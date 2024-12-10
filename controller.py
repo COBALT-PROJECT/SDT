@@ -1,14 +1,3 @@
-"""DT Model Adapter
-
-This script implements the `DTModelAdapter` class. It translates different data models to the DT model and vice-versa.
-
-"""
-
-__author__ = "A. Asensio, A. Qureshi"
-__credits__ = ["Adrian Asensio", "A. Qureshi"]
-__version__ = "0.0.1"
-__status__ = "Development"
-
 import json
 
 import requests
