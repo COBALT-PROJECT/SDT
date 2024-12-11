@@ -5,7 +5,7 @@ import requests
 
 class Controller():
     """
-    A class implementing the adapter to translate different data models to the DT model and vice-versa.
+    A class implementing the Controller to send the translated data from adaptor to eclipse ditto.
 
     ...
 
@@ -22,7 +22,7 @@ class Controller():
     """
 
     def __init__(self):
-        print("New DTModelAdapter instance created.")
+        print("Controller instance created.")
 
     def __create_policy(self):
         try:
