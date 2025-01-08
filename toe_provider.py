@@ -1,9 +1,8 @@
 import json
-
 import requests
 
 #files = ['files/storageevidence.json', 'files/vmevidence.json']
-files = ['test_files/storageraw.json', 'test_files/vmraw.json']
+files = ['/app/test_files/storageraw.json', '/app/test_files/vmraw.json']
 
 url = 'http://127.0.0.1:8000/api/clouditor2dt/'
 
@@ -16,7 +15,7 @@ for f in files:
             json_data.close()
 
         r = requests.post(url, data=json.dumps(payload), headers={'Content-Type': 'application/json'})
-        x=json.loads(r.text)
+        x = json.loads(r.text)
         for i in x:
             dts.append(i)
 
@@ -30,5 +29,5 @@ for f in files:
     except Exception as e:
         print(e)
 print(json.dumps(dts))
-with open('things-created.json', 'w', encoding='utf-8') as f:
+with open('/app/sdt_output/things-created.json', 'w', encoding='utf-8') as f:
     json.dump(dts, f, ensure_ascii=False, indent=4)

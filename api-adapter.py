@@ -52,9 +52,10 @@ async def cbom2dt(file: UploadFile = File(...)):
         converted = adapter.from_CCM_cbom(payload)
         
         # Save the converted output to sdt_output directory
-        output_dir = "/home/abdul/DigitalTwin/Cobalt/SDT/sdt_output"
+        output_dir = "/app/sdt_output" #when you are running SDT on the localhost
         os.makedirs(output_dir, exist_ok=True)
         output_path = os.path.join(output_dir, "cbom_sdt_thing.json")
+        logger.info("json file has been written into sdt_output directory")
         with open(output_path, "w") as f:
             json.dump(converted, f, indent=4)
         
@@ -88,9 +89,10 @@ async def sbom2dt(file: UploadFile = File(...)):
         converted = adapter.from_CCM_sbom(payload)
         
         # Save the converted output to sdt_output directory
-        output_dir = "/home/abdul/DigitalTwin/Cobalt/SDT/sdt_output"
+        output_dir = "/app/sdt_output" #when you are running SDT on localhost
         os.makedirs(output_dir, exist_ok=True)
         output_path = os.path.join(output_dir, "sbom_sdt_thing.json")
+        logger.info("json file has been written into sdt_output directory")
         with open(output_path, "w") as f:
             json.dump(converted, f, indent=4)
         

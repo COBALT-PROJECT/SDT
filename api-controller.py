@@ -1,13 +1,14 @@
+#this is the api to interface/talk with the SDT Controller
 import requests
 import uvicorn
-
+import json
 from adapter import *
 from fastapi import Request, FastAPI
 #TODO: GraphQL
 from controller import Controller
 
 app = FastAPI()
-ctrl = Controller()
+ctrl = Controller() #instance of SDT-Controller is created.
 
 @app.get("/")
 async def root():
@@ -46,4 +47,6 @@ async def create(request: Request):
     return "DT created" #payload
 
 #if __name__ == '__main__':
-uvicorn.run(app, port=8005, host='127.0.0.1')
+#we define the fast api server to run on port 8005
+#we set host as 0.0.0.0 so it listens on port 8005 of all its interfaces, that was if ditto or client(from localhost machine) wants to communicate they can
+uvicorn.run(app, port=8005, host='0.0.0.0')

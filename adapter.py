@@ -27,7 +27,8 @@ class DTModelAdapter():
 
     def send_to_controller(self, payload):
         # print(payload)
-        url = 'http://127.0.0.1:8005/api/create/'
+        #we send information in digital twin model to the controller to create a digital twin in ditto
+        url = 'http://127.0.0.1:8005/api/create/' 
         try:
             r = requests.post(url, data=json.dumps(payload), headers={'Content-Type': 'application/json'})
             return r

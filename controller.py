@@ -1,8 +1,8 @@
 import json
-
 import requests
+import os
 
-
+#the class which defines the SDT Controller object
 class Controller():
     """
     A class implementing the Controller to send the translated data from adaptor to eclipse ditto.
@@ -22,11 +22,13 @@ class Controller():
     """
 
     def __init__(self):
-        print("Controller instance created.")
+        #we are gonna set ip for url call to dockergateway because this is the equivalent to localhost:8080, the container docker_gateway_1 of ditto was bound to port 8080 of the ubuntu VM.
+        self.ip = os.getenv("DITTO_HOST", "docker_nginx_1")
+        self.port = 80
 
     def __create_policy(self):
         try:
-            f = 'test_files/policy.json'
+            f = '/app/test_files/policy.json'
             with open(f, 'r') as json_data:
                 #payload = json.loads(json_data.read())
                 payload = json_data.read()
@@ -34,15 +36,17 @@ class Controller():
                 print(payload)
         except Exception as e:
             print(e)
+
+
         #return
         #ip = '10.0.1.174'
-        ip = '10.0.0.41'
-        port = 8080
-        url = 'http://' + ip + ':' + str(port) + '/api/2/policies/cobalt:policy'
+        #ip = '127.0.0.1' #when you are running the component as a software on the localhost
+        #ip = "docker_policies_1" #the ditto container responsible for creating policy
+        url = f"http://{self.ip}:{self.port}/api/2/policies/cobalt:policy"
         try:
             print("Send policy to Ditto!")
             session = requests.Session()
-            session.auth = ("ditto", "ditto")
+            session.auth = ("ditto", "ditto") #the default username and password to access ditto
             r = session.put(url, json=json.loads(payload), headers={'Content-Type': 'application/json'})
             print(r.json())
             return r
@@ -52,12 +56,7 @@ class Controller():
 
     def create_in_ditto(self, payload):
         self.__create_policy()
-        #return
-        #print(payload)
-        #ip = '10.0.1.174'
-        ip = 'localhost'
-        port = 8080
-        url = 'http://' + ip + ':' + str(port) + '/api/2/things/'
+        url = f"http://{self.ip}:{self.port}/api/2/things/"
         try:
             print("Send DT model to Ditto!")
 
@@ -78,7 +77,9 @@ class Controller():
         return None
 
     def update_in_ditto(self, payload):
-        #print(payload)
-        #ip = '
+        print(payload)
+        ip = 'sdt_container'
+        port = 8080 #the port on which ditto runs on.
+        #url = 'http://' + ip + ':' + str(port) + 
 
         return 
