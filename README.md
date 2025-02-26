@@ -1,8 +1,9 @@
-# SDT v 0.0.1
+# SDT v 0.1.0
 Currentlty two modules are implemented in the preliminary phase adapter and controller 
 
-ADAPTOR: This module implements three APIs to injest the data from Clouditor discovery and CCM SBOM/CBOM discovery. 
-CONTROLLER: Controller sends the translated from adaptor to Eclipse Ditto 
+ADAPTOR: This module implements APIs to injest data from Target of Evaluation, SBOMS, CBOMS, MUD files in CycloneDX
+        
+CONTROLLER: Controller sends the data to Eclipse Ditto   
 
-Requirement : Eclipse Ditto 
+Requirement : Eclipse Ditto https://github.com/eclipse-ditto/ditto
  

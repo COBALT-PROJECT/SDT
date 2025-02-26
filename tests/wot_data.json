@@ -1,0 +1,267 @@
+{
+  "id": "urn:uuid:699b6458-60da-4f52-b1b3-34915dc01eb6",
+  "title": "lhc-vdm-editor",
+  "description": "A code and file editor for VdM scans.",
+  "properties": {
+    "pkg:npm/puppeteer@1.19.0": {
+      "type": "library",
+      "name": "puppeteer",
+      "description": "A high-level API to control headless Chrome over the DevTools Protocol",
+      "properties": {}
+    },
+    "pkg:npm/debug@4.1.1": {
+      "type": "library",
+      "name": "debug",
+      "description": "small debugging utility",
+      "properties": {}
+    },
+    "pkg:npm/ms@2.1.2": {
+      "type": "library",
+      "name": "ms",
+      "description": "Tiny millisecond conversion utility",
+      "properties": {}
+    },
+    "pkg:npm/extract-zip@1.6.7": {
+      "type": "library",
+      "name": "extract-zip",
+      "description": "unzip a zip file into a directory using 100% javascript",
+      "properties": {}
+    },
+    "pkg:npm/concat-stream@1.6.2": {
+      "type": "library",
+      "name": "concat-stream",
+      "description": "writable stream that concatenates strings or binary data and calls a callback with the result",
+      "properties": {}
+    },
+    "pkg:npm/buffer-from@1.1.1": {
+      "type": "library",
+      "name": "buffer-from",
+      "description": "A [ponyfill](https://ponyfill.com) for `Buffer.from`, uses native implementation if available.",
+      "properties": {}
+    },
+    "pkg:npm/inherits@2.0.4": {
+      "type": "library",
+      "name": "inherits",
+      "description": "Browser-friendly inheritance fully compatible with standard node.js inherits()",
+      "properties": {}
+    },
+    "pkg:npm/readable-stream@2.3.6": {
+      "type": "library",
+      "name": "readable-stream",
+      "description": "Streams3, a user-land copy of the stream library from Node.js",
+      "properties": {}
+    },
+    "pkg:npm/core-util-is@1.0.2": {
+      "type": "library",
+      "name": "core-util-is",
+      "description": "The `util.is*` functions introduced in Node v0.12.",
+      "properties": {}
+    },
+    "pkg:npm/isarray@1.0.0": {
+      "type": "library",
+      "name": "isarray",
+      "description": "Array#isArray for older browsers",
+      "properties": {}
+    },
+    "pkg:npm/process-nextick-args@2.0.1": {
+      "type": "library",
+      "name": "process-nextick-args",
+      "description": "process.nextTick but always with args",
+      "properties": {}
+    },
+    "pkg:npm/safe-buffer@5.1.2": {
+      "type": "library",
+      "name": "safe-buffer",
+      "description": "Safer Node.js Buffer API",
+      "properties": {}
+    },
+    "pkg:npm/string_decoder@1.1.1": {
+      "type": "library",
+      "name": "string_decoder",
+      "description": "The string_decoder module from Node core",
+      "properties": {}
+    },
+    "pkg:npm/util-deprecate@1.0.2": {
+      "type": "library",
+      "name": "util-deprecate",
+      "description": "The Node.js `util.deprecate()` function with browser support",
+      "properties": {}
+    },
+    "pkg:npm/typedarray@0.0.6": {
+      "type": "library",
+      "name": "typedarray",
+      "description": "TypedArray polyfill for old browsers",
+      "properties": {}
+    },
+    "pkg:npm/debug@2.6.9": {
+      "type": "library",
+      "name": "debug",
+      "description": "small debugging utility",
+      "properties": {}
+    },
+    "pkg:npm/ms@2.0.0": {
+      "type": "library",
+      "name": "ms",
+      "description": "Tiny milisecond conversion utility",
+      "properties": {}
+    },
+    "pkg:npm/mkdirp@0.5.1": {
+      "type": "library",
+      "name": "mkdirp",
+      "description": "Recursively mkdir, like `mkdir -p`",
+      "properties": {}
+    },
+    "pkg:npm/minimist@0.0.8": {
+      "type": "library",
+      "name": "minimist",
+      "description": "parse argument options",
+      "properties": {}
+    },
+    "pkg:npm/yauzl@2.4.1": {
+      "type": "library",
+      "name": "yauzl",
+      "description": "yet another unzip library for node",
+      "properties": {}
+    },
+    "pkg:npm/fd-slicer@1.0.1": {
+      "type": "library",
+      "name": "fd-slicer",
+      "description": "safely create multiple ReadStream or WriteStream objects from the same file descriptor",
+      "properties": {}
+    },
+    "pkg:npm/pend@1.2.0": {
+      "type": "library",
+      "name": "pend",
+      "description": "dead-simple optimistic async helper",
+      "properties": {}
+    },
+    "pkg:npm/https-proxy-agent@2.2.4": {
+      "type": "library",
+      "name": "https-proxy-agent",
+      "description": "An HTTP(s) proxy `http.Agent` implementation for HTTPS",
+      "properties": {}
+    },
+    "pkg:npm/agent-base@4.3.0": {
+      "type": "library",
+      "name": "agent-base",
+      "description": "Turn a function into an `http.Agent` instance",
+      "properties": {}
+    },
+    "pkg:npm/es6-promisify@5.0.0": {
+      "type": "library",
+      "name": "es6-promisify",
+      "description": "Converts callback-based functions to ES6 Promises",
+      "properties": {}
+    },
+    "pkg:npm/es6-promise@4.2.8": {
+      "type": "library",
+      "name": "es6-promise",
+      "description": "A lightweight library that provides tools for organizing asynchronous code",
+      "properties": {}
+    },
+    "pkg:npm/debug@3.2.6": {
+      "type": "library",
+      "name": "debug",
+      "description": "small debugging utility",
+      "properties": {}
+    },
+    "pkg:npm/mime@2.4.4": {
+      "type": "library",
+      "name": "mime",
+      "description": "A comprehensive library for mime-type mapping",
+      "properties": {}
+    },
+    "pkg:npm/progress@2.0.3": {
+      "type": "library",
+      "name": "progress",
+      "description": "Flexible ascii progress bar",
+      "properties": {}
+    },
+    "pkg:npm/proxy-from-env@1.0.0": {
+      "type": "library",
+      "name": "proxy-from-env",
+      "description": "Offers getProxyForUrl to get the proxy URL for a URL, respecting the *_PROXY (e.g. HTTP_PROXY) and NO_PROXY environment variables.",
+      "properties": {}
+    },
+    "pkg:npm/rimraf@2.7.1": {
+      "type": "library",
+      "name": "rimraf",
+      "description": "A deep deletion module for node (like `rm -rf`)",
+      "properties": {}
+    },
+    "pkg:npm/glob@7.1.4": {
+      "type": "library",
+      "name": "glob",
+      "description": "a little globber",
+      "properties": {}
+    },
+    "pkg:npm/fs.realpath@1.0.0": {
+      "type": "library",
+      "name": "fs.realpath",
+      "description": "Use node's fs.realpath, but fall back to the JS implementation if the native one fails",
+      "properties": {}
+    },
+    "pkg:npm/inflight@1.0.6": {
+      "type": "library",
+      "name": "inflight",
+      "description": "Add callbacks to requests in flight to avoid async duplication",
+      "properties": {}
+    },
+    "pkg:npm/once@1.4.0": {
+      "type": "library",
+      "name": "once",
+      "description": "Run a function exactly one time",
+      "properties": {}
+    },
+    "pkg:npm/wrappy@1.0.2": {
+      "type": "library",
+      "name": "wrappy",
+      "description": "Callback wrapping utility",
+      "properties": {}
+    },
+    "pkg:npm/minimatch@3.0.4": {
+      "type": "library",
+      "name": "minimatch",
+      "description": "a glob matcher in javascript",
+      "properties": {}
+    },
+    "pkg:npm/brace-expansion@1.1.11": {
+      "type": "library",
+      "name": "brace-expansion",
+      "description": "Brace expansion as known from sh/bash",
+      "properties": {}
+    },
+    "pkg:npm/balanced-match@1.0.0": {
+      "type": "library",
+      "name": "balanced-match",
+      "description": "Match balanced character pairs, like \"{\" and \"}\"",
+      "properties": {}
+    },
+    "pkg:npm/concat-map@0.0.1": {
+      "type": "library",
+      "name": "concat-map",
+      "description": "concatenative mapdashery",
+      "properties": {}
+    },
+    "pkg:npm/path-is-absolute@1.0.1": {
+      "type": "library",
+      "name": "path-is-absolute",
+      "description": "Node.js 0.12 path.isAbsolute() ponyfill",
+      "properties": {}
+    },
+    "pkg:npm/ws@6.2.1": {
+      "type": "library",
+      "name": "ws",
+      "description": "Simple to use, blazing fast and thoroughly tested websocket client and server for Node.js",
+      "properties": {}
+    },
+    "pkg:npm/async-limiter@1.0.1": {
+      "type": "library",
+      "name": "async-limiter",
+      "description": "asynchronous function queue with adjustable concurrency",
+      "properties": {}
+    }
+  },
+  "actions": {},
+  "events": {}
+}

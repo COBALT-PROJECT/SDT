@@ -31,7 +31,7 @@ class Controller():
                 #payload = json.loads(json_data.read())
                 payload = json_data.read()
                 json_data.close()
-                print(payload)
+                # print(payload)
         except Exception as e:
             print(e)
         #return
@@ -44,13 +44,13 @@ class Controller():
             session = requests.Session()
             session.auth = ("ditto", "ditto")
             r = session.put(url, json=json.loads(payload), headers={'Content-Type': 'application/json'})
-            print(r.json())
+            # print(r.json())
             return r
         except Exception as e:
             print(e)
         return None
-
-    def create_in_ditto(self, payload):
+    
+    def create_in_ditto1(self, payload):
         self.__create_policy()
         #return
         #print(payload)
@@ -77,8 +77,51 @@ class Controller():
             print(e)
         return None
 
-    def update_in_ditto(self, payload):
-        #print(payload)
-        #ip = '
+    def create_in_ditto(self, payload):
+        self.__create_policy()
+        thing_id = json.loads(payload).get("thingId")
+        print(thing_id)
+        if not thing_id:
+            print("ThingId not found in payload")
+            return None
+        
+        # ditto_response = check_thing_exists(thing_id)
+        # if ditto_response = ok:
+        #     print ("Thing already exists in Ditto")
+        #     print("updating Thing in ditto")
+        # else:
+        #     print("Send Thing to Ditto!")
 
-        return 
+
+        ip = 'localhost'
+        port = 8080
+        url = f'http://{ip}:{port}/api/2/things/{thing_id}'
+        try:
+            
+            session = requests.Session()
+            session.auth = ("ditto", "ditto")
+            r = session.put(url, json=json.loads(payload), headers={'Content-Type': 'application/json'})
+            print(r.json())
+            return r
+        except Exception as e:
+            print(e)
+        return None
+
+# def check_thing_exists(thing_id):
+#     ip = 'localhost'
+#     port = 8080 
+#     url = f'http://{ip}:{port}/api/2/things/{thing_id}'
+#     session = requests.Session()
+#     session
+#     r = session.get(url)
+#     print(r.json())
+#     return r
+
+
+#     # def update_in_ditto(self, payload):
+#     #     #print(payload)
+#     #     #ip = '
+
+#     #     return 
+
+

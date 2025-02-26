@@ -5,8 +5,8 @@ cbom_file_path = 'test_files/CCM-Output/cbom/algorithm_sbom_20241118144135.json'
 sbom_file_path = 'test_files/CCM-Output/sbom/sbom.json'
 
 # Define the API endpoints
-cbom_api_url = 'http://localhost:8000/api/cbom2dt'
-sbom_api_url = 'http://localhost:8000/api/sbom2dt'
+cbom_api_url = 'http://localhost:8001/api/cbom2dt'
+sbom_api_url = 'http://localhost:8001/api/sbom2dt'
 
 # Function to send POST request with file
 def send_post_request_with_file(url, file_path):
