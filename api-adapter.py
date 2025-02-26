@@ -220,5 +220,5 @@ async def cyclone2dt(request: Request):
 #         return JSONResponse(content={"error": str(e)}, status_code=500)
 
 #if __name__ == '__main__':
-uvicorn.run(app, port=8001, host='127.0.0.1')
+#uvicorn.run(app, port=8001, host='127.0.0.1')
 

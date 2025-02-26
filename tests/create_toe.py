@@ -3,7 +3,7 @@ import os
 import json
 
 # Define the API endpoint
-url = "http://127.0.0.1:8001/api/SDT/create/"
+url = "http://127.0.0.1:8000/api/SDT/create/"
 
 
 def get_json_file_paths(base_dir):
