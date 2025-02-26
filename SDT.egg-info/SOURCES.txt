@@ -1,7 +1,0 @@
-README.md
-setup.py
-SDT.egg-info/PKG-INFO
-SDT.egg-info/SOURCES.txt
-SDT.egg-info/dependency_links.txt
-SDT.egg-info/requires.txt
-SDT.egg-info/top_level.txt
