@@ -1,0 +1,5 @@
+cyclonedx-python-lib
+cyclonedx-python-lib[validation]
+flask
+requests
+uvicorn
