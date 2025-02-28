@@ -1,0 +1,176 @@
+llen@sdt:~/k3s-SDT-Ditto/yaml_scripts$ kubectl describe pod sdt-deployment-6454685957-rgk5r
+Name:             sdt-deployment-6454685957-rgk5r
+Namespace:        default
+Priority:         0
+Service Account:  default
+Node:             sdt/10.10.2.14
+Start Time:       Tue, 14 Jan 2025 17:02:25 +0100
+Labels:           app=sdt
+                  pod-template-hash=6454685957
+Annotations:      <none>
+Status:           Pending
+IP:               10.42.0.68
+IPs:
+  IP:           10.42.0.68
+Controlled By:  ReplicaSet/sdt-deployment-6454685957
+Containers:
+  sdt-container:
+    Container ID:   
+    Image:          docker.io/library/sdt-main-image:latest
+    Image ID:       
+    Ports:          8000/TCP, 8005/TCP
+    Host Ports:     0/TCP, 0/TCP
+    State:          Waiting
+      Reason:       ErrImageNeverPull
+    Ready:          False
+    Restart Count:  0
+    Environment:
+      DITTO_HOST:  ditto
+      DITTO_PORT:  80
+    Mounts:
+      /app/sdt_output from sdt-output (rw)
+      /var/run/secrets/kubernetes.io/serviceaccount from kube-api-access-7svwq (ro)
+Conditions:
+  Type                        Status
+  PodReadyToStartContainers   True 
+  Initialized                 True 
+  Ready                       False 
+  ContainersReady             False 
+  PodScheduled                True 
+Volumes:
+  sdt-output:
+    Type:       EmptyDir (a temporary directory that shares a pod's lifetime)
+    Medium:     
+    SizeLimit:  <unset>
+  kube-api-access-7svwq:
+    Type:                    Projected (a volume that contains injected data from multiple sources)
+    TokenExpirationSeconds:  3607
+    ConfigMapName:           kube-root-ca.crt
+    ConfigMapOptional:       <nil>
+    DownwardAPI:             true
+QoS Class:                   BestEffort
+Node-Selectors:              <none>
+Tolerations:                 node.kubernetes.io/not-ready:NoExecute op=Exists for 300s
+                             node.kubernetes.io/unreachable:NoExecute op=Exists for 300s
+Events:
+  Type     Reason             Age                     From               Message
+  ----     ------             ----                    ----               -------
+  Normal   Scheduled          5m28s                   default-scheduler  Successfully assigned default/sdt-deployment-6454685957-rgk5r to sdt
+  Warning  Failed             3m24s (x12 over 5m29s)  kubelet            Error: ErrImageNeverPull
+  Warning  ErrImageNeverPull  16s (x27 over 5m29s)    kubelet            Container image "docker.io/library/sdt-main-image:latest" is not present with pull policy of Never
+
+allen@sdt:~/k3s-SDT-Ditto/yaml_scripts$ kubectl describe node sdt
+Name:               sdt
+Roles:              control-plane,master
+Labels:             beta.kubernetes.io/arch=amd64
+                    beta.kubernetes.io/instance-type=k3s
+                    beta.kubernetes.io/os=linux
+                    kubernetes.io/arch=amd64
+                    kubernetes.io/hostname=sdt
+                    kubernetes.io/os=linux
+                    node-role.kubernetes.io/control-plane=true
+                    node-role.kubernetes.io/master=true
+                    node.kubernetes.io/instance-type=k3s
+Annotations:        alpha.kubernetes.io/provided-node-ip: 10.10.2.14
+                    flannel.alpha.coreos.com/backend-data: {"VNI":1,"VtepMAC":"72:00:f6:ef:ca:34"}
+                    flannel.alpha.coreos.com/backend-type: vxlan
+                    flannel.alpha.coreos.com/kube-subnet-manager: true
+                    flannel.alpha.coreos.com/public-ip: 10.10.2.14
+                    k3s.io/hostname: sdt
+                    k3s.io/internal-ip: 10.10.2.14
+                    k3s.io/node-args: ["server"]
+                    k3s.io/node-config-hash: MLFMUCBMRVINLJJKSG32TOUFWB4CN55GMSNY25AZPESQXZCYRN2A====
+                    k3s.io/node-env: {}
+                    node.alpha.kubernetes.io/ttl: 0
+                    volumes.kubernetes.io/controller-managed-attach-detach: true
+CreationTimestamp:  Mon, 13 Jan 2025 16:53:58 +0100
+Taints:             <none>
+Unschedulable:      false
+Lease:
+  HolderIdentity:  sdt
+  AcquireTime:     <unset>
+  RenewTime:       Tue, 14 Jan 2025 17:06:46 +0100
+Conditions:
+  Type             Status  LastHeartbeatTime                 LastTransitionTime                Reason                       Message
+  ----             ------  -----------------                 ------------------                ------                       -------
+  MemoryPressure   False   Tue, 14 Jan 2025 17:04:45 +0100   Mon, 13 Jan 2025 16:53:58 +0100   KubeletHasSufficientMemory   kubelet has sufficient memory available
+  DiskPressure     False   Tue, 14 Jan 2025 17:04:45 +0100   Mon, 13 Jan 2025 16:53:58 +0100   KubeletHasNoDiskPressure     kubelet has no disk pressure
+  PIDPressure      False   Tue, 14 Jan 2025 17:04:45 +0100   Mon, 13 Jan 2025 16:53:58 +0100   KubeletHasSufficientPID      kubelet has sufficient PID available
+  Ready            True    Tue, 14 Jan 2025 17:04:45 +0100   Mon, 13 Jan 2025 16:53:58 +0100   KubeletReady                 kubelet is posting ready status
+Addresses:
+  InternalIP:  10.10.2.14
+  Hostname:    sdt
+Capacity:
+  cpu:                3
+  ephemeral-storage:  55931072Ki
+  hugepages-2Mi:      0
+  memory:             11981964Ki
+  pods:               110
+Allocatable:
+  cpu:                3
+  ephemeral-storage:  54409746799
+  hugepages-2Mi:      0
+  memory:             11981964Ki
+  pods:               110
+System Info:
+  Machine ID:                 a50174de89fa42608a6bb823c70512b3
+  System UUID:                5eed16b5-b6a9-3342-bad9-292affa30c32
+  Boot ID:                    7b61dce1-b1b2-479a-9b98-82a5043348db
+  Kernel Version:             6.8.0-51-generic
+  OS Image:                   Ubuntu 22.04.5 LTS
+  Operating System:           linux
+  Architecture:               amd64
+  Container Runtime Version:  containerd://1.7.23-k3s2
+  Kubelet Version:            v1.31.4+k3s1
+  Kube-Proxy Version:         v1.31.4+k3s1
+PodCIDR:                      10.42.0.0/24
+PodCIDRs:                     10.42.0.0/24
+ProviderID:                   k3s://sdt
+Non-terminated Pods:          (6 in total)
+  Namespace                   Name                                       CPU Requests  CPU Limits  Memory Requests  Memory Limits  Age
+  ---------                   ----                                       ------------  ----------  ---------------  -------------  ---
+  default                     sdt-deployment-6454685957-rgk5r            0 (0%)        0 (0%)      0 (0%)           0 (0%)         4m23s
+  kube-system                 coredns-ccb96694c-t2ztk                    100m (3%)     0 (0%)      70Mi (0%)        170Mi (1%)     24h
+  kube-system                 local-path-provisioner-5cf85fd84d-frqwn    0 (0%)        0 (0%)      0 (0%)           0 (0%)         24h
+  kube-system                 metrics-server-5985cbc9d7-kbfg5            100m (3%)     0 (0%)      70Mi (0%)        0 (0%)         24h
+  kube-system                 svclb-traefik-f115cc4b-rqkzc               0 (0%)        0 (0%)      0 (0%)           0 (0%)         24h
+  kube-system                 traefik-57b79cf995-cc688                   0 (0%)        0 (0%)      0 (0%)           0 (0%)         24h
+Allocated resources:
+  (Total limits may be over 100 percent, i.e., overcommitted.)
+  Resource           Requests    Limits
+  --------           --------    ------
+  cpu                200m (6%)   0 (0%)
+  memory             140Mi (1%)  170Mi (1%)
+  ephemeral-storage  0 (0%)      0 (0%)
+  hugepages-2Mi      0 (0%)      0 (0%)
+Events:
+  Type    Reason                          Age   From             Message
+  ----    ------                          ----  ----             -------
+  Normal  Starting                        33m   kube-proxy       
+  Normal  Starting                        12m   kube-proxy       
+  Normal  Starting                        25m   kube-proxy       
+  Normal  Starting                        33m   kubelet          Starting kubelet.
+  Normal  NodeHasSufficientMemory         33m   kubelet          Node sdt status is now: NodeHasSufficientMemory
+  Normal  NodeAllocatableEnforced         33m   kubelet          Updated Node Allocatable limit across pods
+  Normal  NodeHasNoDiskPressure           33m   kubelet          Node sdt status is now: NodeHasNoDiskPressure
+  Normal  NodeHasSufficientPID            33m   kubelet          Node sdt status is now: NodeHasSufficientPID
+  Normal  RegisteredNode                  33m   node-controller  Node sdt event: Registered Node sdt in Controller
+  Normal  NodePasswordValidationComplete  33m   k3s-supervisor   Deferred node password secret validation complete
+  Normal  Starting                        25m   kubelet          Starting kubelet.
+  Normal  NodeHasSufficientMemory         25m   kubelet          Node sdt status is now: NodeHasSufficientMemory
+  Normal  NodeAllocatableEnforced         25m   kubelet          Updated Node Allocatable limit across pods
+  Normal  NodeHasNoDiskPressure           25m   kubelet          Node sdt status is now: NodeHasNoDiskPressure
+  Normal  NodeHasSufficientPID            25m   kubelet          Node sdt status is now: NodeHasSufficientPID
+  Normal  RegisteredNode                  25m   node-controller  Node sdt event: Registered Node sdt in Controller
+  Normal  NodePasswordValidationComplete  25m   k3s-supervisor   Deferred node password secret validation complete
+  Normal  Starting                        12m   kubelet          Starting kubelet.
+  Normal  NodeAllocatableEnforced         12m   kubelet          Updated Node Allocatable limit across pods
+  Normal  NodeHasSufficientMemory         12m   kubelet          Node sdt status is now: NodeHasSufficientMemory
+  Normal  NodeHasNoDiskPressure           12m   kubelet          Node sdt status is now: NodeHasNoDiskPressure
+  Normal  NodeHasSufficientPID            12m   kubelet          Node sdt status is now: NodeHasSufficientPID
+  Normal  RegisteredNode                  12m   node-controller  Node sdt event: Registered Node sdt in Controller
+  Normal  NodePasswordValidationComplete  12m   k3s-supervisor   Deferred node password secret validation complete
+
+allen@sdt:~/k3s-SDT-Ditto/yaml_scripts$ sudo ctr --address /run/k3s/containerd/containerd.sock images list | grep sdt-main-image
+[sudo] password for allen: 
+docker.io/library/sdt-main-image:latest application/vnd.docker.distribution.manifest.v2+json sha256:bae3ad34da208e4ce052f0858f7898cdefdb5450f5bbc811bc4b0a80032d6cc2 454.3 MiB linux/amd64 -      

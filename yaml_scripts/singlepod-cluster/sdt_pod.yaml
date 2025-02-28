@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sdt-container
+  namespace: ditto-system
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: sdt
+  template:
+    metadata:
+      labels:
+        app: sdt
+    spec:
+      initContainers:
+        - name: wait-for-ditto
+          image: busybox
+          command: ['sh', '-c', 'until nc -z ditto-service 8080; do echo waiting for Ditto; sleep 2; done']
+      containers:
+        - name: sdt
+          image: docker.io/library/sdt-main-image:latest
+          env:
+            - name: DITTO_HOST
+              value: ditto-service
+            - name: SDT_HOST
+              value: sdt-service
+          ports:
+            - containerPort: 8000
+            - containerPort: 8005
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: sdt-service
+  namespace: ditto-system
+spec:
+  type: ClusterIP
+  ports:
+    - name: api
+      protocol: TCP
+      port: 8000
+      targetPort: 8000
+    - name: callback
+      protocol: TCP
+      port: 8005
+      targetPort: 8005
+  selector:
+    app: sdt

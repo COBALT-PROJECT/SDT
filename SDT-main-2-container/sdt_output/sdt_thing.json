@@ -1,0 +1,75 @@
+{
+    "thingId": "TOE.sbom.urn.uuid:699b6458-60da-4f52-b1b3-34915dc01eb6",
+    "policyId": "cobalt:policy",
+    "definition": "cobalt:clouditor-resource:0.0.1",
+    "attributes": {
+        "bomFormat": "CycloneDX",
+        "specVersion": "1.6",
+        "serialNumber": "urn:uuid:fb464ac5-6c11-4b16-8a0d-84661620bd55",
+        "version": "1.0",
+        "timestamp": "2024-11-19T19:23:13Z",
+        "component": "my application"
+    },
+    "features": {
+      "lamp": {
+        "properties": {
+          "color": [{
+            "r": 100,
+            "g": 0,
+            "b": 255
+          }],
+          "status": {
+            "on": true
+          }
+        }
+      }
+    },
+    "_metadata": {
+      "features": {
+        "lamp": {
+          "properties": {
+            "color": {
+              "r": {
+                "changeLog": {
+                  "changedAt": "2022-08-02T04:30:07",
+                  "changedBy": {
+                    "name": "ditto",
+                    "mail": "ditto@mail.com"
+                  }
+                }
+              },
+              "g": {
+                "changeLog": {
+                  "changedAt": "2022-08-02T04:30:07",
+                  "changedBy": {
+                    "name": "ditto",
+                    "mail": "ditto@mail.com"
+                  }
+                }
+              },
+              "b": {
+                "changeLog": {
+                  "changedAt": "2022-08-02T04:30:07",
+                  "changedBy": {
+                    "name": "ditto",
+                    "mail": "ditto@mail.com"
+                  }
+                }
+              },
+              "status": {
+                "on": {
+                  "changeLog": {
+                    "changedAt": "2022-08-02T04:30:07", 
+                    "changedBy": {
+                      "name": "ditto", 
+                      "mail": "ditto@mail.com"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }

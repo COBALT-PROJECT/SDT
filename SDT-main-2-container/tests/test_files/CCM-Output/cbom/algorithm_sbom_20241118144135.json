@@ -1,0 +1,201 @@
+{
+    "bomFormat": "CycloneDX",
+    "specVersion": "1.6",
+    "serialNumber": "urn:uuid:fb464ac5-6c11-4b16-8a0d-84661620bd55",
+    "version": 1,
+    "metadata": {
+        "timestamp": "2024-11-19T19:23:13Z",
+        "component": {
+            "type": "application",
+            "name": "my application",
+            "version": "1.0"
+        }
+    },
+    "components": [
+        {
+            "name": "AES256-GCM-SHA384",
+            "type": "cryptographic-asset",
+            "cryptoProperties": {
+                "assetType": "algorithm",
+                "algorithmProperties": {
+                    "primitive": "Block-cipher",
+                    "executionEnvironment": "software-plain-ram",
+                    "implementationPlatform": "x86_64",
+                    "certificationLevel": "fips140-2-l1",
+                    "cryptoFunctions": [
+                        "keygen",
+                        "encrypt",
+                        "decrypt"
+                    ],
+                    "classicalSecurityLevel": 256,
+                    "nistQuantumSecurityLevel": 4
+                },
+                "oid": "1.3.6.1.4.1.11.2.4.3.20.74"
+            }
+        },
+        {
+            "name": "AES256-SHA256",
+            "type": "cryptographic-asset",
+            "cryptoProperties": {
+                "assetType": "algorithm",
+                "algorithmProperties": {
+                    "primitive": "Block-cipher",
+                    "executionEnvironment": "software-plain-ram",
+                    "implementationPlatform": "x86_64",
+                    "certificationLevel": "fips140-2-l1",
+                    "cryptoFunctions": [
+                        "keygen",
+                        "encrypt",
+                        "decrypt"
+                    ],
+                    "classicalSecurityLevel": 256,
+                    "nistQuantumSecurityLevel": 4
+                },
+                "oid": "1.3.6.1.4.1.11.2.4.3.20.74"
+            }
+        },
+        {
+            "name": "AES256-SHA",
+            "type": "cryptographic-asset",
+            "cryptoProperties": {
+                "assetType": "algorithm",
+                "algorithmProperties": {
+                    "primitive": "Block-cipher",
+                    "executionEnvironment": "software-plain-ram",
+                    "implementationPlatform": "x86_64",
+                    "certificationLevel": "fips140-2-l1",
+                    "cryptoFunctions": [
+                        "keygen",
+                        "encrypt",
+                        "decrypt"
+                    ],
+                    "classicalSecurityLevel": 256,
+                    "nistQuantumSecurityLevel": 4
+                },
+                "oid": "1.3.6.1.4.1.11.2.4.3.20.74"
+            }
+        },
+        {
+            "name": "DES-CBC3-SHA",
+            "type": "cryptographic-asset",
+            "cryptoProperties": {
+                "assetType": "algorithm",
+                "algorithmProperties": {
+                    "primitive": "unknown",
+                    "executionEnvironment": "software-plain-ram",
+                    "implementationPlatform": "x86_64",
+                    "certificationLevel": "none",
+                    "cryptoFunctions": "unknown",
+                    "classicalSecurityLevel": "unknown",
+                    "nistQuantumSecurityLevel": "0"
+                },
+                "oid": "1.3.6.1.4.1.11.2.4.3.20.74"
+            }
+        },
+        {
+            "name": "AES128-GCM-SHA256",
+            "type": "cryptographic-asset",
+            "cryptoProperties": {
+                "assetType": "algorithm",
+                "algorithmProperties": {
+                    "primitive": "Block-cipher",
+                    "executionEnvironment": "software-plain-ram",
+                    "implementationPlatform": "x86_64",
+                    "certificationLevel": "fips140-2-l1",
+                    "cryptoFunctions": [
+                        "keygen",
+                        "encrypt",
+                        "decrypt"
+                    ],
+                    "classicalSecurityLevel": 128,
+                    "nistQuantumSecurityLevel": 2
+                },
+                "oid": "1.3.6.1.4.1.11.2.4.3.20.74"
+            }
+        },
+        {
+            "name": "AES128-SHA256",
+            "type": "cryptographic-asset",
+            "cryptoProperties": {
+                "assetType": "algorithm",
+                "algorithmProperties": {
+                    "primitive": "Block-cipher",
+                    "executionEnvironment": "software-plain-ram",
+                    "implementationPlatform": "x86_64",
+                    "certificationLevel": "fips140-2-l1",
+                    "cryptoFunctions": [
+                        "keygen",
+                        "encrypt",
+                        "decrypt"
+                    ],
+                    "classicalSecurityLevel": 128,
+                    "nistQuantumSecurityLevel": 2
+                },
+                "oid": "1.3.6.1.4.1.11.2.4.3.20.74"
+            }
+        },
+        {
+            "name": "AES128-SHA",
+            "type": "cryptographic-asset",
+            "cryptoProperties": {
+                "assetType": "algorithm",
+                "algorithmProperties": {
+                    "primitive": "Block-cipher",
+                    "executionEnvironment": "software-plain-ram",
+                    "implementationPlatform": "x86_64",
+                    "certificationLevel": "fips140-2-l1",
+                    "cryptoFunctions": [
+                        "keygen",
+                        "encrypt",
+                        "decrypt"
+                    ],
+                    "classicalSecurityLevel": 128,
+                    "nistQuantumSecurityLevel": 2
+                },
+                "oid": "1.3.6.1.4.1.11.2.4.3.20.74"
+            }
+        },
+        {
+            "name": "RC4-SHA",
+            "type": "cryptographic-asset",
+            "cryptoProperties": {
+                "assetType": "algorithm",
+                "algorithmProperties": {
+                    "primitive": "Stream-cipher",
+                    "executionEnvironment": "software-plain-ram",
+                    "implementationPlatform": "x86_64",
+                    "certificationLevel": "fips140-2-l1",
+                    "cryptoFunctions": [
+                        "keygen",
+                        "encrypt",
+                        "decrypt"
+                    ],
+                    "classicalSecurityLevel": "128",
+                    "nistQuantumSecurityLevel": "0"
+                },
+                "oid": "1.3.6.1.4.1.11.2.4.3.20.74"
+            }
+        },
+        {
+            "name": "RC4-MD5",
+            "type": "cryptographic-asset",
+            "cryptoProperties": {
+                "assetType": "algorithm",
+                "algorithmProperties": {
+                    "primitive": "Stream-cipher",
+                    "executionEnvironment": "software-plain-ram",
+                    "implementationPlatform": "x86_64",
+                    "certificationLevel": "fips140-2-l1",
+                    "cryptoFunctions": [
+                        "keygen",
+                        "encrypt",
+                        "decrypt"
+                    ],
+                    "classicalSecurityLevel": "128",
+                    "nistQuantumSecurityLevel": "0"
+                },
+                "oid": "1.3.6.1.4.1.11.2.4.3.20.74"
+            }
+        }
+    ]
+}

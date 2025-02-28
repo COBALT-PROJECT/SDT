@@ -1,0 +1,18 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sdt-main
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: sdt-main
+  template:
+    metadata:
+      labels:
+        app: sdt-main
+    spec:
+      containers:
+      - name: sdt-main-container
+        image: docker.io/library/sdt-main-image:latest
+        imagePullPolicy: Never

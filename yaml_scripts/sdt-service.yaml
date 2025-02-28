@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: sdt-service
+  namespace: default
+spec:
+  type: NodePort  # Expose it externally
+  selector:
+    app: sdt  # Matches SDT pod label
+  ports:
+    - protocol: TCP
+      port: 8000       # Service Port
+      targetPort: 8000 # Pod's Container Port
+      nodePort: 30008  # Exposed port on node

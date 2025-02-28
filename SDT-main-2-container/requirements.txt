@@ -1,0 +1,7 @@
+flask
+fastapi
+requests
+uvicorn
+python-multipart
+cyclonedx-python-lib
+cyclonedx-python-lib[validation]

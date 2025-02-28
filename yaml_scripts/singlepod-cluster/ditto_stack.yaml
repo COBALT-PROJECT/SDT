@@ -1,0 +1,96 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ditto-stack
+  namespace: ditto-system
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ditto-stack
+  template:
+    metadata:
+      labels:
+        app: ditto-stack
+    spec:
+      containers:
+        - name: mongodb
+          image: docker.io/library/mongo:7.0
+          ports:
+            - containerPort: 27017
+          volumeMounts:
+            - name: mongo-data
+              mountPath: /data/db
+        - name: gateway
+          image: docker.io/eclipse/ditto-gateway:latest
+          ports:
+            - containerPort: 8081
+        - name: things
+          image: docker.io/eclipse/ditto-things:latest
+          ports:
+            - containerPort: 8082
+        - name: things-search
+          image: docker.io/eclipse/ditto-things-search:latest
+          ports:
+            - containerPort: 8083
+        - name: connectivity
+          image: docker.io/eclipse/ditto-connectivity:latest
+          ports:
+            - containerPort: 8084
+        - name: policies
+          image: docker.io/eclipse/ditto-policies:latest
+          ports:
+            - containerPort: 8085
+        - name: ditto-ui
+          image: docker.io/eclipse/ditto-ui:latest
+          ports:
+            - containerPort: 8086
+        - name: swagger-ui
+          image: docker.io/swaggerapi/swagger-ui:v5.9.1
+          ports:
+            - containerPort: 8087
+        - name: nginx
+          image: docker.io/library/nginx:1.27-alpine
+          ports:
+            - containerPort: 80
+          volumeMounts:
+            - name: nginx-config
+              mountPath: /etc/nginx/nginx.conf
+              subPath: nginx.conf
+      volumes:
+        - name: mongo-data
+          emptyDir: {}
+        - name: nginx-config
+          configMap:
+            name: nginx-config
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nginx-config
+  namespace: ditto-system
+data:
+  nginx.conf: |
+    events {}
+    http {
+      server {
+        listen 80;
+        location / {
+          proxy_pass http://localhost:8081;
+        }
+      }
+    }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ditto-service
+  namespace: ditto-system
+spec:
+  type: ClusterIP
+  ports:
+    - protocol: TCP
+      port: 8080
+      targetPort: 80
+  selector:
+    app: ditto-stack

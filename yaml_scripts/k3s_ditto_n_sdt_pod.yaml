@@ -1,0 +1,65 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: ditto-sdt-pod
+  namespace: ditto-sdt
+spec:
+  containers:
+  - name: sdt-container
+    image: docker.io/library/sdt-main-image:latest
+    ports:
+    - containerPort: 8000
+    - containerPort: 8005
+    command: ["/app/entrypoint.sh"]
+    volumeMounts:
+    - name: app-volume
+      mountPath: /app
+
+  - name: docker_nginx_1
+    image: docker.io/library/nginx:1.27-alpine
+    ports:
+    - containerPort: 80
+
+  - name: docker_gateway_1
+    image: docker.io/eclipse/ditto-gateway:latest
+    ports:
+    - containerPort: 8081
+
+  - name: docker_things_1
+    image: docker.io/eclipse/ditto-things:latest
+    ports:
+    - containerPort: 8082
+
+  - name: docker_things-search_1
+    image: docker.io/eclipse/ditto-things-search:latest
+    ports:
+    - containerPort: 8083
+
+  - name: docker_connectivity_1
+    image: docker.io/eclipse/ditto-connectivity:latest
+    ports:
+    - containerPort: 8084
+
+  - name: docker_policies_1
+    image: docker.io/eclipse/ditto-policies:latest
+    ports:
+    - containerPort: 8085
+
+  - name: docker_mongodb_1
+    image: docker.io/library/mongo:7.0
+    ports:
+    - containerPort: 27017
+
+  - name: docker_swagger-ui_1
+    image: docker.io/swaggerapi/swagger-ui:v5.9.1
+    ports:
+    - containerPort: 80
+
+  - name: docker_ditto-ui_1
+    image: docker.io/eclipse/ditto-ui:latest
+    ports:
+    - containerPort: 8086
+
+  volumes:
+  - name: app-volume
+    emptyDir: {}

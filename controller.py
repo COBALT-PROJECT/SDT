@@ -22,8 +22,8 @@ class Controller():
     """
 
     def __init__(self):
-        #we are gonna set ip for url call to dockergateway because this is the equivalent to localhost:8080, the container docker_gateway_1 of ditto was bound to port 8080 of the ubuntu VM.
-        self.ip = os.getenv("DITTO_HOST", "docker_nginx_1")
+        #we are gonna set ip for url call to dockergateway because this is the equivalent to localhost:8080, the container docker_nginx_1 of ditto was bound to port 8080 of the ubuntu VM.
+        self.ip = os.getenv("DITTO_HOST", "docker_nginx_1") #we contact the container directly by-passing the VM
         self.port = 80
 
     def __create_policy(self):
