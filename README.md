@@ -121,4 +121,20 @@ things-search-7df4f84ff7-5xwz4   1/1     Running     0          2m7s
 
 
 
+TO INSTANTIATE A SDT POD WITH THE REAL REPLICATION OF A NETWORK (PROVIDED BY DEMOKRITOS), go the folder SDT-main-2-container and perform the following steps
+
+cd SDT-main-2-container
+
+Build the docker image -> docker build -t sdt-main-image-ndt .
+
+cd ..
+
+push the image to your dockerhub account (optional)
+
+Deploy ditto as a kubernetes cluster
+run -> python3 deploy_ditto.py deploy-ditto
+
+Deploy the SDT as a pod in the same cluster as the ditto pods
+run -> python3 deploy_sdt_n_ditto.py
+
 
