@@ -22,19 +22,12 @@ Currently three modules are implemented in the preliminary phase:
 - [Installation](#installation)
   - [Prerequisites](#prerequisites)
   - [Setup](#setup)
-  - [Environment Variables](#environment-variables)
-  - [Docker Installation](#docker-installation)
 - [API Reference](#api-reference)
   - [Basic Operations](#basic-operations)
   - [Digital Twin Management](#digital-twin-management)
-  - [Evidence Collection](#evidence-collection)
-  - [GitHub Integration](#github-integration)
-- [Authentication](#authentication)
 - [Usage Examples](#usage-examples)
-- [Development](#development)
-- [Troubleshooting](#troubleshooting)
-- [Contributing](#contributing)
-- [License](#license)
+
+
 
 ## Features
 
