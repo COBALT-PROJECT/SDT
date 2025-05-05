@@ -1,0 +1,4227 @@
+<?xml version="1.0"?>
+<rdf:RDF xmlns="urn:webprotege:ontology:e4316a28-d966-4499-bd93-6be721055117#"
+     xml:base="urn:webprotege:ontology:e4316a28-d966-4499-bd93-6be721055117"
+     xmlns:cl="http://graph.clouditor.io/classes/"
+     xmlns:dc="http://purl.org/dc/elements/1.1/"
+     xmlns:aws="http://graph.clouditor.io/individuals/aws/"
+     xmlns:k8s="http://graph.clouditor.io/individuals/k8s/"
+     xmlns:owl="http://www.w3.org/2002/07/owl#"
+     xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+     xmlns:xml="http://www.w3.org/XML/1998/namespace"
+     xmlns:xsd="http://www.w3.org/2001/XMLSchema#"
+     xmlns:prop="http://graph.clouditor.io/properties/"
+     xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
+     xmlns:azure="http://graph.clouditor.io/individuals/azure/"
+     xmlns:docker="http://graph.clouditor.io/individuals/docker/"
+     xmlns:library="http://graph.clouditor.io/individuals/libraries/">
+    <owl:Ontology rdf:about="urn:webprotege:ontology:e4316a28-d966-4499-bd93-6be721055117"/>
+    
+
+
+    <!-- 
+    ///////////////////////////////////////////////////////////////////////////////////////
+    //
+    // Annotation properties
+    //
+    ///////////////////////////////////////////////////////////////////////////////////////
+     -->
+
+    
+
+
+    <!-- http://purl.org/dc/elements/1.1/description -->
+
+    <owl:AnnotationProperty rdf:about="http://purl.org/dc/elements/1.1/description"/>
+    
+
+
+    <!-- 
+    ///////////////////////////////////////////////////////////////////////////////////////
+    //
+    // Datatypes
+    //
+    ///////////////////////////////////////////////////////////////////////////////////////
+     -->
+
+    
+
+
+    <!-- http://www.w3.org/2001/XMLSchema#de.fraunhofer.aisec.cpg.graph.Node -->
+
+    <rdfs:Datatype rdf:about="http://www.w3.org/2001/XMLSchema#de.fraunhofer.aisec.cpg.graph.Node">
+        <rdfs:label xml:lang="english">xsd:de.fraunhofer.aisec.cpg.graph.Node</rdfs:label>
+    </rdfs:Datatype>
+    
+
+
+    <!-- http://www.w3.org/2001/XMLSchema#listString -->
+
+    <rdfs:Datatype rdf:about="http://www.w3.org/2001/XMLSchema#listString">
+        <rdfs:label>listString</rdfs:label>
+    </rdfs:Datatype>
+    
+
+
+    <!-- 
+    ///////////////////////////////////////////////////////////////////////////////////////
+    //
+    // Object Properties
+    //
+    ///////////////////////////////////////////////////////////////////////////////////////
+     -->
+
+    
+
+
+    <!-- http://graph.clouditor.io/classes/basedOn -->
+
+    <owl:ObjectProperty rdf:about="http://graph.clouditor.io/classes/basedOn">
+        <rdfs:label>basedOn</rdfs:label>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/bootLog -->
+
+    <owl:ObjectProperty rdf:about="http://graph.clouditor.io/classes/bootLog">
+        <rdfs:label>bootLog</rdfs:label>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/measures -->
+
+    <owl:ObjectProperty rdf:about="http://graph.clouditor.io/classes/measures">
+        <rdfs:label>measures</rdfs:label>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/offersInterface -->
+
+    <owl:ObjectProperty rdf:about="http://graph.clouditor.io/classes/offersInterface">
+        <rdfs:label>offersInterface</rdfs:label>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/offersMultiple -->
+
+    <owl:ObjectProperty rdf:about="http://graph.clouditor.io/classes/offersMultiple">
+        <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">If a property is a security feature.</rdfs:comment>
+        <rdfs:label>offersMultiple</rdfs:label>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/output -->
+
+    <owl:ObjectProperty rdf:about="http://graph.clouditor.io/classes/output">
+        <rdfs:label>output</rdfs:label>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/scope -->
+
+    <owl:ObjectProperty rdf:about="http://graph.clouditor.io/classes/scope">
+        <rdfs:label>scope</rdfs:label>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/target -->
+
+    <owl:ObjectProperty rdf:about="http://graph.clouditor.io/classes/target">
+        <rdfs:label>target</rdfs:label>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/usedBy -->
+
+    <owl:ObjectProperty rdf:about="http://graph.clouditor.io/classes/usedBy">
+        <rdfs:subPropertyOf rdf:resource="http://www.w3.org/2002/07/owl#topObjectProperty"/>
+        <rdfs:label>usedBy</rdfs:label>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/usedByMultiple -->
+
+    <owl:ObjectProperty rdf:about="http://graph.clouditor.io/classes/usedByMultiple">
+        <rdfs:subPropertyOf rdf:resource="http://graph.clouditor.io/classes/usedBy"/>
+        <rdfs:label>usedByMultiple</rdfs:label>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/validatedBy -->
+
+    <owl:ObjectProperty rdf:about="http://graph.clouditor.io/classes/validatedBy">
+        <rdfs:label>validatedBy</rdfs:label>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- http://graph.clouditor.io/properties/backend -->
+
+    <owl:ObjectProperty rdf:about="http://graph.clouditor.io/properties/backend">
+        <rdfs:label xml:lang="english">backend</rdfs:label>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- http://graph.clouditor.io/properties/collectionOf -->
+
+    <owl:ObjectProperty rdf:about="http://graph.clouditor.io/properties/collectionOf">
+        <rdfs:label xml:lang="english">collectionOf</rdfs:label>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- http://graph.clouditor.io/properties/deployedOn -->
+
+    <owl:ObjectProperty rdf:about="http://graph.clouditor.io/properties/deployedOn">
+        <rdfs:label xml:lang="english">deployedOn</rdfs:label>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- http://graph.clouditor.io/properties/has -->
+
+    <owl:ObjectProperty rdf:about="http://graph.clouditor.io/properties/has">
+        <rdfs:domain rdf:resource="http://graph.clouditor.io/classes/CloudResource"/>
+        <rdfs:range rdf:resource="http://graph.clouditor.io/classes/CloudResource"/>
+        <rdfs:label xml:lang="english">has</rdfs:label>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- http://graph.clouditor.io/properties/hasMultiple -->
+
+    <owl:ObjectProperty rdf:about="http://graph.clouditor.io/properties/hasMultiple">
+        <rdfs:subPropertyOf rdf:resource="http://graph.clouditor.io/properties/has"/>
+        <rdfs:label xml:lang="english">hasMultiple</rdfs:label>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- http://graph.clouditor.io/properties/implements -->
+
+    <owl:ObjectProperty rdf:about="http://graph.clouditor.io/properties/implements">
+        <rdfs:label xml:lang="english">implements</rdfs:label>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- http://graph.clouditor.io/properties/offers -->
+
+    <owl:ObjectProperty rdf:about="http://graph.clouditor.io/properties/offers">
+        <rdfs:domain rdf:resource="http://graph.clouditor.io/classes/CloudResource"/>
+        <rdfs:range rdf:resource="http://graph.clouditor.io/classes/SecurityFeature"/>
+        <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">If a property is a security feature.</rdfs:comment>
+        <rdfs:label xml:lang="english">offers</rdfs:label>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- http://graph.clouditor.io/properties/parent -->
+
+    <owl:ObjectProperty rdf:about="http://graph.clouditor.io/properties/parent">
+        <rdfs:label xml:lang="english">parent</rdfs:label>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- http://graph.clouditor.io/properties/proxyTarget -->
+
+    <owl:ObjectProperty rdf:about="http://graph.clouditor.io/properties/proxyTarget">
+        <rdfs:label xml:lang="english">proxyTarget</rdfs:label>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- http://graph.clouditor.io/properties/resourceOf -->
+
+    <owl:ObjectProperty rdf:about="http://graph.clouditor.io/properties/resourceOf">
+        <rdfs:label xml:lang="english">resourceOf</rdfs:label>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- http://graph.clouditor.io/properties/runsOn -->
+
+    <owl:ObjectProperty rdf:about="http://graph.clouditor.io/properties/runsOn">
+        <rdfs:label xml:lang="english">runsOn</rdfs:label>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- http://graph.clouditor.io/properties/serviceOf -->
+
+    <owl:ObjectProperty rdf:about="http://graph.clouditor.io/properties/serviceOf">
+        <rdfs:label xml:lang="english">serviceOf</rdfs:label>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- http://graph.clouditor.io/properties/storage -->
+
+    <owl:ObjectProperty rdf:about="http://graph.clouditor.io/properties/storage">
+        <rdfs:label>storage</rdfs:label>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- http://graph.clouditor.io/properties/to -->
+
+    <owl:ObjectProperty rdf:about="http://graph.clouditor.io/properties/to">
+        <rdfs:label xml:lang="english">to</rdfs:label>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- 
+    ///////////////////////////////////////////////////////////////////////////////////////
+    //
+    // Data properties
+    //
+    ///////////////////////////////////////////////////////////////////////////////////////
+     -->
+
+    
+
+
+    <!-- http://graph.clouditor.io/classes/apiHitsPerMonth -->
+
+    <owl:DatatypeProperty rdf:about="http://graph.clouditor.io/classes/apiHitsPerMonth">
+        <rdfs:label>apiHitsPerMonth</rdfs:label>
+    </owl:DatatypeProperty>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/authenticationMechanism -->
+
+    <owl:DatatypeProperty rdf:about="http://graph.clouditor.io/classes/authenticationMechanism">
+        <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">for example: RSA, ECDSA</rdfs:comment>
+        <rdfs:label>authenticationMechanism</rdfs:label>
+    </owl:DatatypeProperty>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/broadAssignments -->
+
+    <owl:DatatypeProperty rdf:about="http://graph.clouditor.io/classes/broadAssignments">
+        <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">see Privacy Smells: Detecting Privacy Problems in Cloud Architectures (2020)</rdfs:comment>
+        <rdfs:label>broadAssignments</rdfs:label>
+    </owl:DatatypeProperty>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/calls -->
+
+    <owl:DatatypeProperty rdf:about="http://graph.clouditor.io/classes/calls">
+        <rdfs:label>calls</rdfs:label>
+    </owl:DatatypeProperty>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/code -->
+
+    <owl:DatatypeProperty rdf:about="http://graph.clouditor.io/classes/code">
+        <rdfs:label>code</rdfs:label>
+    </owl:DatatypeProperty>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/contextIsChecked -->
+
+    <owl:DatatypeProperty rdf:about="http://graph.clouditor.io/classes/contextIsChecked">
+        <rdfs:label>contextIsChecked</rdfs:label>
+    </owl:DatatypeProperty>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/creation_time -->
+
+    <owl:DatatypeProperty rdf:about="http://graph.clouditor.io/classes/creation_time">
+        <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">creationTime</rdfs:label>
+    </owl:DatatypeProperty>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/cve -->
+
+    <owl:DatatypeProperty rdf:about="http://graph.clouditor.io/classes/cve">
+        <rdfs:label>cve</rdfs:label>
+    </owl:DatatypeProperty>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/cwe -->
+
+    <owl:DatatypeProperty rdf:about="http://graph.clouditor.io/classes/cwe">
+        <rdfs:label>cwe</rdfs:label>
+    </owl:DatatypeProperty>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/daysSinceActive -->
+
+    <owl:DatatypeProperty rdf:about="http://graph.clouditor.io/classes/daysSinceActive">
+        <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">durationSinceActive</rdfs:label>
+    </owl:DatatypeProperty>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/description -->
+
+    <owl:DatatypeProperty rdf:about="http://graph.clouditor.io/classes/description">
+        <rdfs:label>description</rdfs:label>
+    </owl:DatatypeProperty>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/disablePasswordPolicy -->
+
+    <owl:DatatypeProperty rdf:about="http://graph.clouditor.io/classes/disablePasswordPolicy">
+        <rdfs:label>disablePasswordPolicy</rdfs:label>
+    </owl:DatatypeProperty>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/endColumn -->
+
+    <owl:DatatypeProperty rdf:about="http://graph.clouditor.io/classes/endColumn">
+        <rdfs:label>endColumn</rdfs:label>
+    </owl:DatatypeProperty>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/endLine -->
+
+    <owl:DatatypeProperty rdf:about="http://graph.clouditor.io/classes/endLine">
+        <rdfs:label>endLine</rdfs:label>
+    </owl:DatatypeProperty>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/enforceMFA -->
+
+    <owl:DatatypeProperty rdf:about="http://graph.clouditor.io/classes/enforceMFA">
+        <rdfs:label>enforceMFA</rdfs:label>
+    </owl:DatatypeProperty>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/expendability -->
+
+    <owl:DatatypeProperty rdf:about="http://graph.clouditor.io/classes/expendability">
+        <rdfs:label>expendability</rdfs:label>
+    </owl:DatatypeProperty>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/expirationDate -->
+
+    <owl:DatatypeProperty rdf:about="http://graph.clouditor.io/classes/expirationDate">
+        <rdfs:label>expirationDate</rdfs:label>
+    </owl:DatatypeProperty>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/file -->
+
+    <owl:DatatypeProperty rdf:about="http://graph.clouditor.io/classes/file">
+        <rdfs:label>file</rdfs:label>
+    </owl:DatatypeProperty>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/filename -->
+
+    <owl:DatatypeProperty rdf:about="http://graph.clouditor.io/classes/filename">
+        <rdfs:label>filename</rdfs:label>
+    </owl:DatatypeProperty>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/filetype -->
+
+    <owl:DatatypeProperty rdf:about="http://graph.clouditor.io/classes/filetype">
+        <rdfs:label>filetype</rdfs:label>
+    </owl:DatatypeProperty>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/format -->
+
+    <owl:DatatypeProperty rdf:about="http://graph.clouditor.io/classes/format">
+        <rdfs:label>format</rdfs:label>
+    </owl:DatatypeProperty>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/geo -->
+
+    <owl:DatatypeProperty rdf:about="http://graph.clouditor.io/classes/geo">
+        <rdfs:label>geo</rdfs:label>
+    </owl:DatatypeProperty>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/id -->
+
+    <owl:DatatypeProperty rdf:about="http://graph.clouditor.io/classes/id">
+        <rdfs:label>id</rdfs:label>
+    </owl:DatatypeProperty>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/internetAccessibleEndpoint -->
+
+    <owl:DatatypeProperty rdf:about="http://graph.clouditor.io/classes/internetAccessibleEndpoint">
+        <rdfs:label>internetAccessibleEndpoint</rdfs:label>
+    </owl:DatatypeProperty>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/interval -->
+
+    <owl:DatatypeProperty rdf:about="http://graph.clouditor.io/classes/interval">
+        <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">The interval refers to the update interval in days.</rdfs:comment>
+        <rdfs:label>interval</rdfs:label>
+    </owl:DatatypeProperty>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/isActive -->
+
+    <owl:DatatypeProperty rdf:about="http://graph.clouditor.io/classes/isActive">
+        <rdfs:label>isActive</rdfs:label>
+    </owl:DatatypeProperty>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/isManaged -->
+
+    <owl:DatatypeProperty rdf:about="http://graph.clouditor.io/classes/isManaged">
+        <rdfs:label>isManaged</rdfs:label>
+    </owl:DatatypeProperty>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/keyExchangeAlgorithm -->
+
+    <owl:DatatypeProperty rdf:about="http://graph.clouditor.io/classes/keyExchangeAlgorithm">
+        <rdfs:label>keyExchangeAlgorithm</rdfs:label>
+    </owl:DatatypeProperty>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/keySize -->
+
+    <owl:DatatypeProperty rdf:about="http://graph.clouditor.io/classes/keySize">
+        <rdfs:label>keySize</rdfs:label>
+    </owl:DatatypeProperty>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/lastActivity -->
+
+    <owl:DatatypeProperty rdf:about="http://graph.clouditor.io/classes/lastActivity">
+        <rdfs:label>lastActivity</rdfs:label>
+    </owl:DatatypeProperty>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/length -->
+
+    <owl:DatatypeProperty rdf:about="http://graph.clouditor.io/classes/length">
+        <rdfs:label>length</rdfs:label>
+    </owl:DatatypeProperty>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/local -->
+
+    <owl:DatatypeProperty rdf:about="http://graph.clouditor.io/classes/local">
+        <rdfs:label>local</rdfs:label>
+    </owl:DatatypeProperty>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/loginDefenderEnabled -->
+
+    <owl:DatatypeProperty rdf:about="http://graph.clouditor.io/classes/loginDefenderEnabled">
+        <rdfs:label>loginDefenderEnabled</rdfs:label>
+    </owl:DatatypeProperty>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/macAlgorithm -->
+
+    <owl:DatatypeProperty rdf:about="http://graph.clouditor.io/classes/macAlgorithm">
+        <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">naming schema: SHA-256</rdfs:comment>
+        <rdfs:label>macAlgorithm</rdfs:label>
+    </owl:DatatypeProperty>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/message -->
+
+    <owl:DatatypeProperty rdf:about="http://graph.clouditor.io/classes/message">
+        <rdfs:label>message</rdfs:label>
+    </owl:DatatypeProperty>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/mixedDuties -->
+
+    <owl:DatatypeProperty rdf:about="http://graph.clouditor.io/classes/mixedDuties">
+        <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">see Privacy Smells: Detecting Privacy Problems in Cloud Architectures (2020)</rdfs:comment>
+        <rdfs:label>mixedDuties</rdfs:label>
+    </owl:DatatypeProperty>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/monitoringEnabled -->
+
+    <owl:DatatypeProperty rdf:about="http://graph.clouditor.io/classes/monitoringEnabled">
+        <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">monitoringLogDataEnabled</rdfs:label>
+    </owl:DatatypeProperty>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/mutual -->
+
+    <owl:DatatypeProperty rdf:about="http://graph.clouditor.io/classes/mutual">
+        <rdfs:label>mutual</rdfs:label>
+    </owl:DatatypeProperty>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/name -->
+
+    <owl:DatatypeProperty rdf:about="http://graph.clouditor.io/classes/name">
+        <rdfs:label>name</rdfs:label>
+    </owl:DatatypeProperty>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/notBeforeDate -->
+
+    <owl:DatatypeProperty rdf:about="http://graph.clouditor.io/classes/notBeforeDate">
+        <rdfs:label>notBeforeDate</rdfs:label>
+    </owl:DatatypeProperty>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/numberOfThreatsFound -->
+
+    <owl:DatatypeProperty rdf:about="http://graph.clouditor.io/classes/numberOfThreatsFound">
+        <rdfs:label>numberOfThreatsFound</rdfs:label>
+    </owl:DatatypeProperty>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/numberOfUsages -->
+
+    <owl:DatatypeProperty rdf:about="http://graph.clouditor.io/classes/numberOfUsages">
+        <rdfs:label>numberOfUsages</rdfs:label>
+    </owl:DatatypeProperty>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/overridePasswordPolicy -->
+
+    <owl:DatatypeProperty rdf:about="http://graph.clouditor.io/classes/overridePasswordPolicy">
+        <rdfs:label>overridePasswordPolicy</rdfs:label>
+    </owl:DatatypeProperty>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/privacyLabel -->
+
+    <owl:DatatypeProperty rdf:about="http://graph.clouditor.io/classes/privacyLabel">
+        <rdfs:label>privacyLabel</rdfs:label>
+    </owl:DatatypeProperty>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/privileged -->
+
+    <owl:DatatypeProperty rdf:about="http://graph.clouditor.io/classes/privileged">
+        <rdfs:label>privileged</rdfs:label>
+    </owl:DatatypeProperty>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/programmingVersion -->
+
+    <owl:DatatypeProperty rdf:about="http://graph.clouditor.io/classes/programmingVersion">
+        <rdfs:label>programmingVersion</rdfs:label>
+    </owl:DatatypeProperty>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/protocol -->
+
+    <owl:DatatypeProperty rdf:about="http://graph.clouditor.io/classes/protocol">
+        <rdfs:label>protocol</rdfs:label>
+    </owl:DatatypeProperty>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/protocolVersion -->
+
+    <owl:DatatypeProperty rdf:about="http://graph.clouditor.io/classes/protocolVersion">
+        <rdfs:label>protocolVersion</rdfs:label>
+    </owl:DatatypeProperty>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/publicAccess -->
+
+    <owl:DatatypeProperty rdf:about="http://graph.clouditor.io/classes/publicAccess">
+        <rdfs:label>publicAccess</rdfs:label>
+    </owl:DatatypeProperty>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/publicApiAccess -->
+
+    <owl:DatatypeProperty rdf:about="http://graph.clouditor.io/classes/publicApiAccess">
+        <rdfs:label>publicApiAccess</rdfs:label>
+    </owl:DatatypeProperty>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/raw -->
+
+    <owl:DatatypeProperty rdf:about="http://graph.clouditor.io/classes/raw">
+        <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">The raw field contains the raw information that is used to fill in the fields of the ontology.</rdfs:comment>
+        <rdfs:label>raw</rdfs:label>
+    </owl:DatatypeProperty>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/reqBody -->
+
+    <owl:DatatypeProperty rdf:about="http://graph.clouditor.io/classes/reqBody">
+        <rdfs:label>reqBody</rdfs:label>
+    </owl:DatatypeProperty>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/resourceType -->
+
+    <owl:DatatypeProperty rdf:about="http://graph.clouditor.io/classes/resourceType">
+        <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">The resource type. It is an array, because a type can be derived from another.</rdfs:comment>
+        <rdfs:label>resourceType</rdfs:label>
+    </owl:DatatypeProperty>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/retentionPeriod -->
+
+    <owl:DatatypeProperty rdf:about="http://graph.clouditor.io/classes/retentionPeriod">
+        <rdfs:label>retentionPeriod</rdfs:label>
+    </owl:DatatypeProperty>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/robustness -->
+
+    <owl:DatatypeProperty rdf:about="http://graph.clouditor.io/classes/robustness">
+        <rdfs:label>robustness</rdfs:label>
+    </owl:DatatypeProperty>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/runtimeLanguage -->
+
+    <owl:DatatypeProperty rdf:about="http://graph.clouditor.io/classes/runtimeLanguage">
+        <rdfs:label>runtimeLanguage</rdfs:label>
+    </owl:DatatypeProperty>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/runtimeVersion -->
+
+    <owl:DatatypeProperty rdf:about="http://graph.clouditor.io/classes/runtimeVersion">
+        <rdfs:label>runtimeVersion</rdfs:label>
+    </owl:DatatypeProperty>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/schemaURL -->
+
+    <owl:DatatypeProperty rdf:about="http://graph.clouditor.io/classes/schemaURL">
+        <rdfs:label>schemaURL</rdfs:label>
+    </owl:DatatypeProperty>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/securityAlertsEnabled -->
+
+    <owl:DatatypeProperty rdf:about="http://graph.clouditor.io/classes/securityAlertsEnabled">
+        <rdfs:label>securityAlertsEnabled</rdfs:label>
+    </owl:DatatypeProperty>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/securityOnly -->
+
+    <owl:DatatypeProperty rdf:about="http://graph.clouditor.io/classes/securityOnly">
+        <rdfs:label>securityOnly</rdfs:label>
+    </owl:DatatypeProperty>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/serviceID -->
+
+    <owl:DatatypeProperty rdf:about="http://graph.clouditor.io/classes/serviceID">
+        <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">ServiceID contains the ID of the cloud service to which this resource belongs.</rdfs:comment>
+        <rdfs:label>serviceID</rdfs:label>
+    </owl:DatatypeProperty>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/sessionCipher -->
+
+    <owl:DatatypeProperty rdf:about="http://graph.clouditor.io/classes/sessionCipher">
+        <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">naming schema: AES-128-GCM</rdfs:comment>
+        <rdfs:label>sessionCipher</rdfs:label>
+    </owl:DatatypeProperty>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/startColumn -->
+
+    <owl:DatatypeProperty rdf:about="http://graph.clouditor.io/classes/startColumn">
+        <rdfs:label>startColumn</rdfs:label>
+    </owl:DatatypeProperty>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/startLine -->
+
+    <owl:DatatypeProperty rdf:about="http://graph.clouditor.io/classes/startLine">
+        <rdfs:label>startLine</rdfs:label>
+    </owl:DatatypeProperty>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/status -->
+
+    <owl:DatatypeProperty rdf:about="http://graph.clouditor.io/classes/status">
+        <rdfs:label>status</rdfs:label>
+    </owl:DatatypeProperty>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/usesSalt -->
+
+    <owl:DatatypeProperty rdf:about="http://graph.clouditor.io/classes/usesSalt">
+        <rdfs:label>usesSalt</rdfs:label>
+    </owl:DatatypeProperty>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/zone -->
+
+    <owl:DatatypeProperty rdf:about="http://graph.clouditor.io/classes/zone">
+        <rdfs:label>zone</rdfs:label>
+    </owl:DatatypeProperty>
+    
+
+
+    <!-- http://graph.clouditor.io/properties/activated -->
+
+    <owl:DatatypeProperty rdf:about="http://graph.clouditor.io/properties/activated">
+        <rdfs:label xml:lang="english">activated</rdfs:label>
+    </owl:DatatypeProperty>
+    
+
+
+    <!-- http://graph.clouditor.io/properties/algorithm -->
+
+    <owl:DatatypeProperty rdf:about="http://graph.clouditor.io/properties/algorithm">
+        <rdfs:subPropertyOf rdf:resource="http://www.w3.org/2002/07/owl#topDataProperty"/>
+        <rdfs:label xml:lang="english">algorithm</rdfs:label>
+    </owl:DatatypeProperty>
+    
+
+
+    <!-- http://graph.clouditor.io/properties/apiListFunction -->
+
+    <owl:DatatypeProperty rdf:about="http://graph.clouditor.io/properties/apiListFunction">
+        <rdfs:subPropertyOf rdf:resource="http://www.w3.org/2002/07/owl#topDataProperty"/>
+        <rdfs:label xml:lang="english">apiListFunction</rdfs:label>
+    </owl:DatatypeProperty>
+    
+
+
+    <!-- http://graph.clouditor.io/properties/argument -->
+
+    <owl:DatatypeProperty rdf:about="http://graph.clouditor.io/properties/argument">
+        <rdfs:label xml:lang="english">argument</rdfs:label>
+    </owl:DatatypeProperty>
+    
+
+
+    <!-- http://graph.clouditor.io/properties/call -->
+
+    <owl:DatatypeProperty rdf:about="http://graph.clouditor.io/properties/call">
+        <rdfs:subPropertyOf rdf:resource="http://www.w3.org/2002/07/owl#topDataProperty"/>
+        <rdfs:label xml:lang="english">call</rdfs:label>
+    </owl:DatatypeProperty>
+    
+
+
+    <!-- http://graph.clouditor.io/properties/enabled -->
+
+    <owl:DatatypeProperty rdf:about="http://graph.clouditor.io/properties/enabled">
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#boolean"/>
+        <rdfs:label xml:lang="english">enabled</rdfs:label>
+    </owl:DatatypeProperty>
+    
+
+
+    <!-- http://graph.clouditor.io/properties/enforced -->
+
+    <owl:DatatypeProperty rdf:about="http://graph.clouditor.io/properties/enforced">
+        <rdfs:label xml:lang="english">enforced</rdfs:label>
+    </owl:DatatypeProperty>
+    
+
+
+    <!-- http://graph.clouditor.io/properties/field -->
+
+    <owl:DatatypeProperty rdf:about="http://graph.clouditor.io/properties/field">
+        <rdfs:subPropertyOf rdf:resource="http://www.w3.org/2002/07/owl#topDataProperty"/>
+        <rdfs:label xml:lang="english">field</rdfs:label>
+    </owl:DatatypeProperty>
+    
+
+
+    <!-- http://graph.clouditor.io/properties/from -->
+
+    <owl:DatatypeProperty rdf:about="http://graph.clouditor.io/properties/from">
+        <rdfs:label xml:lang="english">from</rdfs:label>
+    </owl:DatatypeProperty>
+    
+
+
+    <!-- http://graph.clouditor.io/properties/handler -->
+
+    <owl:DatatypeProperty rdf:about="http://graph.clouditor.io/properties/handler">
+        <rdfs:subPropertyOf rdf:resource="http://www.w3.org/2002/07/owl#topDataProperty"/>
+        <rdfs:label xml:lang="english">handler</rdfs:label>
+    </owl:DatatypeProperty>
+    
+
+
+    <!-- http://graph.clouditor.io/properties/impact -->
+
+    <owl:DatatypeProperty rdf:about="http://graph.clouditor.io/properties/impact">
+        <rdfs:label xml:lang="english">impact</rdfs:label>
+    </owl:DatatypeProperty>
+    
+
+
+    <!-- http://graph.clouditor.io/properties/inbound -->
+
+    <owl:DatatypeProperty rdf:about="http://graph.clouditor.io/properties/inbound">
+        <rdfs:label xml:lang="english">inbound</rdfs:label>
+    </owl:DatatypeProperty>
+    
+
+
+    <!-- http://graph.clouditor.io/properties/ips -->
+
+    <owl:DatatypeProperty rdf:about="http://graph.clouditor.io/properties/ips">
+        <rdfs:label xml:lang="english">ips</rdfs:label>
+    </owl:DatatypeProperty>
+    
+
+
+    <!-- http://graph.clouditor.io/properties/keyManagement -->
+
+    <owl:DatatypeProperty rdf:about="http://graph.clouditor.io/properties/keyManagement">
+        <rdfs:label xml:lang="english">keymanagement</rdfs:label>
+    </owl:DatatypeProperty>
+    
+
+
+    <!-- http://graph.clouditor.io/properties/keyManager -->
+
+    <owl:DatatypeProperty rdf:about="http://graph.clouditor.io/properties/keyManager">
+        <rdfs:label xml:lang="english">keyManager</rdfs:label>
+    </owl:DatatypeProperty>
+    
+
+
+    <!-- http://graph.clouditor.io/properties/keyUrl -->
+
+    <owl:DatatypeProperty rdf:about="http://graph.clouditor.io/properties/keyUrl">
+        <rdfs:subPropertyOf rdf:resource="http://www.w3.org/2002/07/owl#topDataProperty"/>
+        <rdfs:label xml:lang="english">keyUrl</rdfs:label>
+    </owl:DatatypeProperty>
+    
+
+
+    <!-- http://graph.clouditor.io/properties/labels -->
+
+    <owl:DatatypeProperty rdf:about="http://graph.clouditor.io/properties/labels">
+        <rdfs:subPropertyOf rdf:resource="http://www.w3.org/2002/07/owl#topDataProperty"/>
+        <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">labels</rdfs:label>
+    </owl:DatatypeProperty>
+    
+
+
+    <!-- http://graph.clouditor.io/properties/managementUrl -->
+
+    <owl:DatatypeProperty rdf:about="http://graph.clouditor.io/properties/managementUrl">
+        <rdfs:label xml:lang="english">managementUrl</rdfs:label>
+    </owl:DatatypeProperty>
+    
+
+
+    <!-- http://graph.clouditor.io/properties/method -->
+
+    <owl:DatatypeProperty rdf:about="http://graph.clouditor.io/properties/method">
+        <rdfs:subPropertyOf rdf:resource="http://www.w3.org/2002/07/owl#topDataProperty"/>
+        <rdfs:label xml:lang="english">method</rdfs:label>
+    </owl:DatatypeProperty>
+    
+
+
+    <!-- http://graph.clouditor.io/properties/modify -->
+
+    <owl:DatatypeProperty rdf:about="http://graph.clouditor.io/properties/modify">
+        <rdfs:label>modify</rdfs:label>
+    </owl:DatatypeProperty>
+    
+
+
+    <!-- http://graph.clouditor.io/properties/path -->
+
+    <owl:DatatypeProperty rdf:about="http://graph.clouditor.io/properties/path">
+        <rdfs:subPropertyOf rdf:resource="http://www.w3.org/2002/07/owl#topDataProperty"/>
+        <rdfs:label xml:lang="english">path</rdfs:label>
+    </owl:DatatypeProperty>
+    
+
+
+    <!-- http://graph.clouditor.io/properties/policy -->
+
+    <owl:DatatypeProperty rdf:about="http://graph.clouditor.io/properties/policy">
+        <rdfs:label xml:lang="english">policy</rdfs:label>
+    </owl:DatatypeProperty>
+    
+
+
+    <!-- http://graph.clouditor.io/properties/ports -->
+
+    <owl:DatatypeProperty rdf:about="http://graph.clouditor.io/properties/ports">
+        <rdfs:label xml:lang="english">ports</rdfs:label>
+    </owl:DatatypeProperty>
+    
+
+
+    <!-- http://graph.clouditor.io/properties/programmingLanguage -->
+
+    <owl:DatatypeProperty rdf:about="http://graph.clouditor.io/properties/programmingLanguage">
+        <rdfs:subPropertyOf rdf:resource="http://www.w3.org/2002/07/owl#topDataProperty"/>
+        <rdfs:label xml:lang="english">programmingLanguage</rdfs:label>
+    </owl:DatatypeProperty>
+    
+
+
+    <!-- http://graph.clouditor.io/properties/propertyMapping -->
+
+    <owl:DatatypeProperty rdf:about="http://graph.clouditor.io/properties/propertyMapping">
+        <rdfs:subPropertyOf rdf:resource="http://www.w3.org/2002/07/owl#topDataProperty"/>
+        <rdfs:label xml:lang="english">propertyMapping</rdfs:label>
+    </owl:DatatypeProperty>
+    
+
+
+    <!-- http://graph.clouditor.io/properties/public -->
+
+    <owl:DatatypeProperty rdf:about="http://graph.clouditor.io/properties/public">
+        <rdfs:label xml:lang="english">public</rdfs:label>
+    </owl:DatatypeProperty>
+    
+
+
+    <!-- http://graph.clouditor.io/properties/region -->
+
+    <owl:DatatypeProperty rdf:about="http://graph.clouditor.io/properties/region">
+        <rdfs:label xml:lang="english">region</rdfs:label>
+    </owl:DatatypeProperty>
+    
+
+
+    <!-- http://graph.clouditor.io/properties/restrictedPorts -->
+
+    <owl:DatatypeProperty rdf:about="http://graph.clouditor.io/properties/restrictedPorts">
+        <rdfs:label xml:lang="english">restrictedPorts</rdfs:label>
+    </owl:DatatypeProperty>
+    
+
+
+    <!-- http://graph.clouditor.io/properties/serves -->
+
+    <owl:DatatypeProperty rdf:about="http://graph.clouditor.io/properties/serves">
+        <rdfs:subPropertyOf rdf:resource="http://www.w3.org/2002/07/owl#topDataProperty"/>
+        <rdfs:label xml:lang="english">serves</rdfs:label>
+    </owl:DatatypeProperty>
+    
+
+
+    <!-- http://graph.clouditor.io/properties/source -->
+
+    <owl:DatatypeProperty rdf:about="http://graph.clouditor.io/properties/source">
+        <rdfs:subPropertyOf rdf:resource="http://www.w3.org/2002/07/owl#topDataProperty"/>
+        <rdfs:label xml:lang="english">source</rdfs:label>
+    </owl:DatatypeProperty>
+    
+
+
+    <!-- http://graph.clouditor.io/properties/tlsVersion -->
+
+    <owl:DatatypeProperty rdf:about="http://graph.clouditor.io/properties/tlsVersion">
+        <rdfs:label xml:lang="english">tlsVersion</rdfs:label>
+    </owl:DatatypeProperty>
+    
+
+
+    <!-- http://graph.clouditor.io/properties/translationUnits -->
+
+    <owl:DatatypeProperty rdf:about="http://graph.clouditor.io/properties/translationUnits">
+        <rdfs:subPropertyOf rdf:resource="http://www.w3.org/2002/07/owl#topDataProperty"/>
+        <rdfs:label xml:lang="english">translationUnits</rdfs:label>
+    </owl:DatatypeProperty>
+    
+
+
+    <!-- http://graph.clouditor.io/properties/url -->
+
+    <owl:DatatypeProperty rdf:about="http://graph.clouditor.io/properties/url">
+        <rdfs:subPropertyOf rdf:resource="http://www.w3.org/2002/07/owl#topDataProperty"/>
+        <rdfs:label xml:lang="english">url</rdfs:label>
+    </owl:DatatypeProperty>
+    
+
+
+    <!-- http://graph.clouditor.io/properties/value -->
+
+    <owl:DatatypeProperty rdf:about="http://graph.clouditor.io/properties/value">
+        <rdfs:label xml:lang="english">value</rdfs:label>
+    </owl:DatatypeProperty>
+    
+
+
+    <!-- 
+    ///////////////////////////////////////////////////////////////////////////////////////
+    //
+    // Classes
+    //
+    ///////////////////////////////////////////////////////////////////////////////////////
+     -->
+
+    
+
+
+    <!-- http://graph.clouditor.io/classes/ABAC -->
+
+    <owl:Class rdf:about="http://graph.clouditor.io/classes/ABAC">
+        <rdfs:subClassOf rdf:resource="http://graph.clouditor.io/classes/Authorization"/>
+        <rdfs:label xml:lang="english">ABAC</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/AccessRestriction -->
+
+    <owl:Class rdf:about="http://graph.clouditor.io/classes/AccessRestriction">
+        <rdfs:subClassOf rdf:resource="http://graph.clouditor.io/classes/Authorization"/>
+        <rdfs:label xml:lang="english">AccessRestriction</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/Account -->
+
+    <owl:Class rdf:about="http://graph.clouditor.io/classes/Account">
+        <rdfs:subClassOf rdf:resource="http://graph.clouditor.io/classes/CloudResource"/>
+        <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">This represents the cloud account as a whole, e.g., an Azure subscription.</rdfs:comment>
+        <rdfs:label xml:lang="english">Account</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/ActivityLog -->
+
+    <owl:Class rdf:about="http://graph.clouditor.io/classes/ActivityLog">
+        <rdfs:subClassOf rdf:resource="http://graph.clouditor.io/classes/Logging"/>
+        <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">ActivityLogging</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/AnomalyDetection -->
+
+    <owl:Class rdf:about="http://graph.clouditor.io/classes/AnomalyDetection">
+        <rdfs:subClassOf rdf:resource="http://graph.clouditor.io/classes/Auditing"/>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/properties/offers"/>
+                <owl:someValuesFrom rdf:resource="http://graph.clouditor.io/classes/ApplicationLog"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/classes/scope"/>
+                <owl:hasValue rdf:resource="http://graph.clouditor.io/classes/resourceId"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/properties/enabled"/>
+                <owl:someValuesFrom rdf:resource="http://www.w3.org/2001/XMLSchema#boolean"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Analyzes the activity of a NetworkService (which includes DatabaseServices).</rdfs:comment>
+        <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Scope contains the resource ID of the protected resource.</rdfs:comment>
+        <rdfs:label>AnomalyDetection</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/Application -->
+
+    <owl:Class rdf:about="http://graph.clouditor.io/classes/Application">
+        <rdfs:subClassOf rdf:resource="http://graph.clouditor.io/classes/Component"/>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/properties/offers"/>
+                <owl:someValuesFrom rdf:resource="http://graph.clouditor.io/classes/AutomaticUpdates"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/properties/runsOn"/>
+                <owl:someValuesFrom rdf:resource="http://graph.clouditor.io/classes/Compute"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/classes/programmingVersion"/>
+                <owl:someValuesFrom rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/properties/programmingLanguage"/>
+                <owl:someValuesFrom rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/properties/translationUnits"/>
+                <owl:someValuesFrom rdf:resource="http://www.w3.org/2001/XMLSchema#listString"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">This encapsulates the whole (source) code of an application.</rdfs:comment>
+        <rdfs:label xml:lang="english">Application</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/ApplicationLog -->
+
+    <owl:Class rdf:about="http://graph.clouditor.io/classes/ApplicationLog">
+        <rdfs:subClassOf rdf:resource="http://graph.clouditor.io/classes/Logging"/>
+        <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">ApplicationLogging</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/AtRestEncryption -->
+
+    <owl:Class rdf:about="http://graph.clouditor.io/classes/AtRestEncryption">
+        <rdfs:subClassOf rdf:resource="http://graph.clouditor.io/classes/Confidentiality"/>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/properties/algorithm"/>
+                <owl:someValuesFrom rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/properties/enabled"/>
+                <owl:someValuesFrom rdf:resource="http://www.w3.org/2001/XMLSchema#boolean"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/properties/keyUrl"/>
+                <owl:someValuesFrom rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:label xml:lang="english">AtRestEncryption</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/Attestation -->
+
+    <owl:Class rdf:about="http://graph.clouditor.io/classes/Attestation">
+        <rdfs:subClassOf rdf:resource="http://graph.clouditor.io/classes/Integrity"/>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/properties/enabled"/>
+                <owl:someValuesFrom rdf:resource="http://www.w3.org/2001/XMLSchema#boolean"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:label>Attestation</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/Auditing -->
+
+    <owl:Class rdf:about="http://graph.clouditor.io/classes/Auditing">
+        <rdfs:subClassOf rdf:resource="http://graph.clouditor.io/classes/SecurityFeature"/>
+        <rdfs:label xml:lang="english">Auditing</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/Authenticity -->
+
+    <owl:Class rdf:about="http://graph.clouditor.io/classes/Authenticity">
+        <rdfs:subClassOf rdf:resource="http://graph.clouditor.io/classes/SecurityFeature"/>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/classes/contextIsChecked"/>
+                <owl:someValuesFrom rdf:resource="http://www.w3.org/2001/XMLSchema#boolean"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:label xml:lang="english">Authenticity</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/Authorization -->
+
+    <owl:Class rdf:about="http://graph.clouditor.io/classes/Authorization">
+        <rdfs:subClassOf rdf:resource="http://graph.clouditor.io/classes/SecurityFeature"/>
+        <rdfs:label xml:lang="english">Authorization</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/AutomaticUpdates -->
+
+    <owl:Class rdf:about="http://graph.clouditor.io/classes/AutomaticUpdates">
+        <rdfs:subClassOf rdf:resource="http://graph.clouditor.io/classes/Integrity"/>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/classes/securityOnly"/>
+                <owl:someValuesFrom rdf:resource="http://www.w3.org/2001/XMLSchema#boolean"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/properties/enabled"/>
+                <owl:someValuesFrom rdf:resource="http://www.w3.org/2001/XMLSchema#boolean"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/classes/interval"/>
+                <owl:hasValue rdf:datatype="http://www.w3.org/2001/XMLSchema#string">xsd:java.time.Duration</owl:hasValue>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">This feature is, e.g., available on some VM services to automatically update their software. It ensures that a resource is protected from tampering with its state.</rdfs:comment>
+        <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">AutomaticUpdates</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/Availability -->
+
+    <owl:Class rdf:about="http://graph.clouditor.io/classes/Availability">
+        <rdfs:subClassOf rdf:resource="http://graph.clouditor.io/classes/SecurityFeature"/>
+        <rdfs:label xml:lang="english">Availability</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/Backup -->
+
+    <owl:Class rdf:about="http://graph.clouditor.io/classes/Backup">
+        <rdfs:subClassOf rdf:resource="http://graph.clouditor.io/classes/Availability"/>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/classes/offersInterface"/>
+                <owl:someValuesFrom rdf:resource="http://graph.clouditor.io/classes/TransportEncryption"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/properties/has"/>
+                <owl:someValuesFrom rdf:resource="http://graph.clouditor.io/classes/Storage"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/properties/enabled"/>
+                <owl:someValuesFrom rdf:resource="http://www.w3.org/2001/XMLSchema#boolean"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/classes/interval"/>
+                <owl:hasValue rdf:datatype="http://www.w3.org/2001/XMLSchema#string">xsd:java.time.Duration</owl:hasValue>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/classes/retentionPeriod"/>
+                <owl:hasValue rdf:datatype="http://www.w3.org/2001/XMLSchema#string">xsd:java.time.Duration</owl:hasValue>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">RetentionPeriod in hours</rdfs:comment>
+        <rdfs:label xml:lang="english">Backup</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/BaseResource -->
+
+    <owl:Class rdf:about="http://graph.clouditor.io/classes/BaseResource">
+        <rdfs:subClassOf rdf:resource="http://www.w3.org/2002/07/owl#Thing"/>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/properties/parent"/>
+                <owl:someValuesFrom rdf:resource="http://graph.clouditor.io/classes/BaseResource"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/classes/creation_time"/>
+                <owl:someValuesFrom rdf:resource="http://www.w3.org/2001/XMLSchema#dateTime"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/classes/description"/>
+                <owl:someValuesFrom rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/classes/id"/>
+                <owl:someValuesFrom rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/classes/name"/>
+                <owl:someValuesFrom rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/classes/raw"/>
+                <owl:someValuesFrom rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/properties/labels"/>
+                <owl:hasValue rdf:datatype="http://www.w3.org/2001/XMLSchema#string">xsd:java.util.Map&lt;String, String&gt;</owl:hasValue>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Resource</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/BlockStorage -->
+
+    <owl:Class rdf:about="http://graph.clouditor.io/classes/BlockStorage">
+        <rdfs:subClassOf rdf:resource="http://graph.clouditor.io/classes/Storage"/>
+        <rdfs:label xml:lang="english">BlockStorage</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/BootLog -->
+
+    <owl:Class rdf:about="http://graph.clouditor.io/classes/BootLog">
+        <rdfs:subClassOf rdf:resource="http://graph.clouditor.io/classes/Logging"/>
+        <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">BootLogging</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/CICDService -->
+
+    <owl:Class rdf:about="http://graph.clouditor.io/classes/CICDService">
+        <rdfs:subClassOf rdf:resource="http://graph.clouditor.io/classes/CloudResource"/>
+        <rdfs:label xml:lang="english">CICDService</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/Certificate -->
+
+    <owl:Class rdf:about="http://graph.clouditor.io/classes/Certificate">
+        <rdfs:subClassOf rdf:resource="http://graph.clouditor.io/classes/Credential"/>
+        <rdfs:label>Certificate</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/CertificateBasedAuthentication -->
+
+    <owl:Class rdf:about="http://graph.clouditor.io/classes/CertificateBasedAuthentication">
+        <rdfs:subClassOf rdf:resource="http://graph.clouditor.io/classes/Authenticity"/>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/properties/enabled"/>
+                <owl:someValuesFrom rdf:resource="http://www.w3.org/2001/XMLSchema#boolean"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:label xml:lang="english">CertificateBasedAuthentication</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/CipherSuite -->
+
+    <owl:Class rdf:about="http://graph.clouditor.io/classes/CipherSuite">
+        <rdfs:subClassOf rdf:resource="http://graph.clouditor.io/classes/Functionality"/>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/classes/authenticationMechanism"/>
+                <owl:someValuesFrom rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/classes/keyExchangeAlgorithm"/>
+                <owl:someValuesFrom rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/classes/macAlgorithm"/>
+                <owl:someValuesFrom rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/classes/sessionCipher"/>
+                <owl:someValuesFrom rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:label>CipherSuite</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/CloudResource -->
+
+    <owl:Class rdf:about="http://graph.clouditor.io/classes/CloudResource">
+        <rdfs:subClassOf rdf:resource="http://graph.clouditor.io/classes/BaseResource"/>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/classes/offersMultiple"/>
+                <owl:someValuesFrom rdf:resource="http://graph.clouditor.io/classes/Redundancy"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/properties/hasMultiple"/>
+                <owl:someValuesFrom rdf:resource="http://graph.clouditor.io/classes/Logging"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/properties/offers"/>
+                <owl:someValuesFrom rdf:resource="http://graph.clouditor.io/classes/GeoLocation"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/properties/offers"/>
+                <owl:someValuesFrom rdf:resource="http://graph.clouditor.io/classes/UsageStatistics"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/classes/internetAccessibleEndpoint"/>
+                <owl:someValuesFrom rdf:resource="http://www.w3.org/2001/XMLSchema#boolean"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <dc:description rdf:datatype="http://www.w3.org/2001/XMLSchema#string">internetAccessibleEndpoint: Is true if the management API endpoint is reachable from everywhere. Access controls can still apply.</dc:description>
+        <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Infrastructure</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/CloudSDK -->
+
+    <owl:Class rdf:about="http://graph.clouditor.io/classes/CloudSDK">
+        <rdfs:subClassOf rdf:resource="http://graph.clouditor.io/classes/Framework"/>
+        <rdfs:label xml:lang="english">CloudSDK</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/Code -->
+
+    <owl:Class rdf:about="http://graph.clouditor.io/classes/Code">
+        <rdfs:subClassOf rdf:resource="http://graph.clouditor.io/classes/BaseResource"/>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/properties/has"/>
+                <owl:someValuesFrom rdf:resource="http://graph.clouditor.io/classes/CodeRepository"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/properties/hasMultiple"/>
+                <owl:someValuesFrom rdf:resource="http://graph.clouditor.io/classes/Functionality"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/properties/hasMultiple"/>
+                <owl:someValuesFrom rdf:resource="http://graph.clouditor.io/classes/Module"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:label>Code</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/CodeRegion -->
+
+    <owl:Class rdf:about="http://graph.clouditor.io/classes/CodeRegion">
+        <rdfs:subClassOf rdf:resource="http://graph.clouditor.io/classes/Functionality"/>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/classes/code"/>
+                <owl:someValuesFrom rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/classes/endColumn"/>
+                <owl:someValuesFrom rdf:resource="http://www.w3.org/2001/XMLSchema#int"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/classes/endLine"/>
+                <owl:someValuesFrom rdf:resource="http://www.w3.org/2001/XMLSchema#int"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/classes/file"/>
+                <owl:someValuesFrom rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/classes/startColumn"/>
+                <owl:someValuesFrom rdf:resource="http://www.w3.org/2001/XMLSchema#int"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/classes/startLine"/>
+                <owl:someValuesFrom rdf:resource="http://www.w3.org/2001/XMLSchema#int"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:label>CodeRegion</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/CodeRepository -->
+
+    <owl:Class rdf:about="http://graph.clouditor.io/classes/CodeRepository">
+        <rdfs:subClassOf rdf:resource="http://graph.clouditor.io/classes/CloudResource"/>
+        <rdfs:label>CodeRepository</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/Component -->
+
+    <owl:Class rdf:about="http://graph.clouditor.io/classes/Component">
+        <rdfs:subClassOf rdf:resource="http://graph.clouditor.io/classes/Code"/>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/properties/hasMultiple"/>
+                <owl:someValuesFrom rdf:resource="http://graph.clouditor.io/classes/Library"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:label>Component</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/Compute -->
+
+    <owl:Class rdf:about="http://graph.clouditor.io/classes/Compute">
+        <rdfs:subClassOf rdf:resource="http://graph.clouditor.io/classes/CloudResource"/>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/properties/hasMultiple"/>
+                <owl:someValuesFrom rdf:resource="http://graph.clouditor.io/classes/NetworkInterface"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/properties/offers"/>
+                <owl:someValuesFrom rdf:resource="http://graph.clouditor.io/classes/EncryptionInUse"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/properties/offers"/>
+                <owl:someValuesFrom rdf:resource="http://graph.clouditor.io/classes/RemoteAttestation"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/properties/offers"/>
+                <owl:someValuesFrom rdf:resource="http://graph.clouditor.io/classes/ResourceLogging"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:label xml:lang="english">Compute</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/Confidentiality -->
+
+    <owl:Class rdf:about="http://graph.clouditor.io/classes/Confidentiality">
+        <rdfs:subClassOf rdf:resource="http://graph.clouditor.io/classes/SecurityFeature"/>
+        <rdfs:label xml:lang="english">Confidentiality</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/Container -->
+
+    <owl:Class rdf:about="http://graph.clouditor.io/classes/Container">
+        <rdfs:subClassOf rdf:resource="http://graph.clouditor.io/classes/Compute"/>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/properties/has"/>
+                <owl:someValuesFrom rdf:resource="http://graph.clouditor.io/classes/Image"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:label xml:lang="english">Container</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/ContainerImage -->
+
+    <owl:Class rdf:about="http://graph.clouditor.io/classes/ContainerImage">
+        <rdfs:subClassOf rdf:resource="http://graph.clouditor.io/classes/Image"/>
+        <rdfs:label xml:lang="en">ContainerImage</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/ContainerOrchestration -->
+
+    <owl:Class rdf:about="http://graph.clouditor.io/classes/ContainerOrchestration">
+        <rdfs:subClassOf rdf:resource="http://graph.clouditor.io/classes/CloudResource"/>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/properties/has"/>
+                <owl:someValuesFrom rdf:resource="http://graph.clouditor.io/classes/ResourceLogging"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/properties/hasMultiple"/>
+                <owl:someValuesFrom rdf:resource="http://graph.clouditor.io/classes/Container"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/properties/managementUrl"/>
+                <owl:someValuesFrom rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:label xml:lang="english">ContainerOrchestration</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/ContainerRegistry -->
+
+    <owl:Class rdf:about="http://graph.clouditor.io/classes/ContainerRegistry">
+        <rdfs:subClassOf rdf:resource="http://graph.clouditor.io/classes/CloudResource"/>
+        <rdfs:label xml:lang="english">ContainerRegistry</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/Credential -->
+
+    <owl:Class rdf:about="http://graph.clouditor.io/classes/Credential">
+        <rdfs:subClassOf rdf:resource="http://graph.clouditor.io/classes/CloudResource"/>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/classes/usedByMultiple"/>
+                <owl:someValuesFrom rdf:resource="http://graph.clouditor.io/classes/CloudResource"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/classes/expirationDate"/>
+                <owl:someValuesFrom rdf:resource="http://www.w3.org/2001/XMLSchema#dateTime"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/classes/isManaged"/>
+                <owl:someValuesFrom rdf:resource="http://www.w3.org/2001/XMLSchema#boolean"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/classes/notBeforeDate"/>
+                <owl:someValuesFrom rdf:resource="http://www.w3.org/2001/XMLSchema#dateTime"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/properties/enabled"/>
+                <owl:someValuesFrom rdf:resource="http://www.w3.org/2001/XMLSchema#boolean"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <dc:description rdf:datatype="http://www.w3.org/2001/XMLSchema#string">usedByMultiple: In which resources the credential is being used</dc:description>
+        <rdfs:label>Credential</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/CryptographicHash -->
+
+    <owl:Class rdf:about="http://graph.clouditor.io/classes/CryptographicHash">
+        <rdfs:subClassOf rdf:resource="http://graph.clouditor.io/classes/Integrity"/>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/properties/hasMultiple"/>
+                <owl:someValuesFrom rdf:resource="http://graph.clouditor.io/classes/Error"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/properties/algorithm"/>
+                <owl:someValuesFrom rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">DocumentChecksum</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/CryptographicOperation -->
+
+    <owl:Class rdf:about="http://graph.clouditor.io/classes/CryptographicOperation">
+        <rdfs:subClassOf rdf:resource="http://graph.clouditor.io/classes/Operation"/>
+        <rdfs:label>CryptographicOperation</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/CustomerKeyEncryption -->
+
+    <owl:Class rdf:about="http://graph.clouditor.io/classes/CustomerKeyEncryption">
+        <rdfs:subClassOf rdf:resource="http://graph.clouditor.io/classes/AtRestEncryption"/>
+        <rdfs:label xml:lang="english">CustomerKeyEncryption</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/DDosProtection -->
+
+    <owl:Class rdf:about="http://graph.clouditor.io/classes/DDosProtection">
+        <rdfs:subClassOf rdf:resource="http://graph.clouditor.io/classes/Availability"/>
+        <rdfs:label xml:lang="en">DDoSProtection</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/Data -->
+
+    <owl:Class rdf:about="http://graph.clouditor.io/classes/Data">
+        <rdfs:subClassOf rdf:resource="http://graph.clouditor.io/classes/BaseResource"/>
+        <rdfs:label>Data</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/DatabaseConnect -->
+
+    <owl:Class rdf:about="http://graph.clouditor.io/classes/DatabaseConnect">
+        <rdfs:subClassOf rdf:resource="http://graph.clouditor.io/classes/DatabaseOperation"/>
+        <rdfs:label>DatabaseConnect</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/DatabaseOperation -->
+
+    <owl:Class rdf:about="http://graph.clouditor.io/classes/DatabaseOperation">
+        <rdfs:subClassOf rdf:resource="http://graph.clouditor.io/classes/Operation"/>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/properties/storage"/>
+                <owl:someValuesFrom rdf:resource="http://graph.clouditor.io/classes/DatabaseStorage"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/properties/to"/>
+                <owl:someValuesFrom rdf:resource="http://graph.clouditor.io/classes/DatabaseService"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/classes/calls"/>
+                <owl:someValuesFrom rdf:resource="http://www.w3.org/2001/XMLSchema#listString"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:label>DatabaseOperation</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/DatabaseQuery -->
+
+    <owl:Class rdf:about="http://graph.clouditor.io/classes/DatabaseQuery">
+        <rdfs:subClassOf rdf:resource="http://graph.clouditor.io/classes/DatabaseOperation"/>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/properties/modify"/>
+                <owl:someValuesFrom rdf:resource="http://www.w3.org/2001/XMLSchema#boolean"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:label>DatabaseQuery</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/DatabaseService -->
+
+    <owl:Class rdf:about="http://graph.clouditor.io/classes/DatabaseService">
+        <rdfs:subClassOf rdf:resource="http://graph.clouditor.io/classes/StorageService"/>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/classes/offersMultiple"/>
+                <owl:someValuesFrom rdf:resource="http://graph.clouditor.io/classes/AnomalyDetection"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/properties/offers"/>
+                <owl:someValuesFrom rdf:resource="http://graph.clouditor.io/classes/HttpEndpoint"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/properties/offers"/>
+                <owl:someValuesFrom rdf:resource="http://graph.clouditor.io/classes/MalwareProtection"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">This class represents a database service. For example, a postgres SQL server would be modelled as a database service (with a host and IP) and the individual tables or collections would be modelled as a DatabaseStorage entity.</rdfs:comment>
+        <rdfs:label xml:lang="english">DatabaseService</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/DatabaseStorage -->
+
+    <owl:Class rdf:about="http://graph.clouditor.io/classes/DatabaseStorage">
+        <rdfs:subClassOf rdf:resource="http://graph.clouditor.io/classes/Storage"/>
+        <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">describes the actual database or a table in a database</rdfs:comment>
+        <rdfs:label>DatabaseStorage</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/DecryptionOperation -->
+
+    <owl:Class rdf:about="http://graph.clouditor.io/classes/DecryptionOperation">
+        <rdfs:subClassOf rdf:resource="http://graph.clouditor.io/classes/CryptographicOperation"/>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/properties/algorithm"/>
+                <owl:someValuesFrom rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Decryption</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/DeviceProvisioningService -->
+
+    <owl:Class rdf:about="http://graph.clouditor.io/classes/DeviceProvisioningService">
+        <rdfs:subClassOf rdf:resource="http://graph.clouditor.io/classes/IoT"/>
+        <rdfs:label xml:lang="english">DeviceProvisioningService</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/Document -->
+
+    <owl:Class rdf:about="http://graph.clouditor.io/classes/Document">
+        <rdfs:subClassOf rdf:resource="http://graph.clouditor.io/classes/Data"/>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/classes/validatedBy"/>
+                <owl:someValuesFrom rdf:resource="http://graph.clouditor.io/classes/SchemaValidation"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/properties/has"/>
+                <owl:someValuesFrom rdf:resource="http://graph.clouditor.io/classes/DocumentLocation"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/properties/hasMultiple"/>
+                <owl:someValuesFrom rdf:resource="http://graph.clouditor.io/classes/CryptographicHash"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/properties/hasMultiple"/>
+                <owl:someValuesFrom rdf:resource="http://graph.clouditor.io/classes/SecurityFeature"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/properties/hasMultiple"/>
+                <owl:someValuesFrom rdf:resource="http://graph.clouditor.io/classes/Signature"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/classes/filetype"/>
+                <owl:someValuesFrom rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">path: Describes either local path or path in URL format</rdfs:comment>
+        <rdfs:label>Document</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/DocumentDatabaseService -->
+
+    <owl:Class rdf:about="http://graph.clouditor.io/classes/DocumentDatabaseService">
+        <rdfs:subClassOf rdf:resource="http://graph.clouditor.io/classes/DatabaseService"/>
+        <rdfs:label>DocumentDatabaseService</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/DocumentLocation -->
+
+    <owl:Class rdf:about="http://graph.clouditor.io/classes/DocumentLocation">
+        <rdfs:subClassOf rdf:resource="http://graph.clouditor.io/classes/Functionality"/>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/properties/has"/>
+                <owl:someValuesFrom rdf:resource="http://graph.clouditor.io/classes/Storage"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/properties/path"/>
+                <owl:someValuesFrom rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">DataLocation</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/EncryptionInUse -->
+
+    <owl:Class rdf:about="http://graph.clouditor.io/classes/EncryptionInUse">
+        <rdfs:subClassOf rdf:resource="http://graph.clouditor.io/classes/Confidentiality"/>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/properties/enabled"/>
+                <owl:someValuesFrom rdf:resource="http://www.w3.org/2001/XMLSchema#boolean"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:label>EncryptionInUse</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/EncryptionOperation -->
+
+    <owl:Class rdf:about="http://graph.clouditor.io/classes/EncryptionOperation">
+        <rdfs:subClassOf rdf:resource="http://graph.clouditor.io/classes/CryptographicOperation"/>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/properties/algorithm"/>
+                <owl:someValuesFrom rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Encryption</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/Error -->
+
+    <owl:Class rdf:about="http://graph.clouditor.io/classes/Error">
+        <rdfs:subClassOf rdf:resource="http://graph.clouditor.io/classes/Functionality"/>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/classes/message"/>
+                <owl:someValuesFrom rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:label>Error</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/FileStorage -->
+
+    <owl:Class rdf:about="http://graph.clouditor.io/classes/FileStorage">
+        <rdfs:subClassOf rdf:resource="http://graph.clouditor.io/classes/Storage"/>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/classes/publicAccess"/>
+                <owl:someValuesFrom rdf:resource="http://www.w3.org/2001/XMLSchema#boolean"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:label xml:lang="english">FileStorage</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/FileStorageService -->
+
+    <owl:Class rdf:about="http://graph.clouditor.io/classes/FileStorageService">
+        <rdfs:subClassOf rdf:resource="http://graph.clouditor.io/classes/StorageService"/>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/properties/offers"/>
+                <owl:someValuesFrom rdf:resource="http://graph.clouditor.io/classes/HttpEndpoint"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">An file storage service represents the network service that is used to access a list of file storage shares. The storage itself is modelled as a FileStorage. The service has an http endpoint.</rdfs:comment>
+        <rdfs:label>FileStorageService</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/Firewall -->
+
+    <owl:Class rdf:about="http://graph.clouditor.io/classes/Firewall">
+        <rdfs:subClassOf rdf:resource="http://graph.clouditor.io/classes/AccessRestriction"/>
+        <rdfs:label>Firewall</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/Framework -->
+
+    <owl:Class rdf:about="http://graph.clouditor.io/classes/Framework">
+        <rdfs:subClassOf rdf:resource="http://www.w3.org/2002/07/owl#Thing"/>
+        <rdfs:label xml:lang="english">Framework</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/Function -->
+
+    <owl:Class rdf:about="http://graph.clouditor.io/classes/Function">
+        <rdfs:subClassOf rdf:resource="http://graph.clouditor.io/classes/Compute"/>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/classes/runtimeLanguage"/>
+                <owl:someValuesFrom rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/classes/runtimeVersion"/>
+                <owl:someValuesFrom rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:label xml:lang="english">Function</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/FunctionService -->
+
+    <owl:Class rdf:about="http://graph.clouditor.io/classes/FunctionService">
+        <rdfs:subClassOf rdf:resource="http://graph.clouditor.io/classes/NetworkService"/>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/properties/hasMultiple"/>
+                <owl:someValuesFrom rdf:resource="http://graph.clouditor.io/classes/Function"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:label>FunctionService</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/Functionality -->
+
+    <owl:Class rdf:about="http://graph.clouditor.io/classes/Functionality">
+        <rdfs:subClassOf rdf:resource="http://www.w3.org/2002/07/owl#Thing"/>
+        <rdfs:label xml:lang="english">Functionality</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/GenericDocument -->
+
+    <owl:Class rdf:about="http://graph.clouditor.io/classes/GenericDocument">
+        <rdfs:subClassOf rdf:resource="http://graph.clouditor.io/classes/Document"/>
+        <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">This is a placeholder for all other documents, e.g. index.txt</rdfs:comment>
+        <rdfs:label>GenericDocument</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/GenericNetworkService -->
+
+    <owl:Class rdf:about="http://graph.clouditor.io/classes/GenericNetworkService">
+        <rdfs:subClassOf rdf:resource="http://graph.clouditor.io/classes/NetworkService"/>
+        <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">A generic network service.</rdfs:comment>
+        <rdfs:label>GenericNetworkService</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/GeoLocation -->
+
+    <owl:Class rdf:about="http://graph.clouditor.io/classes/GeoLocation">
+        <rdfs:subClassOf rdf:resource="http://graph.clouditor.io/classes/Availability"/>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/properties/region"/>
+                <owl:someValuesFrom rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:label xml:lang="english">GeoLocation</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/GeoRedundancy -->
+
+    <owl:Class rdf:about="http://graph.clouditor.io/classes/GeoRedundancy">
+        <rdfs:subClassOf rdf:resource="http://graph.clouditor.io/classes/Redundancy"/>
+        <rdfs:label>GeoRedundancy</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/HashOperation -->
+
+    <owl:Class rdf:about="http://graph.clouditor.io/classes/HashOperation">
+        <rdfs:subClassOf rdf:resource="http://graph.clouditor.io/classes/CryptographicOperation"/>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/classes/usesSalt"/>
+                <owl:someValuesFrom rdf:resource="http://www.w3.org/2001/XMLSchema#boolean"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/properties/algorithm"/>
+                <owl:someValuesFrom rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">CryptographicHash</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/HttpClientLibrary -->
+
+    <owl:Class rdf:about="http://graph.clouditor.io/classes/HttpClientLibrary">
+        <rdfs:subClassOf rdf:resource="http://graph.clouditor.io/classes/Framework"/>
+        <rdfs:label xml:lang="english">HttpClientLibrary</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/HttpEndpoint -->
+
+    <owl:Class rdf:about="http://graph.clouditor.io/classes/HttpEndpoint">
+        <rdfs:subClassOf rdf:resource="http://graph.clouditor.io/classes/Functionality"/>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/properties/offers"/>
+                <owl:someValuesFrom rdf:resource="http://graph.clouditor.io/classes/Authenticity"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/properties/offers"/>
+                <owl:someValuesFrom rdf:resource="http://graph.clouditor.io/classes/TransportEncryption"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/properties/proxyTarget"/>
+                <owl:someValuesFrom rdf:resource="http://graph.clouditor.io/classes/HttpEndpoint"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/properties/handler"/>
+                <owl:someValuesFrom rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/properties/method"/>
+                <owl:someValuesFrom rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/properties/path"/>
+                <owl:someValuesFrom rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/properties/url"/>
+                <owl:someValuesFrom rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">An HTTP endpoint can set the &quot;proxyTarget&quot; property, in case that is routed through a (reverse) proxy, e.g. a load balancer.</rdfs:comment>
+        <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Via the Authenticity relationship, the access type can be specified, e.g. public access (no authentication), password-based, etc.</rdfs:comment>
+        <rdfs:label xml:lang="english">HttpEndpoint</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/HttpRequest -->
+
+    <owl:Class rdf:about="http://graph.clouditor.io/classes/HttpRequest">
+        <rdfs:subClassOf rdf:resource="http://graph.clouditor.io/classes/Operation"/>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/properties/to"/>
+                <owl:someValuesFrom rdf:resource="http://graph.clouditor.io/classes/HttpEndpoint"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/classes/reqBody"/>
+                <owl:someValuesFrom rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/properties/call"/>
+                <owl:someValuesFrom rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:label xml:lang="english">HttpRequest</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/HttpRequestHandler -->
+
+    <owl:Class rdf:about="http://graph.clouditor.io/classes/HttpRequestHandler">
+        <rdfs:subClassOf rdf:resource="http://graph.clouditor.io/classes/Functionality"/>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/properties/has"/>
+                <owl:someValuesFrom rdf:resource="http://graph.clouditor.io/classes/Application"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/properties/hasMultiple"/>
+                <owl:someValuesFrom rdf:resource="http://graph.clouditor.io/classes/HttpEndpoint"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/properties/path"/>
+                <owl:someValuesFrom rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:label xml:lang="english">HttpRequestHandler</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/HttpServer -->
+
+    <owl:Class rdf:about="http://graph.clouditor.io/classes/HttpServer">
+        <rdfs:subClassOf rdf:resource="http://graph.clouditor.io/classes/Framework"/>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/properties/offers"/>
+                <owl:someValuesFrom rdf:resource="http://graph.clouditor.io/classes/HttpRequestHandler"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:label xml:lang="english">HttpServer</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/Identifiable -->
+
+    <owl:Class rdf:about="http://graph.clouditor.io/classes/Identifiable">
+        <rdfs:subClassOf rdf:resource="http://graph.clouditor.io/classes/CloudResource"/>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/properties/offers"/>
+                <owl:someValuesFrom rdf:resource="http://graph.clouditor.io/classes/Authenticity"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/properties/offers"/>
+                <owl:someValuesFrom rdf:resource="http://graph.clouditor.io/classes/Authorization"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/properties/activated"/>
+                <owl:someValuesFrom rdf:resource="http://www.w3.org/2001/XMLSchema#boolean"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:label>Identifiable</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/Identity -->
+
+    <owl:Class rdf:about="http://graph.clouditor.io/classes/Identity">
+        <rdfs:subClassOf rdf:resource="http://graph.clouditor.io/classes/Identifiable"/>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/classes/disablePasswordPolicy"/>
+                <owl:someValuesFrom rdf:resource="http://www.w3.org/2001/XMLSchema#boolean"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/classes/enforceMFA"/>
+                <owl:someValuesFrom rdf:resource="http://www.w3.org/2001/XMLSchema#boolean"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/classes/loginDefenderEnabled"/>
+                <owl:someValuesFrom rdf:resource="http://www.w3.org/2001/XMLSchema#boolean"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/classes/privileged"/>
+                <owl:someValuesFrom rdf:resource="http://www.w3.org/2001/XMLSchema#boolean"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/classes/lastActivity"/>
+                <owl:hasValue rdf:datatype="http://www.w3.org/2001/XMLSchema#string">xsd:java.time.ZonedDateTime</owl:hasValue>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:label xml:lang="english">Identity</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/Image -->
+
+    <owl:Class rdf:about="http://graph.clouditor.io/classes/Image">
+        <rdfs:subClassOf rdf:resource="http://graph.clouditor.io/classes/CloudResource"/>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/properties/has"/>
+                <owl:someValuesFrom rdf:resource="http://graph.clouditor.io/classes/Application"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:label xml:lang="english">Image</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/Immutability -->
+
+    <owl:Class rdf:about="http://graph.clouditor.io/classes/Immutability">
+        <rdfs:subClassOf rdf:resource="http://graph.clouditor.io/classes/Integrity"/>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/properties/enabled"/>
+                <owl:someValuesFrom rdf:resource="http://www.w3.org/2001/XMLSchema#boolean"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:label xml:lang="english">Immutability</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/Integrity -->
+
+    <owl:Class rdf:about="http://graph.clouditor.io/classes/Integrity">
+        <rdfs:subClassOf rdf:resource="http://graph.clouditor.io/classes/SecurityFeature"/>
+        <rdfs:label xml:lang="english">Integrity</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/IoT -->
+
+    <owl:Class rdf:about="http://graph.clouditor.io/classes/IoT">
+        <rdfs:subClassOf rdf:resource="http://graph.clouditor.io/classes/CloudResource"/>
+        <rdfs:label xml:lang="english">IoT</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/Job -->
+
+    <owl:Class rdf:about="http://graph.clouditor.io/classes/Job">
+        <rdfs:subClassOf rdf:resource="http://graph.clouditor.io/classes/CICDService"/>
+        <rdfs:label xml:lang="english">Job</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/JwtBasedAuthentication -->
+
+    <owl:Class rdf:about="http://graph.clouditor.io/classes/JwtBasedAuthentication">
+        <rdfs:subClassOf rdf:resource="http://graph.clouditor.io/classes/Authenticity"/>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/properties/enabled"/>
+                <owl:someValuesFrom rdf:resource="http://www.w3.org/2001/XMLSchema#boolean"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/properties/enforced"/>
+                <owl:someValuesFrom rdf:resource="http://www.w3.org/2001/XMLSchema#boolean"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">TokenBasedAuthentication</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/Key -->
+
+    <owl:Class rdf:about="http://graph.clouditor.io/classes/Key">
+        <rdfs:subClassOf rdf:resource="http://graph.clouditor.io/classes/Credential"/>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/classes/keySize"/>
+                <owl:someValuesFrom rdf:resource="http://www.w3.org/2001/XMLSchema#int"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/properties/algorithm"/>
+                <owl:someValuesFrom rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+    </owl:Class>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/KeyValueDatabaseService -->
+
+    <owl:Class rdf:about="http://graph.clouditor.io/classes/KeyValueDatabaseService">
+        <rdfs:subClassOf rdf:resource="http://graph.clouditor.io/classes/DatabaseService"/>
+        <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">KeyValueDatabaseService</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/KeyVault -->
+
+    <owl:Class rdf:about="http://graph.clouditor.io/classes/KeyVault">
+        <rdfs:subClassOf rdf:resource="http://graph.clouditor.io/classes/CloudResource"/>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/properties/hasMultiple"/>
+                <owl:someValuesFrom rdf:resource="http://graph.clouditor.io/classes/Credential"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:label>KeyVault</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/L3Firewall -->
+
+    <owl:Class rdf:about="http://graph.clouditor.io/classes/L3Firewall">
+        <rdfs:subClassOf rdf:resource="http://graph.clouditor.io/classes/Firewall"/>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/properties/enabled"/>
+                <owl:someValuesFrom rdf:resource="http://www.w3.org/2001/XMLSchema#boolean"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/properties/inbound"/>
+                <owl:someValuesFrom rdf:resource="http://www.w3.org/2001/XMLSchema#boolean"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/properties/restrictedPorts"/>
+                <owl:hasValue rdf:datatype="http://www.w3.org/2001/XMLSchema#string">xsd:java.util.ArrayList&lt;String&gt;</owl:hasValue>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:label>L3Firewall</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/Library -->
+
+    <owl:Class rdf:about="http://graph.clouditor.io/classes/Library">
+        <rdfs:subClassOf rdf:resource="http://graph.clouditor.io/classes/Component"/>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/properties/hasMultiple"/>
+                <owl:someValuesFrom rdf:resource="http://graph.clouditor.io/classes/Vulnerability"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:label>Library</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/LoadBalancer -->
+
+    <owl:Class rdf:about="http://graph.clouditor.io/classes/LoadBalancer">
+        <rdfs:subClassOf rdf:resource="http://graph.clouditor.io/classes/NetworkService"/>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/classes/offersInterface"/>
+                <owl:someValuesFrom rdf:resource="http://graph.clouditor.io/classes/AccessRestriction"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/properties/hasMultiple"/>
+                <owl:someValuesFrom rdf:resource="http://graph.clouditor.io/classes/HttpEndpoint"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/properties/hasMultiple"/>
+                <owl:someValuesFrom rdf:resource="http://graph.clouditor.io/classes/NetworkService"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/properties/url"/>
+                <owl:someValuesFrom rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">A Load Balancer may have multiple access restriction features, e.g. a L3 firewall and a WAF</rdfs:comment>
+        <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">LoadBalancer</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/LocalAttestation -->
+
+    <owl:Class rdf:about="http://graph.clouditor.io/classes/LocalAttestation">
+        <rdfs:subClassOf rdf:resource="http://graph.clouditor.io/classes/Attestation"/>
+        <rdfs:label>LocalAttestation</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/LocalDocumentLocation -->
+
+    <owl:Class rdf:about="http://graph.clouditor.io/classes/LocalDocumentLocation">
+        <rdfs:subClassOf rdf:resource="http://graph.clouditor.io/classes/DocumentLocation"/>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/properties/offers"/>
+                <owl:someValuesFrom rdf:resource="http://graph.clouditor.io/classes/AtRestEncryption"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">LocalDataLocation</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/LocalRedundancy -->
+
+    <owl:Class rdf:about="http://graph.clouditor.io/classes/LocalRedundancy">
+        <rdfs:subClassOf rdf:resource="http://graph.clouditor.io/classes/Redundancy"/>
+        <rdfs:label>LocalRedundancy</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/LogOutput -->
+
+    <owl:Class rdf:about="http://graph.clouditor.io/classes/LogOutput">
+        <rdfs:subClassOf rdf:resource="http://graph.clouditor.io/classes/Operation"/>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/properties/offers"/>
+                <owl:someValuesFrom rdf:resource="http://graph.clouditor.io/classes/Logging"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/properties/call"/>
+                <owl:someValuesFrom rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/properties/value"/>
+                <owl:someValuesFrom rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">A LogOperation is used by an application</rdfs:comment>
+        <rdfs:label xml:lang="english">LogOperation</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/Logger -->
+
+    <owl:Class rdf:about="http://graph.clouditor.io/classes/Logger">
+        <rdfs:subClassOf rdf:resource="http://graph.clouditor.io/classes/Framework"/>
+        <rdfs:label xml:lang="english">Logger</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/Logging -->
+
+    <owl:Class rdf:about="http://graph.clouditor.io/classes/Logging">
+        <rdfs:subClassOf rdf:resource="http://graph.clouditor.io/classes/Auditing"/>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/properties/to"/>
+                <owl:someValuesFrom rdf:resource="http://graph.clouditor.io/classes/LoggingService"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/classes/monitoringEnabled"/>
+                <owl:someValuesFrom rdf:resource="http://www.w3.org/2001/XMLSchema#boolean"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/classes/securityAlertsEnabled"/>
+                <owl:someValuesFrom rdf:resource="http://www.w3.org/2001/XMLSchema#boolean"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/properties/enabled"/>
+                <owl:someValuesFrom rdf:resource="http://www.w3.org/2001/XMLSchema#boolean"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/classes/retentionPeriod"/>
+                <owl:hasValue rdf:datatype="http://www.w3.org/2001/XMLSchema#string">xsd:java.time.Duration</owl:hasValue>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:label xml:lang="english">Logging</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/LoggingService -->
+
+    <owl:Class rdf:about="http://graph.clouditor.io/classes/LoggingService">
+        <rdfs:subClassOf rdf:resource="http://graph.clouditor.io/classes/NetworkService"/>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/properties/hasMultiple"/>
+                <owl:someValuesFrom rdf:resource="http://graph.clouditor.io/classes/Storage"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">A logging-as-a-service offering, e.g. for analyzing logs; has a Storage resource that stores the logs</rdfs:comment>
+        <rdfs:label>LoggingService</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/MachineLearning -->
+
+    <owl:Class rdf:about="http://graph.clouditor.io/classes/MachineLearning">
+        <rdfs:subClassOf rdf:resource="http://graph.clouditor.io/classes/Functionality"/>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/properties/has"/>
+                <owl:someValuesFrom rdf:resource="http://graph.clouditor.io/classes/MachineLearningDataset"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/properties/has"/>
+                <owl:someValuesFrom rdf:resource="http://graph.clouditor.io/classes/MachineLearningModel"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+    </owl:Class>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/MachineLearningDataset -->
+
+    <owl:Class rdf:about="http://graph.clouditor.io/classes/MachineLearningDataset">
+        <rdfs:subClassOf rdf:resource="http://graph.clouditor.io/classes/Data"/>
+        <rdfs:label>MachineLearningDataset</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/MachineLearningModel -->
+
+    <owl:Class rdf:about="http://graph.clouditor.io/classes/MachineLearningModel">
+        <rdfs:subClassOf rdf:resource="http://graph.clouditor.io/classes/Data"/>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/classes/expendability"/>
+                <owl:someValuesFrom rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/classes/privacyLabel"/>
+                <owl:someValuesFrom rdf:resource="http://www.w3.org/2001/XMLSchema#float"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/classes/robustness"/>
+                <owl:someValuesFrom rdf:resource="http://www.w3.org/2001/XMLSchema#float"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:label>MachineLearningModel</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/MachineLearningService -->
+
+    <owl:Class rdf:about="http://graph.clouditor.io/classes/MachineLearningService">
+        <rdfs:subClassOf rdf:resource="http://graph.clouditor.io/classes/NetworkService"/>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/properties/hasMultiple"/>
+                <owl:someValuesFrom rdf:resource="http://graph.clouditor.io/classes/MachineLearning"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/properties/hasMultiple"/>
+                <owl:someValuesFrom rdf:resource="http://graph.clouditor.io/classes/Storage"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:label>MachineLearningService</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/MalwareProtection -->
+
+    <owl:Class rdf:about="http://graph.clouditor.io/classes/MalwareProtection">
+        <rdfs:subClassOf rdf:resource="http://graph.clouditor.io/classes/Auditing"/>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/properties/offers"/>
+                <owl:someValuesFrom rdf:resource="http://graph.clouditor.io/classes/ApplicationLog"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/classes/numberOfThreatsFound"/>
+                <owl:someValuesFrom rdf:resource="http://www.w3.org/2001/XMLSchema#int"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/properties/enabled"/>
+                <owl:someValuesFrom rdf:resource="http://www.w3.org/2001/XMLSchema#boolean"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/classes/daysSinceActive"/>
+                <owl:hasValue rdf:datatype="http://www.w3.org/2001/XMLSchema#string">xsd:java.time.Duration</owl:hasValue>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">analyzes the activity within a Compute resource</rdfs:comment>
+        <rdfs:label>MalwareProtection</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/ManagedKeyEncryption -->
+
+    <owl:Class rdf:about="http://graph.clouditor.io/classes/ManagedKeyEncryption">
+        <rdfs:subClassOf rdf:resource="http://graph.clouditor.io/classes/AtRestEncryption"/>
+        <rdfs:label xml:lang="english">ManagedKeyEncryption</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/MessagingHub -->
+
+    <owl:Class rdf:about="http://graph.clouditor.io/classes/MessagingHub">
+        <rdfs:subClassOf rdf:resource="http://graph.clouditor.io/classes/IoT"/>
+        <rdfs:label xml:lang="english">MessagingHub</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/Module -->
+
+    <owl:Class rdf:about="http://graph.clouditor.io/classes/Module">
+        <rdfs:subClassOf rdf:resource="http://graph.clouditor.io/classes/Code"/>
+        <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">CodeModule</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/MultiFactorAuthentiation -->
+
+    <owl:Class rdf:about="http://graph.clouditor.io/classes/MultiFactorAuthentiation">
+        <rdfs:subClassOf rdf:resource="http://graph.clouditor.io/classes/Authenticity"/>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/properties/hasMultiple"/>
+                <owl:someValuesFrom rdf:resource="http://graph.clouditor.io/classes/Authenticity"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:label>MultiFactorAuthentiation</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/MultiModalDatabaseService -->
+
+    <owl:Class rdf:about="http://graph.clouditor.io/classes/MultiModalDatabaseService">
+        <rdfs:subClassOf rdf:resource="http://graph.clouditor.io/classes/DatabaseService"/>
+        <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">This class represents a database service that identifies itself as &quot;multi-model&quot;, e.g., offers document storage as well as relational features.</rdfs:comment>
+        <rdfs:label>MultiModalDatabaseService</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/NetworkInterface -->
+
+    <owl:Class rdf:about="http://graph.clouditor.io/classes/NetworkInterface">
+        <rdfs:subClassOf rdf:resource="http://graph.clouditor.io/classes/Networking"/>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/classes/offersInterface"/>
+                <owl:someValuesFrom rdf:resource="http://graph.clouditor.io/classes/AccessRestriction"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/properties/has"/>
+                <owl:someValuesFrom rdf:resource="http://graph.clouditor.io/classes/NetworkService"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:label xml:lang="english">NetworkInterface</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/NetworkSecurityGroup -->
+
+    <owl:Class rdf:about="http://graph.clouditor.io/classes/NetworkSecurityGroup">
+        <rdfs:subClassOf rdf:resource="http://graph.clouditor.io/classes/Networking"/>
+        <rdfs:label xml:lang="english">NetworkSecurityGroup</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/NetworkService -->
+
+    <owl:Class rdf:about="http://graph.clouditor.io/classes/NetworkService">
+        <rdfs:subClassOf rdf:resource="http://graph.clouditor.io/classes/Networking"/>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/classes/offersInterface"/>
+                <owl:someValuesFrom rdf:resource="http://graph.clouditor.io/classes/Authenticity"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/properties/has"/>
+                <owl:someValuesFrom rdf:resource="http://graph.clouditor.io/classes/ServiceMetadataDocument"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/properties/hasMultiple"/>
+                <owl:someValuesFrom rdf:resource="http://graph.clouditor.io/classes/Compute"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/properties/offers"/>
+                <owl:someValuesFrom rdf:resource="http://graph.clouditor.io/classes/TransportEncryption"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/properties/ips"/>
+                <owl:hasValue rdf:datatype="http://www.w3.org/2001/XMLSchema#string">xsd:java.util.ArrayList&lt;String&gt;</owl:hasValue>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/properties/ports"/>
+                <owl:hasValue rdf:datatype="http://www.w3.org/2001/XMLSchema#string">xsd:java.util.ArrayList&lt;Short&gt;</owl:hasValue>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">A NetworkService is an application (on the network layer) running on a Compute resource. It provides access to a resource</rdfs:comment>
+        <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">has: Compute instance the network service is running on. This can also be a compute resource within the cloud provider itself if it is a managed service (e.g. Azure App Service)</rdfs:comment>
+        <rdfs:label xml:lang="english">NetworkService</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/Networking -->
+
+    <owl:Class rdf:about="http://graph.clouditor.io/classes/Networking">
+        <rdfs:subClassOf rdf:resource="http://graph.clouditor.io/classes/CloudResource"/>
+        <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Networking</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/NoAuthentication -->
+
+    <owl:Class rdf:about="http://graph.clouditor.io/classes/NoAuthentication">
+        <rdfs:subClassOf rdf:resource="http://graph.clouditor.io/classes/Authenticity"/>
+        <rdfs:label xml:lang="english">NoAuthentication</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/OSLog -->
+
+    <owl:Class rdf:about="http://graph.clouditor.io/classes/OSLog">
+        <rdfs:subClassOf rdf:resource="http://graph.clouditor.io/classes/Logging"/>
+        <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">OSLogging</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/OTPBasedAuthentication -->
+
+    <owl:Class rdf:about="http://graph.clouditor.io/classes/OTPBasedAuthentication">
+        <rdfs:subClassOf rdf:resource="http://graph.clouditor.io/classes/Authenticity"/>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/properties/activated"/>
+                <owl:someValuesFrom rdf:resource="http://www.w3.org/2001/XMLSchema#boolean"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:label xml:lang="en">OTPBasedAuthentication</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/ObjectStorage -->
+
+    <owl:Class rdf:about="http://graph.clouditor.io/classes/ObjectStorage">
+        <rdfs:subClassOf rdf:resource="http://graph.clouditor.io/classes/Storage"/>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/classes/publicAccess"/>
+                <owl:someValuesFrom rdf:resource="http://www.w3.org/2001/XMLSchema#boolean"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <dc:description rdf:datatype="http://www.w3.org/2001/XMLSchema#string">publicAccess: Means if access to the actual object is public or not</dc:description>
+        <rdfs:label xml:lang="english">ObjectStorage</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/ObjectStorageRequest -->
+
+    <owl:Class rdf:about="http://graph.clouditor.io/classes/ObjectStorageRequest">
+        <rdfs:subClassOf rdf:resource="http://graph.clouditor.io/classes/Operation"/>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/properties/to"/>
+                <owl:someValuesFrom rdf:resource="http://graph.clouditor.io/classes/ObjectStorage"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/properties/source"/>
+                <owl:someValuesFrom rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:label xml:lang="english">ObjectStorageRequest</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/ObjectStorageService -->
+
+    <owl:Class rdf:about="http://graph.clouditor.io/classes/ObjectStorageService">
+        <rdfs:subClassOf rdf:resource="http://graph.clouditor.io/classes/StorageService"/>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/properties/offers"/>
+                <owl:someValuesFrom rdf:resource="http://graph.clouditor.io/classes/HttpEndpoint"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">An object storage service represents the network service that is used to access a list of object storage containers. The storage itself is modelled as a ObjectStorage. The service has an http endpoint.</rdfs:comment>
+        <rdfs:label>ObjectStorageService</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/Operation -->
+
+    <owl:Class rdf:about="http://graph.clouditor.io/classes/Operation">
+        <rdfs:subClassOf rdf:resource="http://graph.clouditor.io/classes/Functionality"/>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/properties/has"/>
+                <owl:someValuesFrom rdf:resource="http://graph.clouditor.io/classes/CodeRegion"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:label>Operation</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/PasswordBasedAuthentication -->
+
+    <owl:Class rdf:about="http://graph.clouditor.io/classes/PasswordBasedAuthentication">
+        <rdfs:subClassOf rdf:resource="http://graph.clouditor.io/classes/Authenticity"/>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/properties/activated"/>
+                <owl:someValuesFrom rdf:resource="http://www.w3.org/2001/XMLSchema#boolean"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:label xml:lang="en">PasswordBasedAuthentication</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/PasswordPolicy -->
+
+    <owl:Class rdf:about="http://graph.clouditor.io/classes/PasswordPolicy">
+        <rdfs:subClassOf rdf:resource="http://graph.clouditor.io/classes/CloudResource"/>
+        <rdfs:label>PasswordPolicy</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/RBAC -->
+
+    <owl:Class rdf:about="http://graph.clouditor.io/classes/RBAC">
+        <rdfs:subClassOf rdf:resource="http://graph.clouditor.io/classes/Authorization"/>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/classes/broadAssignments"/>
+                <owl:someValuesFrom rdf:resource="http://www.w3.org/2001/XMLSchema#float"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/classes/mixedDuties"/>
+                <owl:someValuesFrom rdf:resource="http://www.w3.org/2001/XMLSchema#float"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:label xml:lang="english">RBAC</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/Redundancy -->
+
+    <owl:Class rdf:about="http://graph.clouditor.io/classes/Redundancy">
+        <rdfs:subClassOf rdf:resource="http://graph.clouditor.io/classes/Availability"/>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/properties/hasMultiple"/>
+                <owl:someValuesFrom rdf:resource="http://graph.clouditor.io/classes/GeoLocation"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:label>Redundancy</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/RelationalDatabaseService -->
+
+    <owl:Class rdf:about="http://graph.clouditor.io/classes/RelationalDatabaseService">
+        <rdfs:subClassOf rdf:resource="http://graph.clouditor.io/classes/DatabaseService"/>
+        <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">RelationalDatabaseService</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/RemoteAttestation -->
+
+    <owl:Class rdf:about="http://graph.clouditor.io/classes/RemoteAttestation">
+        <rdfs:subClassOf rdf:resource="http://graph.clouditor.io/classes/Attestation"/>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/classes/creation_time"/>
+                <owl:someValuesFrom rdf:resource="http://www.w3.org/2001/XMLSchema#dateTime"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/classes/status"/>
+                <owl:someValuesFrom rdf:resource="http://www.w3.org/2001/XMLSchema#boolean"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+    </owl:Class>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/RemoteDocumentLocation -->
+
+    <owl:Class rdf:about="http://graph.clouditor.io/classes/RemoteDocumentLocation">
+        <rdfs:subClassOf rdf:resource="http://graph.clouditor.io/classes/DocumentLocation"/>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/properties/offers"/>
+                <owl:someValuesFrom rdf:resource="http://graph.clouditor.io/classes/Authenticity"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/properties/offers"/>
+                <owl:someValuesFrom rdf:resource="http://graph.clouditor.io/classes/TransportEncryption"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">RemoteDataLocation</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/ResourceGroup -->
+
+    <owl:Class rdf:about="http://graph.clouditor.io/classes/ResourceGroup">
+        <rdfs:subClassOf rdf:resource="http://graph.clouditor.io/classes/CloudResource"/>
+        <rdfs:label>ResourceGroup</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/ResourceLogging -->
+
+    <owl:Class rdf:about="http://graph.clouditor.io/classes/ResourceLogging">
+        <rdfs:subClassOf rdf:resource="http://graph.clouditor.io/classes/Logging"/>
+        <rdfs:label>ResourceLogging</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/RoleAssignment -->
+
+    <owl:Class rdf:about="http://graph.clouditor.io/classes/RoleAssignment">
+        <rdfs:subClassOf rdf:resource="http://graph.clouditor.io/classes/Identifiable"/>
+        <rdfs:label xml:lang="english">RoleAssignment</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/SchemaValidation -->
+
+    <owl:Class rdf:about="http://graph.clouditor.io/classes/SchemaValidation">
+        <rdfs:subClassOf rdf:resource="http://graph.clouditor.io/classes/Functionality"/>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/properties/hasMultiple"/>
+                <owl:someValuesFrom rdf:resource="http://graph.clouditor.io/classes/Error"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/classes/format"/>
+                <owl:someValuesFrom rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/classes/schemaURL"/>
+                <owl:someValuesFrom rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:label>SchemaValidation</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/Secret -->
+
+    <owl:Class rdf:about="http://graph.clouditor.io/classes/Secret">
+        <rdfs:subClassOf rdf:resource="http://graph.clouditor.io/classes/Credential"/>
+    </owl:Class>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/SecurityAdvisoryDocument -->
+
+    <owl:Class rdf:about="http://graph.clouditor.io/classes/SecurityAdvisoryDocument">
+        <rdfs:subClassOf rdf:resource="http://graph.clouditor.io/classes/Document"/>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/properties/hasMultiple"/>
+                <owl:someValuesFrom rdf:resource="http://graph.clouditor.io/classes/Vulnerability"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:label>SecurityAdvisoryDocument</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/SecurityAdvisoryFeed -->
+
+    <owl:Class rdf:about="http://graph.clouditor.io/classes/SecurityAdvisoryFeed">
+        <rdfs:subClassOf rdf:resource="http://graph.clouditor.io/classes/Functionality"/>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/properties/hasMultiple"/>
+                <owl:someValuesFrom rdf:resource="http://graph.clouditor.io/classes/SecurityAdvisoryDocument"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:label>SecurityAdvisoryFeed</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/SecurityAdvisoryService -->
+
+    <owl:Class rdf:about="http://graph.clouditor.io/classes/SecurityAdvisoryService">
+        <rdfs:subClassOf rdf:resource="http://graph.clouditor.io/classes/NetworkService"/>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/properties/hasMultiple"/>
+                <owl:someValuesFrom rdf:resource="http://graph.clouditor.io/classes/Key"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/properties/hasMultiple"/>
+                <owl:someValuesFrom rdf:resource="http://graph.clouditor.io/classes/SecurityAdvisoryFeed"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">This service discloses security advisories, e.g. according to the CSAF standard. It has one or more feeds that contain the actual advisories as well as multiple (public) keys that are used to sign the advisory documents.</rdfs:comment>
+        <rdfs:label>SecurityAdvisoryService</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/SecurityFeature -->
+
+    <owl:Class rdf:about="http://graph.clouditor.io/classes/SecurityFeature">
+        <rdfs:subClassOf rdf:resource="http://www.w3.org/2002/07/owl#Thing"/>
+        <rdfs:label xml:lang="english">SecurityFeature</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/ServiceMetadataDocument -->
+
+    <owl:Class rdf:about="http://graph.clouditor.io/classes/ServiceMetadataDocument">
+        <rdfs:subClassOf rdf:resource="http://graph.clouditor.io/classes/Document"/>
+        <rdfs:label>ServiceMetadataDocument</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/Signature -->
+
+    <owl:Class rdf:about="http://graph.clouditor.io/classes/Signature">
+        <rdfs:subClassOf rdf:resource="http://graph.clouditor.io/classes/Integrity"/>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/properties/hasMultiple"/>
+                <owl:someValuesFrom rdf:resource="http://graph.clouditor.io/classes/Error"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/properties/algorithm"/>
+                <owl:someValuesFrom rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">DocumentSignature</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/SingleSignOn -->
+
+    <owl:Class rdf:about="http://graph.clouditor.io/classes/SingleSignOn">
+        <rdfs:subClassOf rdf:resource="http://graph.clouditor.io/classes/Authenticity"/>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/properties/enabled"/>
+                <owl:someValuesFrom rdf:resource="http://www.w3.org/2001/XMLSchema#boolean"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:label xml:lang="english">SingleSignOn</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/Storage -->
+
+    <owl:Class rdf:about="http://graph.clouditor.io/classes/Storage">
+        <rdfs:subClassOf rdf:resource="http://graph.clouditor.io/classes/CloudResource"/>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/classes/offersInterface"/>
+                <owl:someValuesFrom rdf:resource="http://graph.clouditor.io/classes/AtRestEncryption"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/properties/hasMultiple"/>
+                <owl:someValuesFrom rdf:resource="http://graph.clouditor.io/classes/Backup"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/properties/offers"/>
+                <owl:someValuesFrom rdf:resource="http://graph.clouditor.io/classes/ActivityLog"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/properties/offers"/>
+                <owl:someValuesFrom rdf:resource="http://graph.clouditor.io/classes/Immutability"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/properties/offers"/>
+                <owl:someValuesFrom rdf:resource="http://graph.clouditor.io/classes/ResourceLogging"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:label xml:lang="english">Storage</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/StorageService -->
+
+    <owl:Class rdf:about="http://graph.clouditor.io/classes/StorageService">
+        <rdfs:subClassOf rdf:resource="http://graph.clouditor.io/classes/NetworkService"/>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/properties/hasMultiple"/>
+                <owl:someValuesFrom rdf:resource="http://graph.clouditor.io/classes/Storage"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/properties/offers"/>
+                <owl:someValuesFrom rdf:resource="http://graph.clouditor.io/classes/ActivityLog"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">This entity represents a network-based service that can be used to access a particular storage backend. It has multiple subclasses, e.g., for databases or object stores. It has a list of storage resources associated to it.</rdfs:comment>
+        <rdfs:label>StorageService</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/TransportEncryption -->
+
+    <owl:Class rdf:about="http://graph.clouditor.io/classes/TransportEncryption">
+        <rdfs:subClassOf rdf:resource="http://graph.clouditor.io/classes/Confidentiality"/>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/properties/hasMultiple"/>
+                <owl:someValuesFrom rdf:resource="http://graph.clouditor.io/classes/CipherSuite"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/classes/protocol"/>
+                <owl:someValuesFrom rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/classes/protocolVersion"/>
+                <owl:someValuesFrom rdf:resource="http://www.w3.org/2001/XMLSchema#float"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/properties/enabled"/>
+                <owl:someValuesFrom rdf:resource="http://www.w3.org/2001/XMLSchema#boolean"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/properties/enforced"/>
+                <owl:someValuesFrom rdf:resource="http://www.w3.org/2001/XMLSchema#boolean"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">enabled means the resource _can_ be reached via https, while enforced means it _can only_ be reached via https (or http traffic is redirected)</rdfs:comment>
+        <rdfs:label xml:lang="english">TransportEncryption</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/UsageStatistics -->
+
+    <owl:Class rdf:about="http://graph.clouditor.io/classes/UsageStatistics">
+        <rdfs:subClassOf rdf:resource="http://graph.clouditor.io/classes/Auditing"/>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/classes/apiHitsPerMonth"/>
+                <owl:someValuesFrom rdf:resource="http://www.w3.org/2001/XMLSchema#int"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:label>UsageStatistics</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/VMImage -->
+
+    <owl:Class rdf:about="http://graph.clouditor.io/classes/VMImage">
+        <rdfs:subClassOf rdf:resource="http://graph.clouditor.io/classes/Image"/>
+        <rdfs:label xml:lang="en">VMImage</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/VirtualMachine -->
+
+    <owl:Class rdf:about="http://graph.clouditor.io/classes/VirtualMachine">
+        <rdfs:subClassOf rdf:resource="http://graph.clouditor.io/classes/Compute"/>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/properties/hasMultiple"/>
+                <owl:someValuesFrom rdf:resource="http://graph.clouditor.io/classes/BlockStorage"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/properties/offers"/>
+                <owl:someValuesFrom rdf:resource="http://graph.clouditor.io/classes/ActivityLog"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/properties/offers"/>
+                <owl:someValuesFrom rdf:resource="http://graph.clouditor.io/classes/AutomaticUpdates"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/properties/offers"/>
+                <owl:someValuesFrom rdf:resource="http://graph.clouditor.io/classes/BootLog"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/properties/offers"/>
+                <owl:someValuesFrom rdf:resource="http://graph.clouditor.io/classes/MalwareProtection"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/properties/offers"/>
+                <owl:someValuesFrom rdf:resource="http://graph.clouditor.io/classes/OSLog"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">VirtualMachine</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/VirtualNetwork -->
+
+    <owl:Class rdf:about="http://graph.clouditor.io/classes/VirtualNetwork">
+        <rdfs:subClassOf rdf:resource="http://graph.clouditor.io/classes/Networking"/>
+        <rdfs:label xml:lang="english">VirtualNetwork</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/VirtualSubNetwork -->
+
+    <owl:Class rdf:about="http://graph.clouditor.io/classes/VirtualSubNetwork">
+        <rdfs:subClassOf rdf:resource="http://graph.clouditor.io/classes/Networking"/>
+        <rdfs:label xml:lang="english">VirtualSubNetwork</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/Vulnerability -->
+
+    <owl:Class rdf:about="http://graph.clouditor.io/classes/Vulnerability">
+        <rdfs:subClassOf rdf:resource="http://graph.clouditor.io/classes/Functionality"/>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/classes/cve"/>
+                <owl:someValuesFrom rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/classes/cwe"/>
+                <owl:someValuesFrom rdf:resource="http://www.w3.org/2001/XMLSchema#listString"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/classes/description"/>
+                <owl:someValuesFrom rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/classes/name"/>
+                <owl:someValuesFrom rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/properties/url"/>
+                <owl:someValuesFrom rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">cve: Common Vulnerabilities and Exposures</rdfs:comment>
+        <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">cwe: Common Weakness Enumeration</rdfs:comment>
+        <rdfs:label>Vulnerability</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/WebApplicationFirewall -->
+
+    <owl:Class rdf:about="http://graph.clouditor.io/classes/WebApplicationFirewall">
+        <rdfs:subClassOf rdf:resource="http://graph.clouditor.io/classes/Firewall"/>
+        <rdfs:subClassOf>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/properties/enabled"/>
+                <owl:someValuesFrom rdf:resource="http://www.w3.org/2001/XMLSchema#boolean"/>
+            </owl:Restriction>
+        </rdfs:subClassOf>
+        <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">A WAF is a L7 firewall that includes L3 capabilities</rdfs:comment>
+        <rdfs:label>WebApplicationFirewall</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/Workflow -->
+
+    <owl:Class rdf:about="http://graph.clouditor.io/classes/Workflow">
+        <rdfs:subClassOf rdf:resource="http://graph.clouditor.io/classes/CICDService"/>
+        <rdfs:label xml:lang="english">Workflow</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://graph.clouditor.io/classes/ZoneRedundancy -->
+
+    <owl:Class rdf:about="http://graph.clouditor.io/classes/ZoneRedundancy">
+        <rdfs:subClassOf rdf:resource="http://graph.clouditor.io/classes/Redundancy"/>
+        <rdfs:label>ZoneRedundancy</rdfs:label>
+    </owl:Class>
+    
+
+
+    <!-- http://www.w3.org/2002/07/owl#Thing -->
+
+    <rdf:Description rdf:about="http://www.w3.org/2002/07/owl#Thing">
+        <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">owl:Thing</rdfs:label>
+    </rdf:Description>
+    
+
+
+    <!-- 
+    ///////////////////////////////////////////////////////////////////////////////////////
+    //
+    // Individuals
+    //
+    ///////////////////////////////////////////////////////////////////////////////////////
+     -->
+
+    
+
+
+    <!-- http://graph.clouditor.io/classes/resourceId -->
+
+    <owl:NamedIndividual rdf:about="http://graph.clouditor.io/classes/resourceId">
+        <rdfs:label>resourceId</rdfs:label>
+    </owl:NamedIndividual>
+    
+
+
+    <!-- http://graph.clouditor.io/individuals/AmazonWebServices -->
+
+    <owl:NamedIndividual rdf:about="http://graph.clouditor.io/individuals/AmazonWebServices">
+        <rdfs:label xml:lang="english">Amazon Web Services</rdfs:label>
+    </owl:NamedIndividual>
+    
+
+
+    <!-- http://graph.clouditor.io/individuals/CircleCI -->
+
+    <owl:NamedIndividual rdf:about="http://graph.clouditor.io/individuals/CircleCI">
+        <rdfs:label xml:lang="english">CircleCI</rdfs:label>
+    </owl:NamedIndividual>
+    
+
+
+    <!-- http://graph.clouditor.io/individuals/GitHubActions -->
+
+    <owl:NamedIndividual rdf:about="http://graph.clouditor.io/individuals/GitHubActions">
+        <rdf:type rdf:resource="http://graph.clouditor.io/classes/CICDService"/>
+        <rdfs:label xml:lang="english">GitHub Actions</rdfs:label>
+    </owl:NamedIndividual>
+    
+
+
+    <!-- http://graph.clouditor.io/individuals/TeamCity -->
+
+    <owl:NamedIndividual rdf:about="http://graph.clouditor.io/individuals/TeamCity">
+        <rdfs:label xml:lang="english">TeamCity</rdfs:label>
+    </owl:NamedIndividual>
+    
+
+
+    <!-- http://graph.clouditor.io/individuals/aws/Account -->
+
+    <owl:NamedIndividual rdf:about="http://graph.clouditor.io/individuals/aws/Account">
+        <rdf:type rdf:resource="http://graph.clouditor.io/classes/Account"/>
+        <rdfs:label xml:lang="english">AWS Account</rdfs:label>
+    </owl:NamedIndividual>
+    
+
+
+    <!-- http://graph.clouditor.io/individuals/aws/Aurora -->
+
+    <owl:NamedIndividual rdf:about="http://graph.clouditor.io/individuals/aws/Aurora">
+        <prop:resourceOf rdf:resource="http://graph.clouditor.io/individuals/aws/RDS"/>
+        <rdfs:label xml:lang="english">AWS Aurora</rdfs:label>
+    </owl:NamedIndividual>
+    
+
+
+    <!-- http://graph.clouditor.io/individuals/aws/CloudTrail -->
+
+    <owl:NamedIndividual rdf:about="http://graph.clouditor.io/individuals/aws/CloudTrail">
+        <rdfs:label xml:lang="english">AWS CloudTrail</rdfs:label>
+    </owl:NamedIndividual>
+    
+
+
+    <!-- http://graph.clouditor.io/individuals/aws/DynamoDB -->
+
+    <owl:NamedIndividual rdf:about="http://graph.clouditor.io/individuals/aws/DynamoDB">
+        <prop:serviceOf rdf:resource="http://graph.clouditor.io/individuals/AmazonWebServices"/>
+        <rdfs:label xml:lang="english">AWS DynamoDB</rdfs:label>
+    </owl:NamedIndividual>
+    
+
+
+    <!-- http://graph.clouditor.io/individuals/aws/EC2 -->
+
+    <owl:NamedIndividual rdf:about="http://graph.clouditor.io/individuals/aws/EC2">
+        <rdf:type rdf:resource="http://graph.clouditor.io/classes/Compute"/>
+        <prop:serviceOf rdf:resource="http://graph.clouditor.io/individuals/AmazonWebServices"/>
+        <rdfs:label xml:lang="english">AWS EC2</rdfs:label>
+    </owl:NamedIndividual>
+    
+
+
+    <!-- http://graph.clouditor.io/individuals/aws/EC2Instance -->
+
+    <owl:NamedIndividual rdf:about="http://graph.clouditor.io/individuals/aws/EC2Instance">
+        <rdf:type rdf:resource="http://graph.clouditor.io/classes/VirtualMachine"/>
+        <prop:resourceOf rdf:resource="http://graph.clouditor.io/individuals/aws/EC2"/>
+        <rdfs:label xml:lang="english">AWS EC2 Instance</rdfs:label>
+    </owl:NamedIndividual>
+    
+
+
+    <!-- http://graph.clouditor.io/individuals/aws/EC2LoadBalancer -->
+
+    <owl:NamedIndividual rdf:about="http://graph.clouditor.io/individuals/aws/EC2LoadBalancer">
+        <rdf:type rdf:resource="http://graph.clouditor.io/classes/LoadBalancer"/>
+        <prop:resourceOf rdf:resource="http://graph.clouditor.io/individuals/aws/EC2"/>
+        <rdfs:label xml:lang="english">AWS EC2 LoadBalancer</rdfs:label>
+    </owl:NamedIndividual>
+    
+
+
+    <!-- http://graph.clouditor.io/individuals/aws/EC2NetworkInterface -->
+
+    <owl:NamedIndividual rdf:about="http://graph.clouditor.io/individuals/aws/EC2NetworkInterface">
+        <rdf:type rdf:resource="http://graph.clouditor.io/classes/NetworkInterface"/>
+        <prop:resourceOf rdf:resource="http://graph.clouditor.io/individuals/aws/EC2"/>
+        <rdfs:label xml:lang="english">AWS EC2 Network Interface</rdfs:label>
+    </owl:NamedIndividual>
+    
+
+
+    <!-- http://graph.clouditor.io/individuals/aws/EC2Subnet -->
+
+    <owl:NamedIndividual rdf:about="http://graph.clouditor.io/individuals/aws/EC2Subnet">
+        <rdf:type rdf:resource="http://graph.clouditor.io/classes/VirtualSubNetwork"/>
+        <prop:resourceOf rdf:resource="http://graph.clouditor.io/individuals/aws/EC2"/>
+        <rdfs:label xml:lang="english">AWS EC2 Subnet</rdfs:label>
+    </owl:NamedIndividual>
+    
+
+
+    <!-- http://graph.clouditor.io/individuals/aws/EC2VPC -->
+
+    <owl:NamedIndividual rdf:about="http://graph.clouditor.io/individuals/aws/EC2VPC">
+        <rdf:type rdf:resource="http://graph.clouditor.io/classes/VirtualNetwork"/>
+        <prop:resourceOf rdf:resource="http://graph.clouditor.io/individuals/aws/EC2"/>
+        <rdfs:label xml:lang="english">AWS EC2 VPC</rdfs:label>
+    </owl:NamedIndividual>
+    
+
+
+    <!-- http://graph.clouditor.io/individuals/aws/IAM -->
+
+    <owl:NamedIndividual rdf:about="http://graph.clouditor.io/individuals/aws/IAM">
+        <rdf:type>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/properties/offers"/>
+                <owl:someValuesFrom rdf:resource="http://graph.clouditor.io/classes/PasswordBasedAuthentication"/>
+            </owl:Restriction>
+        </rdf:type>
+        <rdf:type>
+            <owl:Restriction>
+                <owl:onProperty rdf:resource="http://graph.clouditor.io/properties/offers"/>
+                <owl:someValuesFrom rdf:resource="http://graph.clouditor.io/classes/RBAC"/>
+            </owl:Restriction>
+        </rdf:type>
+        <prop:serviceOf rdf:resource="http://graph.clouditor.io/individuals/AmazonWebServices"/>
+        <rdfs:label xml:lang="english">AWS IAM</rdfs:label>
+    </owl:NamedIndividual>
+    
+
+
+    <!-- http://graph.clouditor.io/individuals/aws/IAMUser -->
+
+    <owl:NamedIndividual rdf:about="http://graph.clouditor.io/individuals/aws/IAMUser">
+        <rdf:type rdf:resource="http://graph.clouditor.io/classes/Identity"/>
+        <prop:resourceOf rdf:resource="http://graph.clouditor.io/individuals/aws/IAM"/>
+        <rdfs:label xml:lang="english">AWS IAM User</rdfs:label>
+    </owl:NamedIndividual>
+    
+
+
+    <!-- http://graph.clouditor.io/individuals/aws/IoTCore -->
+
+    <owl:NamedIndividual rdf:about="http://graph.clouditor.io/individuals/aws/IoTCore">
+        <rdf:type rdf:resource="http://graph.clouditor.io/classes/MessagingHub"/>
+        <rdfs:label xml:lang="english">AWS IoT Core</rdfs:label>
+    </owl:NamedIndividual>
+    
+
+
+    <!-- http://graph.clouditor.io/individuals/aws/IoTDeviceManagement -->
+
+    <owl:NamedIndividual rdf:about="http://graph.clouditor.io/individuals/aws/IoTDeviceManagement">
+        <rdf:type rdf:resource="http://graph.clouditor.io/classes/DeviceProvisioningService"/>
+        <rdfs:label xml:lang="english">AWS IoT Device Management</rdfs:label>
+    </owl:NamedIndividual>
+    
+
+
+    <!-- http://graph.clouditor.io/individuals/aws/Lambda -->
+
+    <owl:NamedIndividual rdf:about="http://graph.clouditor.io/individuals/aws/Lambda">
+        <rdf:type rdf:resource="http://graph.clouditor.io/classes/Compute"/>
+        <prop:serviceOf rdf:resource="http://graph.clouditor.io/individuals/AmazonWebServices"/>
+        <rdfs:label xml:lang="english">AWS Lambda</rdfs:label>
+    </owl:NamedIndividual>
+    
+
+
+    <!-- http://graph.clouditor.io/individuals/aws/RDS -->
+
+    <owl:NamedIndividual rdf:about="http://graph.clouditor.io/individuals/aws/RDS">
+        <rdf:type rdf:resource="http://graph.clouditor.io/classes/RelationalDatabaseService"/>
+        <prop:serviceOf rdf:resource="http://graph.clouditor.io/individuals/AmazonWebServices"/>
+        <rdfs:label xml:lang="english">AWS RDS</rdfs:label>
+    </owl:NamedIndividual>
+    
+
+
+    <!-- http://graph.clouditor.io/individuals/aws/S3 -->
+
+    <owl:NamedIndividual rdf:about="http://graph.clouditor.io/individuals/aws/S3">
+        <rdf:type rdf:resource="http://graph.clouditor.io/classes/Storage"/>
+        <prop:parent rdf:resource="http://graph.clouditor.io/individuals/AmazonWebServices"/>
+        <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">AWS S3</rdfs:label>
+    </owl:NamedIndividual>
+    
+
+
+    <!-- http://graph.clouditor.io/individuals/aws/S3Bucket -->
+
+    <owl:NamedIndividual rdf:about="http://graph.clouditor.io/individuals/aws/S3Bucket">
+        <rdf:type rdf:resource="http://graph.clouditor.io/classes/ObjectStorage"/>
+        <prop:resourceOf rdf:resource="http://graph.clouditor.io/individuals/aws/S3"/>
+        <rdfs:label xml:lang="english">AWS S3 Bucket</rdfs:label>
+    </owl:NamedIndividual>
+    
+
+
+    <!-- http://graph.clouditor.io/individuals/aws/Volume -->
+
+    <owl:NamedIndividual rdf:about="http://graph.clouditor.io/individuals/aws/Volume">
+        <rdf:type rdf:resource="http://graph.clouditor.io/classes/BlockStorage"/>
+        <prop:resourceOf rdf:resource="http://graph.clouditor.io/individuals/aws/EC2"/>
+        <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Volume</rdfs:label>
+    </owl:NamedIndividual>
+    
+
+
+    <!-- http://graph.clouditor.io/individuals/azure/ActivityLog -->
+
+    <owl:NamedIndividual rdf:about="http://graph.clouditor.io/individuals/azure/ActivityLog">
+        <rdfs:label xml:lang="english">Azure Activity Log</rdfs:label>
+    </owl:NamedIndividual>
+    
+
+
+    <!-- http://graph.clouditor.io/individuals/azure/Azure -->
+
+    <owl:NamedIndividual rdf:about="http://graph.clouditor.io/individuals/azure/Azure">
+        <rdfs:label xml:lang="english">Azure</rdfs:label>
+    </owl:NamedIndividual>
+    
+
+
+    <!-- http://graph.clouditor.io/individuals/azure/CosmosDB -->
+
+    <owl:NamedIndividual rdf:about="http://graph.clouditor.io/individuals/azure/CosmosDB">
+        <rdf:type rdf:resource="http://graph.clouditor.io/classes/KeyValueDatabaseService"/>
+        <prop:serviceOf rdf:resource="http://graph.clouditor.io/individuals/azure/Azure"/>
+        <rdfs:label xml:lang="english">Azure CosmosDB</rdfs:label>
+    </owl:NamedIndividual>
+    
+
+
+    <!-- http://graph.clouditor.io/individuals/azure/CosmosDBAccount -->
+
+    <owl:NamedIndividual rdf:about="http://graph.clouditor.io/individuals/azure/CosmosDBAccount">
+        <prop:resourceOf rdf:resource="http://graph.clouditor.io/individuals/azure/CosmosDB"/>
+        <rdfs:label xml:lang="english">Azure CosmosDB Account</rdfs:label>
+    </owl:NamedIndividual>
+    
+
+
+    <!-- http://graph.clouditor.io/individuals/azure/DeviceProvisioning -->
+
+    <owl:NamedIndividual rdf:about="http://graph.clouditor.io/individuals/azure/DeviceProvisioning">
+        <rdf:type rdf:resource="http://graph.clouditor.io/classes/DeviceProvisioningService"/>
+        <rdfs:label xml:lang="english">Azure Device Provisioning</rdfs:label>
+    </owl:NamedIndividual>
+    
+
+
+    <!-- http://graph.clouditor.io/individuals/azure/Disk -->
+
+    <owl:NamedIndividual rdf:about="http://graph.clouditor.io/individuals/azure/Disk">
+        <rdf:type rdf:resource="http://graph.clouditor.io/classes/BlockStorage"/>
+        <rdfs:label xml:lang="english">Azure Disk</rdfs:label>
+    </owl:NamedIndividual>
+    
+
+
+    <!-- http://graph.clouditor.io/individuals/azure/Functions -->
+
+    <owl:NamedIndividual rdf:about="http://graph.clouditor.io/individuals/azure/Functions">
+        <rdf:type rdf:resource="http://graph.clouditor.io/classes/Compute"/>
+        <rdfs:label xml:lang="english">Azure Functions</rdfs:label>
+    </owl:NamedIndividual>
+    
+
+
+    <!-- http://graph.clouditor.io/individuals/azure/IoTHub -->
+
+    <owl:NamedIndividual rdf:about="http://graph.clouditor.io/individuals/azure/IoTHub">
+        <rdf:type rdf:resource="http://graph.clouditor.io/classes/MessagingHub"/>
+        <rdfs:label xml:lang="english">Azure IoT Hub</rdfs:label>
+    </owl:NamedIndividual>
+    
+
+
+    <!-- http://graph.clouditor.io/individuals/azure/SQLDB -->
+
+    <owl:NamedIndividual rdf:about="http://graph.clouditor.io/individuals/azure/SQLDB">
+        <rdf:type rdf:resource="http://graph.clouditor.io/classes/RelationalDatabaseService"/>
+        <prop:serviceOf rdf:resource="http://graph.clouditor.io/individuals/azure/Azure"/>
+        <rdfs:label xml:lang="english">Azure SQLDB</rdfs:label>
+    </owl:NamedIndividual>
+    
+
+
+    <!-- http://graph.clouditor.io/individuals/azure/SQLDBDatabase -->
+
+    <owl:NamedIndividual rdf:about="http://graph.clouditor.io/individuals/azure/SQLDBDatabase">
+        <prop:resourceOf rdf:resource="http://graph.clouditor.io/individuals/azure/SQLDB"/>
+        <rdfs:label xml:lang="english">Azure SQLDB Database</rdfs:label>
+    </owl:NamedIndividual>
+    
+
+
+    <!-- http://graph.clouditor.io/individuals/azure/StorageAccount -->
+
+    <owl:NamedIndividual rdf:about="http://graph.clouditor.io/individuals/azure/StorageAccount">
+        <rdf:type rdf:resource="http://graph.clouditor.io/classes/FileStorage"/>
+        <rdf:type rdf:resource="http://graph.clouditor.io/classes/ObjectStorage"/>
+        <prop:resourceOf rdf:resource="http://graph.clouditor.io/individuals/azure/StorageAccounts"/>
+        <rdfs:label xml:lang="english">Azure StorageAccount</rdfs:label>
+    </owl:NamedIndividual>
+    
+
+
+    <!-- http://graph.clouditor.io/individuals/azure/StorageAccounts -->
+
+    <owl:NamedIndividual rdf:about="http://graph.clouditor.io/individuals/azure/StorageAccounts">
+        <rdf:type rdf:resource="http://graph.clouditor.io/classes/Storage"/>
+        <prop:serviceOf rdf:resource="http://graph.clouditor.io/individuals/azure/Azure"/>
+        <rdfs:label xml:lang="english">Azure StorageAccounts</rdfs:label>
+    </owl:NamedIndividual>
+    
+
+
+    <!-- http://graph.clouditor.io/individuals/azure/Subscription -->
+
+    <owl:NamedIndividual rdf:about="http://graph.clouditor.io/individuals/azure/Subscription">
+        <rdf:type rdf:resource="http://graph.clouditor.io/classes/Account"/>
+        <rdfs:label xml:lang="english">Azure Subscription</rdfs:label>
+    </owl:NamedIndividual>
+    
+
+
+    <!-- http://graph.clouditor.io/individuals/azure/VirtualMachines -->
+
+    <owl:NamedIndividual rdf:about="http://graph.clouditor.io/individuals/azure/VirtualMachines">
+        <rdf:type rdf:resource="http://graph.clouditor.io/classes/Compute"/>
+        <prop:serviceOf rdf:resource="http://graph.clouditor.io/individuals/azure/Azure"/>
+        <rdfs:label xml:lang="english">Azure VirtualMachines</rdfs:label>
+    </owl:NamedIndividual>
+    
+
+
+    <!-- http://graph.clouditor.io/individuals/azure/VirtualMachinesVM -->
+
+    <owl:NamedIndividual rdf:about="http://graph.clouditor.io/individuals/azure/VirtualMachinesVM">
+        <rdf:type rdf:resource="http://graph.clouditor.io/classes/VirtualMachine"/>
+        <prop:resourceOf rdf:resource="http://graph.clouditor.io/individuals/azure/VirtualMachines"/>
+        <rdfs:label xml:lang="english">Azure VirtualMachines VM</rdfs:label>
+    </owl:NamedIndividual>
+    
+
+
+    <!-- http://graph.clouditor.io/individuals/docker/Image -->
+
+    <owl:NamedIndividual rdf:about="http://graph.clouditor.io/individuals/docker/Image">
+        <rdf:type rdf:resource="http://graph.clouditor.io/classes/ContainerImage"/>
+        <rdfs:label xml:lang="english">Docker Image</rdfs:label>
+    </owl:NamedIndividual>
+    
+
+
+    <!-- http://graph.clouditor.io/individuals/k8s/Container -->
+
+    <owl:NamedIndividual rdf:about="http://graph.clouditor.io/individuals/k8s/Container">
+        <rdf:type rdf:resource="http://graph.clouditor.io/classes/Container"/>
+        <prop:resourceOf rdf:resource="http://graph.clouditor.io/individuals/k8s/Pod"/>
+        <rdfs:label xml:lang="english">Kubernetes Container</rdfs:label>
+    </owl:NamedIndividual>
+    
+
+
+    <!-- http://graph.clouditor.io/individuals/k8s/Ingress -->
+
+    <owl:NamedIndividual rdf:about="http://graph.clouditor.io/individuals/k8s/Ingress">
+        <rdf:type rdf:resource="http://graph.clouditor.io/classes/LoadBalancer"/>
+        <prop:resourceOf rdf:resource="http://graph.clouditor.io/individuals/k8s/Kubernetes"/>
+        <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Kubernetes Ingress</rdfs:label>
+    </owl:NamedIndividual>
+    
+
+
+    <!-- http://graph.clouditor.io/individuals/k8s/Kubernetes -->
+
+    <owl:NamedIndividual rdf:about="http://graph.clouditor.io/individuals/k8s/Kubernetes">
+        <rdf:type rdf:resource="http://graph.clouditor.io/classes/ContainerOrchestration"/>
+        <rdfs:label xml:lang="english">Kubernetes</rdfs:label>
+    </owl:NamedIndividual>
+    
+
+
+    <!-- http://graph.clouditor.io/individuals/k8s/Namespace -->
+
+    <owl:NamedIndividual rdf:about="http://graph.clouditor.io/individuals/k8s/Namespace">
+        <prop:resourceOf rdf:resource="http://graph.clouditor.io/individuals/k8s/Kubernetes"/>
+        <rdfs:label xml:lang="english">Kubernetes Namespace</rdfs:label>
+    </owl:NamedIndividual>
+    
+
+
+    <!-- http://graph.clouditor.io/individuals/k8s/Node -->
+
+    <owl:NamedIndividual rdf:about="http://graph.clouditor.io/individuals/k8s/Node">
+        <rdf:type rdf:resource="http://graph.clouditor.io/classes/VirtualMachine"/>
+        <prop:resourceOf rdf:resource="http://graph.clouditor.io/individuals/k8s/Kubernetes"/>
+        <rdfs:label xml:lang="english">Kubernetes Node</rdfs:label>
+    </owl:NamedIndividual>
+    
+
+
+    <!-- http://graph.clouditor.io/individuals/k8s/Pod -->
+
+    <owl:NamedIndividual rdf:about="http://graph.clouditor.io/individuals/k8s/Pod">
+        <prop:collectionOf rdf:resource="http://graph.clouditor.io/individuals/k8s/Container"/>
+        <prop:resourceOf rdf:resource="http://graph.clouditor.io/individuals/k8s/Kubernetes"/>
+        <prop:apiListFunction rdf:datatype="http://www.w3.org/2001/XMLSchema#string">listNamespacedPod</prop:apiListFunction>
+        <rdfs:label xml:lang="english">Kubernetes Pod</rdfs:label>
+    </owl:NamedIndividual>
+    
+
+
+    <!-- http://graph.clouditor.io/individuals/k8s/Service -->
+
+    <owl:NamedIndividual rdf:about="http://graph.clouditor.io/individuals/k8s/Service">
+        <rdf:type rdf:resource="http://graph.clouditor.io/classes/NetworkService"/>
+        <prop:propertyMapping rdf:datatype="http://www.w3.org/2001/XMLSchema#string">ips += clusterIP
+ips += externalIP
+ips += loadBalancerIP
+name = metadata.name</prop:propertyMapping>
+        <rdfs:label xml:lang="english">Kubernetes Service</rdfs:label>
+    </owl:NamedIndividual>
+    
+
+
+    <!-- http://graph.clouditor.io/individuals/k8s/Volume -->
+
+    <owl:NamedIndividual rdf:about="http://graph.clouditor.io/individuals/k8s/Volume">
+        <rdf:type rdf:resource="http://graph.clouditor.io/classes/BlockStorage"/>
+        <prop:resourceOf rdf:resource="http://graph.clouditor.io/individuals/k8s/Kubernetes"/>
+        <rdfs:label xml:lang="english">Kubernetes Volume</rdfs:label>
+    </owl:NamedIndividual>
+    
+
+
+    <!-- http://graph.clouditor.io/individuals/libraries/Jersey -->
+
+    <owl:NamedIndividual rdf:about="http://graph.clouditor.io/individuals/libraries/Jersey">
+        <rdf:type rdf:resource="http://graph.clouditor.io/classes/HttpClientLibrary"/>
+        <rdfs:label xml:lang="english">Jersey</rdfs:label>
+    </owl:NamedIndividual>
+    
+
+
+    <!-- http://graph.clouditor.io/individuals/libraries/SpringBoot -->
+
+    <owl:NamedIndividual rdf:about="http://graph.clouditor.io/individuals/libraries/SpringBoot">
+        <rdf:type rdf:resource="http://graph.clouditor.io/classes/Framework"/>
+        <rdfs:label xml:lang="english">SpringBoot</rdfs:label>
+    </owl:NamedIndividual>
+    
+
+
+    <!-- http://graph.clouditor.io/individuals/libraries/SpringBootRESTController -->
+
+    <owl:NamedIndividual rdf:about="http://graph.clouditor.io/individuals/libraries/SpringBootRESTController">
+        <rdf:type rdf:resource="http://graph.clouditor.io/classes/HttpRequestHandler"/>
+        <rdfs:label xml:lang="english">SpringBoot - REST Controller</rdfs:label>
+    </owl:NamedIndividual>
+    
+
+
+    <!-- http://graph.clouditor.io/individuals/libraries/SpringBootRequestMapping -->
+
+    <owl:NamedIndividual rdf:about="http://graph.clouditor.io/individuals/libraries/SpringBootRequestMapping">
+        <rdf:type rdf:resource="http://graph.clouditor.io/classes/HttpEndpoint"/>
+        <rdfs:label xml:lang="english">SpringBoot - Request Mapping</rdfs:label>
+    </owl:NamedIndividual>
+    
+
+
+    <!-- 
+    ///////////////////////////////////////////////////////////////////////////////////////
+    //
+    // Annotations
+    //
+    ///////////////////////////////////////////////////////////////////////////////////////
+     -->
+
+    <rdf:Description rdf:about="wptmp:entity#contextIsChecked">
+        <dc:description rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Check additional information, e.g. which device is used or the time of the login</dc:description>
+    </rdf:Description>
+</rdf:RDF>
+
+
+
+<!-- Generated by the OWL API (version 4.5.13) https://github.com/owlcs/owlapi -->
+

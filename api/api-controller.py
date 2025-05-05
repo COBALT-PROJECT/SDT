@@ -1,10 +1,10 @@
 import requests
 import uvicorn
 
-from adapter import *
+from core.adapter import *
 from fastapi import Request, FastAPI
 #TODO: GraphQL
-from controller import Controller
+from core.controller import Controller
 
 app = FastAPI()
 ctrl = Controller()

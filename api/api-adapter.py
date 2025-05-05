@@ -5,8 +5,8 @@ import logging
 import os
 import time
 
-from adapter import *
-from fastapi import Request, FastAPI, UploadFile, File
+from core.adapter import *
+from fastapi import Request, FastAPI, UploadFile, File, HTTPException
 from fastapi.responses import JSONResponse
 
 logging.basicConfig(level=logging.INFO)
@@ -159,6 +159,23 @@ async def cyclone2dt(request: Request):
         logger.error(f"Error processing SBOM file: {e}")
         return JSONResponse(content={"error": str(e)}, status_code=500)
 
+@app.get("/fetch-file/")
+def fetch_file(github_url: str):
+    adapter = DTModelAdapter()
+    """
+    Endpoint to fetch a file from a GitHub URL and save it locally.
+
+    Args:
+        github_url (str): The URL of the GitHub file to be fetched.
+
+    Returns:
+        dict: A dictionary containing the message with the local path of the saved file.
+    """
+    try:
+        local_path = adapter.fetch_and_save_file(github_url)
+        return {"message": f"File saved at {local_path}"}
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
 # @app.get("/api/SDT/read/{item_id}")
 # async def read_item(item_id: str):
@@ -220,5 +237,5 @@ async def cyclone2dt(request: Request):
 #         return JSONResponse(content={"error": str(e)}, status_code=500)
 
 #if __name__ == '__main__':
-#uvicorn.run(app, port=8001, host='127.0.0.1')
+uvicorn.run(app, port=8001, host='127.0.0.1')
 

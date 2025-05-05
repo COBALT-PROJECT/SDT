@@ -1,9 +1,13 @@
 import requests
 import os
 import json
+import time
+import sys
 
 # Define the API endpoint
 url = "http://127.0.0.1:8000/api/SDT/create/"
+# Set a reasonable timeout for requests (in seconds)
+REQUEST_TIMEOUT = 30
 
 
 def get_json_file_paths(base_dir):
@@ -32,38 +36,49 @@ if __name__ == "__main__":
     if not json_file_paths:
         print("No JSON files found.")
     else:
-        for path in json_file_paths:
-            print(f"File: {path}")
-            # Read the JSON file
-            with open(os.path.join(base_dir, path), 'r') as file:
-                json_payload = file.read()
+        for path in json_file_paths[:1]:
+            print(f"Processing file: {path}")
+            try:
+                # Read the JSON file
+                with open(os.path.join(base_dir, path), 'r') as file:
+                    json_payload = file.read()
 
-            # Extract the name from the file path
-            name = path.split(os.sep)[0]
-            filename = path.split(os.sep)[1]
-            if not filename.startswith("output"):
-                # print(f"Filename {filename} does not start with 'output'")
+                # Extract the name from the file path
+                name = path.split(os.sep)[0]
+                filename = path.split(os.sep)[1]
+                if not filename.startswith("output"):
+                    # Prepare the data to be sent in the request
+                    data = {
+                        "name": name,
+                        "payload": json.loads(json_payload)  # Parse to ensure valid JSON
+                    }
 
-                # Prepare the data to be sent in the request
-                data = {
-                    "name": name,
-                    "payload": json_payload
-                }
-
-                print(name)
-                
-                # Make the API call
-                response = requests.post(url, json=data)
-
-                # Print the response
-                try:
-                    response_data = response.json()
-                    print(f"Response for {path}: {response_data}")
-                except json.JSONDecodeError:
-                    print(f"Response for {path} is not a valid JSON: {response.text}")
-
-                # break
-
-# Iterate over each file path
-# for file_path in json_file_paths:  # Limit to one iteration
-#     file_path = file_path.strip()  # Remove any leading/trailing whitespace
+                    print(f"Sending request for {name}...")
+                    
+                    # Make the API call with a timeout
+                    start_time = time.time()
+                    response = requests.post(url, json=data, timeout=REQUEST_TIMEOUT)
+                    
+                    print(f"Request completed in {time.time() - start_time:.2f} seconds")
+                    print(f"Response status: {response.status_code}")
+                    
+                    # Print the response
+                    try:
+                        response_data = response.json()
+                        print(f"Response for {path}: {response_data}")
+                    except json.JSONDecodeError:
+                        print(f"Response for {path} is not a valid JSON: {response.text[:500]}...")
+                    
+                    # Optional: Add a delay between requests to prevent overloading the server
+                    time.sleep(1)
+            except requests.Timeout:
+                print(f"Request for {path} timed out after {REQUEST_TIMEOUT} seconds")
+                continue
+            except requests.RequestException as e:
+                print(f"Request error for {path}: {str(e)}")
+                continue
+            except Exception as e:
+                print(f"Error processing {path}: {str(e)}")
+                continue
+            
+            print(f"Completed processing {path}\n" + "-"*50)

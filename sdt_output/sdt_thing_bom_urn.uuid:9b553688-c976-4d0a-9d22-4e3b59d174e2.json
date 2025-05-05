@@ -1,6 +1,4 @@
 {
-    "thingId": "TOE.MailServer.bom.urn.uuid:9b553688-c976-4d0a-9d22-4e3b59d174e2",
-    "policyId": "cobalt:policy",
     "attributes": {
         "bomFormat": "CycloneDX",
         "specVersion": "1.6",

@@ -1,0 +1,92 @@
+{
+    "start_time": "2025-03-25 11:49:37",
+    "end_time": "2025-03-25 11:49:37",
+    "duration": 0.16167807579040527,
+    "total_tests": 11,
+    "successful_tests": 5,
+    "failed_tests": 3,
+    "error_tests": 3,
+    "test_cases": [
+        {
+            "class_name": "TestController",
+            "tests": [
+                {
+                    "name": "test_create_in_ditto",
+                    "status": "Failed",
+                    "error": "None is not true",
+                    "execution_time": 0.03309941291809082
+                },
+                {
+                    "name": "test_delete_item",
+                    "status": "Error",
+                    "error": "'Controller' object has no attribute 'delete_item'",
+                    "execution_time": 0.0007779598236083984
+                },
+                {
+                    "name": "test_read_item",
+                    "status": "Failed",
+                    "error": "None != '/home/abdul/DigitalTwin/Cobalt/SDT/SDT/evidence/testevidence'",
+                    "execution_time": 0.024795055389404297
+                },
+                {
+                    "name": "test_update_item",
+                    "status": "Error",
+                    "error": "'Controller' object has no attribute 'update_item'",
+                    "execution_time": 0.0007789134979248047
+                }
+            ]
+        },
+        {
+            "class_name": "TestEvidenceProvider",
+            "tests": [
+                {
+                    "name": "test_get_evidence_invalid_level",
+                    "status": "Passed",
+                    "error": null,
+                    "execution_time": 0.00032973289489746094
+                },
+                {
+                    "name": "test_get_evidence_nonexistent_dir",
+                    "status": "Passed",
+                    "error": null,
+                    "execution_time": 0.0011258125305175781
+                },
+                {
+                    "name": "test_get_evidence_success",
+                    "status": "Failed",
+                    "error": "Expected 'FileResponse' to have been called once. Called 0 times.",
+                    "execution_time": 0.002201080322265625
+                }
+            ]
+        },
+        {
+            "class_name": "TestAPIEndpoints",
+            "tests": [
+                {
+                    "name": "test_evidence_endpoint",
+                    "status": "Error",
+                    "error": "stat: path should be string, bytes, os.PathLike or integer, not NoneType",
+                    "execution_time": 0.029525041580200195
+                },
+                {
+                    "name": "test_health_check",
+                    "status": "Passed",
+                    "error": null,
+                    "execution_time": 0.0036666393280029297
+                },
+                {
+                    "name": "test_read_item",
+                    "status": "Passed",
+                    "error": null,
+                    "execution_time": 0.061476707458496094
+                },
+                {
+                    "name": "test_root_endpoint",
+                    "status": "Passed",
+                    "error": null,
+                    "execution_time": 0.0034821033477783203
+                }
+            ]
+        }
+    ]
+}
