@@ -57,7 +57,7 @@ Currently three modules are implemented in the preliminary phase:
 ### Setup
 
 1. Clone the repository:
-   git clone https://github.com/your-org/DigitalTwin.git
+   git clone https://github.com/COBALT-PROJECT/SDT
 
 2. Install dependencies:
   python setup.py
@@ -84,12 +84,8 @@ curl -X POST "http://127.0.0.1:8000/api/SDT/create/" \
   }'
 ```
 
-### Fetch a file from GitHub
-```ts
-curl -X GET "http://127.0.0.1:8000/api/SDT/fetch/?github_url=https://github.com/user/repo/blob/main/file.json" \
-  -H "accept: application/json"
-```
-### Fetch a GitHub repository
+
+### Fetch a Evidence from Github repository
 ```ts
 curl -X GET "http://127.0.0.1:8000/api/SDT/fetch/repo/?github_url=https://github.com/username/repo.git" \
   -H "accept: application/json"
@@ -97,14 +93,3 @@ curl -X GET "http://127.0.0.1:8000/api/SDT/fetch/repo/?github_url=https://github
 
 ## Basic Operations of SDT 
 
-
-## Basic Operations for Evidence Collectors
-
-### Watchtower Evidence
-Retrieves evidence from Watchtower for a specific Target of Evaluation.
-```ts
-curl -X GET "http://127.0.0.1:8000/api/SDT/evidence/?toeid={toeid}&level={level}" \
-  -H "accept: application/json" \
-  -J -O
-```
-When level is "toe.ai", returns a ZIP file containing evidence.
