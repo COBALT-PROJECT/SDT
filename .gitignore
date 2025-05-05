@@ -2,3 +2,12 @@ __pycache__/
 build/
 dist/
 SDT.egg-info/
+dummy_uploads/*
+evidence/*
+certs/
+api/
+# Ignore everything in tests
+tests/*
+
+# But don't ignore the test_files directory
+!tests/test_files
