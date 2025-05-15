@@ -1,4 +1,4 @@
-# Security Digital Twin (SDT) Service v0.2.0
+# Security Digital Twin (SDT) Service v0.2.1
 
 ## Overview
 

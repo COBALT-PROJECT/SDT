@@ -10,10 +10,8 @@ from datetime import datetime
 import json
 import uuid
 from datetime import datetime, timezone
+from core.config import Clouditor_IP, Clouditor_PORT  # Import the configuration variables
 
-
-Clouditor_IP = ""
-Clouditor_PORT = ""
 
 class EvidenceProvider():
     """
@@ -148,7 +146,7 @@ class EvidenceProvider():
         import base64
 
         # Step 1: Get access token
-        token_url = "http://10.160.101.137:8080/v1/auth/token"
+        token_url = f"http://{Clouditor_IP}:{Clouditor_PORT}/v1/auth/token"
         client_id = "clouditor"
         client_secret = "clouditor"
         basic_auth = base64.b64encode(f"{client_id}:{client_secret}".encode()).decode()
@@ -169,41 +167,44 @@ class EvidenceProvider():
             if not access_token:
                 logger.error("No access token received from QDT auth endpoint.")
                 return None
+
+
+            # Step 2: Read and transform QPU data
+            try:
+                with open(file_path, "r") as f:
+                    qpu_data = json.load(f)
+                transformed_data = self._transform_qpu_data(qpu_data, toe_id)
+            except Exception as e:
+                logger.error(f"Failed to process QPU data file: {e}")
+                return None
+            
+            # Step 3: Send evidence to QDT endpoint
+            evidence_url = "http://10.160.101.137:8080/v1/assessment/evidences"
+            evidence_headers = {
+                "Authorization": f"Bearer {access_token}",
+                "Content-Type": "application/json"
+            }
+            
+            logger.info(f"Evidence request URL: {evidence_url}")
+            logger.info(f"Evidence request headers: {evidence_headers}")
+            logger.info(f"Evidence request payload: {json.dumps(transformed_data, indent=2)}")
+            
+            try:
+                response = requests.post(
+                    evidence_url,
+                    headers=evidence_headers,
+                    json=transformed_data
+                )
+                logger.info(f"QDT notification sent, status: {response.status_code}")
+                logger.info(f"Response status: {response.status_code}")
+                logger.info(f"Response content: {response.text}")
+                return response.status_code
+            except Exception as e:
+                logger.error(f"Failed to send QDT notification: {e}")
+                return None
+        
         except Exception as e:
             logger.error(f"Failed to obtain access token: {e}")
-            return None
-
-        # Step 2: Read and transform QPU data
-        try:
-            with open(file_path, "r") as f:
-                qpu_data = json.load(f)
-            transformed_data = self._transform_qpu_data(qpu_data, toe_id)
-        except Exception as e:
-            logger.error(f"Failed to process QPU data file: {e}")
-            return None
-        
-        # Step 3: Send evidence to QDT endpoint
-        evidence_url = "http://10.160.101.137:8080/v1/assessment/evidences"
-        evidence_headers = {
-            "Authorization": f"Bearer {access_token}",
-            "Content-Type": "application/json"
-        }
-        
-        logger.info(f"Evidence request URL: {evidence_url}")
-        logger.info(f"Evidence request headers: {evidence_headers}")
-        logger.info(f"Evidence request payload: {json.dumps(transformed_data, indent=2)}")
-        
-        try:
-            response = requests.post(
-                evidence_url,
-                headers=evidence_headers,
-                json=transformed_data
-            )
-            logger.info(f"QDT notification sent, status: {response.status_code}")
-            logger.info(f"Response status: {response.status_code}")
-            logger.info(f"Response content: {response.text}")
-            return response.status_code
-        except Exception as e:
             logger.error(f"Failed to send QDT notification: {e}")
             return None
 
@@ -242,5 +243,6 @@ class EvidenceProvider():
                 }
             }
         }
-
+        print(json.dumps(transformed, indent=2))
+        print("*******????????????????????????????*****")
         return transformed

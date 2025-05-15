@@ -10,3 +10,8 @@ rdflib
 sseclient-py 
 python-multipart
 paho-mqtt
+pytest
+cryptography
+pyjwt
+python-dotenv
+tenacity

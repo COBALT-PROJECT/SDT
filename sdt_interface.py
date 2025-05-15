@@ -24,7 +24,10 @@ logger = logging.getLogger(__name__)
 @asynccontextmanager
 async def connection_startup(app: FastAPI):
     # Code that runs on startup
-    logger.info("Automatically establishing connection with Ditto during startup")
+    logger.info("Deleting existing connection with Ditto during startup")
+    # ctrl.connection_delete()
+
+    logger.info("Automatically establishing new connection with Ditto during startup")
     try:
         response = ctrl.connection_create()
         # logger.info("Connection successfully established with Ditto during startup")
@@ -95,7 +98,7 @@ ctrl.run_ditto_listener()
 # # Endpoint to create a new Security Digital Twin
 
 @app.post("/api/SDT/create/", status_code=201)
-async def create(request: Request, toeid: str = Query(default="123456789", description="Target of Evaluation ID"), payload_type: str = Query(default="BOMS", description="Type of payload (AI or QDT)")):
+async def create(request: Request, toeid: str = Query(default="00000000-0000-0000-0000-000000000000", description="Target of Evaluation ID (UUID format: 00000000-0000-0000-0000-000000000000)"), payload_type: str = Query(default="BOMS", description="Type of payload (AI or QDT)")):
     """
     Endpoint to create a new SDT artifacts in Ditto.
     
@@ -144,7 +147,7 @@ async def create(request: Request, toeid: str = Query(default="123456789", descr
         )
 
 @app.get("/api/SDT/read/")
-async def read_item(toeid: str = Query(..., description="Target of Evaluation ID"), category: str = Query(..., description="Level of evidence to retrieve")):
+async def read_item(toeid: str = Query(default="00000000-0000-0000-0000-000000000000", description="Target of Evaluation ID (UUID format: 00000000-0000-0000-0000-000000000000)"), category: str = Query(..., description="Level of evidence to retrieve")):
     """
     Endpoint to read an item from the Digital Twin model.
 
@@ -163,7 +166,7 @@ async def read_item(toeid: str = Query(..., description="Target of Evaluation ID
         return JSONResponse(content={"error": str(e)}, status_code=500)
 
 @app.put("/api/SDT/update/")
-async def update_item(request: Request, toeid: str = Query(..., description="Target of Evaluation ID"), category: str = Query(..., description="Level of evidence to retrieve")):
+async def update_item(request: Request, toeid: str = Query(default="00000000-0000-0000-0000-000000000000", description="Target of Evaluation ID (UUID format: 00000000-0000-0000-0000-000000000000)"), category: str = Query(..., description="Level of evidence to retrieve")):
     """
     Endpoint to update an item in the Digital Twin model.
 
@@ -184,7 +187,7 @@ async def update_item(request: Request, toeid: str = Query(..., description="Tar
         return JSONResponse(content={"error": str(e)}, status_code=500)
 
 @app.delete("/api/SDT/delete/")
-async def delete_item(toeid: str = Query(..., description="Target of Evaluation ID"), category: str = Query(..., description="Level of evidence to retrieve")):
+async def delete_item(toeid: str = Query(default="00000000-0000-0000-0000-000000000000", description="Target of Evaluation ID (UUID format: 00000000-0000-0000-0000-000000000000)"), category: str = Query(..., description="Level of evidence to retrieve")):
     """
     Endpoint to delete an item from the Digital Twin model.
 
@@ -232,7 +235,7 @@ async def connection(request: Request):
 #============================ ENDPOINTS for EVIDENCE COLLECTION and FETCHING for AISHIELD and Quantum files ============================
     
 @app.get("/api/SDT/sync/AI")
-async def sync_ai_evidences(github_url_AI: str = "https://github.com/arehmanq101/testevidenceAI", toeid: str = Query(description="Target of Evaluation ID"), category: str = Query(default= "AI", description="Level of evidence to retrieve")):
+async def sync_ai_evidences(github_url_AI: str = "https://github.com/arehmanq101/testevidenceAI", toeid: str = Query(default="00000000-0000-0000-0000-000000000000", description="Target of Evaluation ID (UUID format: 00000000-0000-0000-0000-000000000000)"), category: str = Query(default= "AI", description="Level of evidence to retrieve")):
     """
     This endpont is used to sync data coming from connector to the Ditto instance.
 
@@ -260,7 +263,7 @@ async def sync_ai_evidences(github_url_AI: str = "https://github.com/arehmanq101
     
 
 @app.get("/api/SDT/sync/QDT")
-async def sync_quantum_evidences(github_url_QDT: str = "https://github.com/COBALT-PROJECT/Quantum-UC", toeid: str = Query(default="123456789", description="Target of Evaluation ID"), category: str = Query(default= "QDT", description="Level of evidence to retrieve")):
+async def sync_quantum_evidences(github_url_QDT: str = "https://github.com/COBALT-PROJECT/Quantum-UC", toeid: str = Query(default="00000000-0000-0000-0000-000000000000", description="Target of Evaluation ID (UUID format: 00000000-0000-0000-0000-000000000000)"), category: str = Query(default= "QDT", description="Level of evidence to retrieve")):
     """
     This endpont is used to sync data coming from connector to the Ditto instance.
 
@@ -288,7 +291,7 @@ async def sync_quantum_evidences(github_url_QDT: str = "https://github.com/COBAL
 
 
 @app.get("/api/SDT/evidence/")
-async def get_evidence(toeid: str = Query(..., description="Target of Evaluation ID"), category: str = Query(..., description="Level of evidence to retrieve")):
+async def get_evidence(toeid: str = Query(default="00000000-0000-0000-0000-000000000000", description="Target of Evaluation ID (UUID format: 00000000-0000-0000-0000-000000000000)"), category: str = Query(..., description="Level of evidence to retrieve")):
     """
     Get evidence from Watchtower for a specific TOE.
     
@@ -393,4 +396,4 @@ async def health_check():
 #         print(f"Error starting HTTPS server: {str(e)}")
 #         sys.exit(1)
 
-uvicorn.run(app, port=8005, host='0.0.0.0')
+# uvicorn.run(app, port=8005, host='0.0.0.0')

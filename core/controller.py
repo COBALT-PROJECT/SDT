@@ -21,6 +21,7 @@ from datetime import datetime
 from core.translator import Translator
 from core.evidence_provider import EvidenceProvider
 from core.util import FileUtils
+from .config import MQTT_BROKER_IP
 import ast
 
 # Setup logging
@@ -194,13 +195,38 @@ class Controller():
             logger.error(f"Error creating thing in Ditto: {e}")
             return {"success": False, "error": str(e)}
 
-    def name_thiing_id(self,toe_id, payload_type): # convert a name to an ID by appending the level to the toe_id
-        """
-        Convert a name to an ID by appending the level to the toe_id.
-        """
-        # tid_12345678.ai:1234567887498749
+    # def name_thiing_id(self,toe_id, payload_type): # convert a name to an ID by appending the level to the toe_id
+    #     """
+    #     Convert a name to an ID by appending the level to the toe_id.
+    #     """
+    #     # tid_12345678.ai:1234567887498749
 
-        return "tid_" + str(toe_id) + "." + str(payload_type) + ":" + self.unique_id()
+    #     return "tid_" + str(toe_id) + "." + str(payload_type) + ":" + self.unique_id()
+
+    def name_thiing_id(self, toe_id, payload_type):
+        """
+        Convert a name to a Ditto-compatible ID following Eclipse Ditto naming rules.
+        
+        - namespace part must be DNS-like (e.g., 'org.eclipse.ditto')
+        - name part comes after the colon (':')
+        
+        Args:
+            toe_id (str): Target of Evaluation ID
+            payload_type (str): Type of payload (e.g., 'AI', 'QDT')
+            
+        Returns:
+            str: A properly formatted Ditto Thing ID
+        """
+        # Create a proper namespace (DNS-like format)
+        namespace = "cobalt.sdt"
+        
+        # Create a name using toe_id, payload_type, and a unique identifier
+        unique_suffix = self.unique_id()
+        name = f"toe-{toe_id}-{payload_type}-{unique_suffix}"
+        
+        # Return in namespace:name format
+        return f"{namespace}:{name}"
+
 
     def unique_id(self):
         """
@@ -243,14 +269,63 @@ class Controller():
             logger.error(f"Error reading thing from Ditto: {e}")
             return None
         
-    def search_item(self, toe_id, level):
+    # def search_item(self, toe_id, level):
 
         
-        item_id = "tid_" + str(toe_id) + "." + str(level)
+    #     item_id = "tid_" + str(toe_id) + "." + str(level)
 
-        logger.info(f"Attempting to read thing with ID: {item_id}")
+    #     logger.info(f"Attempting to read thing with ID: {item_id}")
 
-        url = f'http://{Ditto_IP}:{Ditto_PORT}/api/2/search/things?fields=thingId&filter=like(thingId,"{item_id}:*")'
+    #     url = f'http://{Ditto_IP}:{Ditto_PORT}/api/2/search/things?fields=thingId&filter=like(thingId,"{item_id}:*")'
+        
+    #     try:
+    #         session = requests.Session()
+    #         session.auth = ("ditto", "ditto")
+    #         logger.info(f"Sending GET request to {url}")
+    #         r = session.get(url, headers={'accept': 'application/json'})
+            
+    #         # print("************")
+    #         if r.status_code == 200:
+    #             try:
+    #                 response_json = r.json()
+    #                 logger.info(f"Successfully retrieved thingID of: {item_id}")
+    #                 logger.info(f"Response data: {response_json}")
+    #                 thingid = response_json["items"][0]["thingId"]
+    #                 # print(response_json)
+    #                 # print(response_json["items"][0]["thingId"])
+    #                 return thingid  # Return the response data
+    #             except json.JSONDecodeError as e:
+    #                 logger.error(f"JSON decode error: {e}")
+    #                 return None
+    #         else:
+    #             logger.error(f"Error retrieving item: Status code {r.status_code}")
+    #             return None
+    #     except requests.exceptions.ConnectionError as e:
+    #         logger.error(f"Connection error while reading thing: {e}")
+    #         return None
+    #     except Exception as e:
+    #         logger.error(f"Error reading thing from Ditto: {e}")
+    #         return None
+
+    def search_item(self, toe_id, level):
+        """
+        Search for a Thing in Ditto based on toe_id and level.
+        
+        Args:
+            toe_id (str): Target of Evaluation ID
+            level (str): Level of thing to search for
+            
+        Returns:
+            str: Thing ID if found, None otherwise
+        """
+        namespace = "cobalt.sdt"
+        
+        logger.info(f"Searching for thing with toe_id: {toe_id}, level: {level}")
+        
+        # Search pattern: look for things with namespace:toe-{toe_id}-{level}* pattern
+        item_id = f"{namespace}:toe-{toe_id}-{level}"
+        
+        url = f'http://{Ditto_IP}:{Ditto_PORT}/api/2/search/things?filter=like(thingId,"{item_id}*")&fields=thingId'
         
         try:
             session = requests.Session()
@@ -258,30 +333,34 @@ class Controller():
             logger.info(f"Sending GET request to {url}")
             r = session.get(url, headers={'accept': 'application/json'})
             
-            # print("************")
             if r.status_code == 200:
                 try:
                     response_json = r.json()
-                    logger.info(f"Successfully retrieved thingID of: {item_id}")
+                    logger.info(f"Successfully retrieved things matching pattern: {item_id}")
                     logger.info(f"Response data: {response_json}")
-                    thingid = response_json["items"][0]["thingId"]
-                    # print(response_json)
-                    # print(response_json["items"][0]["thingId"])
-                    return thingid  # Return the response data
+                    
+                    # Check if items were found
+                    if response_json.get("items") and len(response_json["items"]) > 0:
+                        thingid = response_json["items"][0]["thingId"]
+                        return thingid
+                    else:
+                        logger.info(f"No things found matching pattern: {item_id}")
+                        return None
+                    
                 except json.JSONDecodeError as e:
                     logger.error(f"JSON decode error: {e}")
                     return None
             else:
-                logger.error(f"Error retrieving item: Status code {r.status_code}")
+                logger.error(f"Error retrieving items: Status code {r.status_code}")
                 return None
         except requests.exceptions.ConnectionError as e:
-            logger.error(f"Connection error while reading thing: {e}")
+            logger.error(f"Connection error while searching for thing: {e}")
             return None
         except Exception as e:
-            logger.error(f"Error reading thing from Ditto: {e}")
+            logger.error(f"Error searching for thing in Ditto: {e}")
             return None
 
-    
+
     def delete_item(self, toe_id, level):
 
         
@@ -463,7 +542,7 @@ class Controller():
                     return {"error": f"Failed to create evidence zip: {str(e)}"}
             else:
                 response = self.ep.notification_push_AI(evidence_dir, toe_id)
-                logger.info(f"AI evidences notification sent, status: {response}")
+                logger.info(f"AI evidences notification status: {response}")
                 return response
             
         elif evidence_template.get('evidence_type') == "paths":
@@ -516,7 +595,7 @@ class Controller():
                     return {"error": f"Failed to create evidence zip: {str(e)}"}
             else:
                 response = self.ep.notification_push_QDT(evidence_dir)
-                logger.info(f"QDT evidences notification sent, status: {response}")
+                logger.info(f"QDT evidences notification status: {response}")
                 return response
 
     def connection_create(self, custom_config=None):
@@ -526,7 +605,7 @@ class Controller():
         
         Args:
             custom_config (dict, optional): Custom connection configuration.
-                                           If provided, will use this instead of loading from file.
+                                        If provided, will use this instead of loading from file.
         
         Returns:
             dict: The response from the connection creation request.
@@ -545,8 +624,11 @@ class Controller():
                 logger.info(f"Loading connection configuration from: {connection_file}")
                 
                 with open(connection_file, 'r') as json_data:
-                    payload = json.load(json_data)
-                    logger.info("Connection configuration loaded successfully")
+                    payload_str = json_data.read()
+                    # Replace the MQTT_BROKER_IP placeholder with actual value from config
+                    payload_str = payload_str.replace("{{MQTT_BROKER_IP}}", MQTT_BROKER_IP)
+                    payload = json.loads(payload_str)
+                    logger.info(f"Connection configuration loaded and substituted MQTT broker IP: {MQTT_BROKER_IP}")
             
             # Send the request - using 10000ms timeout as specified
             url = f'http://{Ditto_IP}:{Ditto_PORT}/devops/piggyback/connectivity?timeout=1'
@@ -617,6 +699,13 @@ class Controller():
                 payload = msg.payload.decode()
                 print("Raw MQTT message:", payload)
                 outputJS = json.loads(payload)
+
+                # Check if this is a deletion event by inspecting the topic
+                topic = outputJS.get('topic', '')
+                if '/events/deleted' in topic:
+                    print("Deletion event detected - ignoring")
+                    return
+
                 thing = outputJS.get('value', {})
                 thing_id = thing.get('thingId')
                 attributes = thing.get('attributes', {})
@@ -630,7 +719,7 @@ class Controller():
         client = mqtt.Client()
         client.on_connect = on_connect
         client.on_message = on_message
-        client.connect("test.mosquitto.org", 1883, 60)
+        client.connect(MQTT_BROKER_IP, 1883, 60)
         client.loop_forever()
 
     def run_ditto_listener(self):
@@ -721,8 +810,8 @@ class Controller():
             # print(repo_path_thing)
             logger.info(f"Repository Thing created")
             thingid = self.search_item(toe_id, level)
-            # print(thingid)
-            # print("************")
+            print(thingid)
+            print("*************************COMPARE*******")
             if thingid is not None:
                 # print("************")
                 logger.info(f"Item already exists")

@@ -6,11 +6,11 @@
     "piggybackCommand": {
         "type": "connectivity.commands:createConnection",
         "connection": {
-            "id": "mqtt-connection",
+            "id": "mqtt-connection_101",
             "connectionType": "mqtt",
             "connectionStatus": "open",
             "failoverEnabled": true,
-            "uri": "tcp://test.mosquitto.org:1883",
+            "uri": "tcp://{{MQTT_BROKER_IP}}:1883",
             "sources": [{
                 "addresses": ["ditto-cobalt/#"],
                 "authorizationContext": ["nginx:ditto"],

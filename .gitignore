@@ -1,4 +1,5 @@
 __pycache__/
+core/__pycache__
 build/
 dist/
 SDT.egg-info/
@@ -8,6 +9,7 @@ certs/
 api/
 # Ignore everything in tests
 tests/*
+evidence/*
 
 # But don't ignore the test_files directory
 !tests/test_files
