@@ -12,6 +12,9 @@ import uuid
 from datetime import datetime, timezone
 
 
+Clouditor_IP = ""
+Clouditor_PORT = ""
+
 class EvidenceProvider():
     """
     EvidenceProvider class to handle evidence queries and notifications.
@@ -105,67 +108,139 @@ class EvidenceProvider():
                 os.remove(zip_path)
                 return None
             
+    # def notification_push_QDT(self, file_path, toe_id=None, filename=None, media_type="application/json"):
+    #     """
+    #     Reads a QPU data JSON file, transforms it to the required format, and sends it to the QDT endpoint.
+    #     """
+
+    #     dummy_url = f"http://10.160.101.141:8080/v1/assessment/evidences"
+        
+    #     # Read the JSON file
+    #     try:
+    #         with open(file_path, "r") as f:
+    #             qpu_data = json.load(f)
             
+    #         # Transform data
+    #         transformed_data = self._transform_qpu_data(qpu_data, toe_id)
+            
+    #         # Send the transformed data
+    #         try:
+    #             response = requests.post(
+    #                 dummy_url, 
+    #                 json=transformed_data,
+    #                 headers={"Content-Type": "application/json"}
+    #             )
+    #             logger.info(f"QDT notification sent, status: {response.status_code}")
+    #             return response.status_code
+    #         except Exception as e:
+    #             logger.error(f"Failed to send QDT notification: {e}")
+    #             return None
+                
+    #     except Exception as e:
+    #         logger.error(f"Failed to process QPU data file: {e}")
+    #         return None
     def notification_push_QDT(self, file_path, toe_id=None, filename=None, media_type="application/json"):
         """
-        Reads a QPU data JSON file, transforms it to the required format, and sends it to the QDT endpoint.
+        Reads a QPU data JSON file, transforms it to the required format, obtains an access token,
+        and sends it to the QDT endpoint.
         """
+        import requests
+        import base64
 
-        dummy_url = "http://localhost:8002/upload/qdt"
-        
-        # Read the JSON file
+        # Step 1: Get access token
+        token_url = "http://10.160.101.137:8080/v1/auth/token"
+        client_id = "clouditor"
+        client_secret = "clouditor"
+        basic_auth = base64.b64encode(f"{client_id}:{client_secret}".encode()).decode()
+        headers = {
+            "Authorization": f"Basic {basic_auth}",
+            "Content-Type": "application/x-www-form-urlencoded"
+        }
+        data = {"grant_type": "client_credentials"}
+
+        logger.info(f"Token request URL: {token_url}")
+        logger.info(f"Token request headers: {headers}")
+        logger.info(f"Token request data: {data}")
+
+        try:
+            token_resp = requests.post(token_url, headers=headers, data=data)
+            token_resp.raise_for_status()
+            access_token = token_resp.json().get("access_token")
+            if not access_token:
+                logger.error("No access token received from QDT auth endpoint.")
+                return None
+        except Exception as e:
+            logger.error(f"Failed to obtain access token: {e}")
+            return None
+
+        # Step 2: Read and transform QPU data
         try:
             with open(file_path, "r") as f:
                 qpu_data = json.load(f)
-            
-            # Transform data
             transformed_data = self._transform_qpu_data(qpu_data, toe_id)
-            
-            # Send the transformed data
-            try:
-                response = requests.post(
-                    dummy_url, 
-                    json=transformed_data,
-                    headers={"Content-Type": "application/json"}
-                )
-                logger.info(f"QDT notification sent, status: {response.status_code}")
-                return response.status_code
-            except Exception as e:
-                logger.error(f"Failed to send QDT notification: {e}")
-                return None
-                
         except Exception as e:
             logger.error(f"Failed to process QPU data file: {e}")
             return None
-            
-    def _transform_qpu_data(self, qpu_data, toe_id=None):
-        """
-        Transforms QPU data from the source format to the target format.
-        """
         
-        # Create a dictionary to easily access values by id
-        data_dict = {item["id"]: item["value"] for item in qpu_data}
-        
-        # Generate current timestamp in ISO format with timezone
-        current_time = datetime.now(timezone.utc).isoformat()
-        
-        # Create the transformed structure
-        transformed = {
-            "id": str(uuid.uuid4()),
-            "timestamp": current_time,
-            "target_of_evaluation_id": toe_id or "11111111-1111-1111-1111-111111111111",
-            "toolId": "QPU Evidence Collector",
-            "resource": {
-                "@type": "type.googleapis.com/clouditor.ontology.v1.QPU",
-                "creationTime": current_time,
-                "id": str(uuid.uuid4()),
-                "name": "FOKUS-QPU",
-                "OneQubitErrorRate": str(data_dict.get("OneQubitGateErrorRate", 0.00001)),
-                "TwoQubitErrorRate": str(data_dict.get("TwoQubitGateErrorRate", 0.00001)),
-                "SpamErrorRate": str(data_dict.get("SPAMErrorRate", 0.00001)),
-                "ErrorCorrectionEnabled": data_dict.get("ErrorCorrectionEnabled", True),
-                "raw": json.dumps(qpu_data)
-            }
+        # Step 3: Send evidence to QDT endpoint
+        evidence_url = "http://10.160.101.137:8080/v1/assessment/evidences"
+        evidence_headers = {
+            "Authorization": f"Bearer {access_token}",
+            "Content-Type": "application/json"
         }
         
+        logger.info(f"Evidence request URL: {evidence_url}")
+        logger.info(f"Evidence request headers: {evidence_headers}")
+        logger.info(f"Evidence request payload: {json.dumps(transformed_data, indent=2)}")
+        
+        try:
+            response = requests.post(
+                evidence_url,
+                headers=evidence_headers,
+                json=transformed_data
+            )
+            logger.info(f"QDT notification sent, status: {response.status_code}")
+            logger.info(f"Response status: {response.status_code}")
+            logger.info(f"Response content: {response.text}")
+            return response.status_code
+        except Exception as e:
+            logger.error(f"Failed to send QDT notification: {e}")
+            return None
+
+    def _transform_qpu_data(self, qpu_data, toe_id=None):
+        """Transform QPU data to the format required by Clouditor API."""
+        import uuid
+        from datetime import datetime, timezone
+
+        # Generate fresh UUIDs and timestamp each time
+        evidence_id = str(uuid.uuid4())
+        qpu_id = str(uuid.uuid4())
+        current_time = datetime.now(timezone.utc).isoformat(timespec='seconds').replace('+00:00', 'Z')
+
+        # Create a dictionary to easily access values by id from the source format
+        data_dict = {}
+        for item in qpu_data:
+            if isinstance(item, dict) and "id" in item and "value" in item:
+                data_dict[item["id"]] = item["value"]
+
+        # Return the transformed data - NO outer "evidence" wrapper
+        transformed = {
+            "timestamp": current_time,
+            "id": evidence_id,
+            "targetOfEvaluationId": toe_id or "00000000-0000-0000-0000-000000000000",
+            "toolId": "QPU Collector",
+            "resource": {
+                "qpu": {
+                    "id": qpu_id,
+                    "name": "FOKUS-QPU",
+                    "oneQubitGateErrorRate": str(data_dict.get("OneQubitGateErrorRate", "9.999999999998899e-05")),
+                    "twoQubitGateErrorRate": str(data_dict.get("TwoQubitGateErrorRate", "0.00019998999999992773")),
+                    "spamErrorRate": str(data_dict.get("SPAMErrorRate", "9.999999999998899e-05")),
+                    "errorCorrectionEnabled": data_dict.get("ErrorCorrectionEnabled", False),
+                    "creationTime": current_time,
+                    "raw": json.dumps([{"id": "1234"}])  # Keep this simple for now
+                }
+            }
+        }
+
         return transformed

@@ -8,3 +8,5 @@ cyclonedx-python-lib[validation]
 gitpython
 rdflib
 sseclient-py 
+python-multipart
+paho-mqtt

@@ -581,22 +581,57 @@ class Controller():
             logger.error(error_msg)
             return {"success": False, "error": error_msg}
         
+    # def listen_to_ditto(self):
+    #     url = 'http://ditto:ditto@' + Ditto_IP + ':' + Ditto_PORT + '/api/2/things'
+    #     print("Connecting to Ditto SSE at:", url)
+    #     try:
+    #         messages = SSEClient(url)
+    #         print("SSEClient connected, waiting for messages...")
+    #         for msg in messages:
+    #             print("*************************************Ditto Listener*******************************")
+    #             outputMsg = msg.data
+    #             print("Raw SSE message:", outputMsg)
+    #             if type(outputMsg) is str and len(outputMsg) > 0:
+    #                 try:
+    #                     outputJS = json.loads(outputMsg)
+    #                     print("*****Ditto Listener**000000")
+    #                     print(outputJS.get('thingId'))
+    #                     self.get_evidence(toe_id=None, level=None, thing_id=outputJS.get('thingId'), notify=True)
+    #                 except Exception as e:
+    #                     print("Error parsing SSE message:", e)
+    #     except Exception as e:
+    #         print("Failed to connect to Ditto SSE:", e)
+
+
     def listen_to_ditto(self):
-    # bCreateATCar = True
-        url = 'http://ditto:ditto@' + Ditto_IP+':'+Ditto_PORT + '/api/2/things'
-        print(url)
-        messages = SSEClient(url)
-        for msg in messages:
-            print("*************************************Ditto Listener*******************************")
-            outputMsg = msg.data
-            # print(outputMsg)
-            if type(outputMsg) is str and len(outputMsg) > 0:
-                outputJS = json.loads(outputMsg)
-                print("*****Ditto Listener**000000")
-                print(outputJS['thingId'])
+        import paho.mqtt.client as mqtt
 
-                self.get_evidence(toe_id=None, level=None, thing_id=outputJS['thingId'], notify=True)
+        def on_connect(client, userdata, flags, rc):
+            print("Connected to MQTT broker with result code", rc)
+            client.subscribe("ditto-cobalt/#")
 
+        def on_message(client, userdata, msg):
+            print("*************************************Ditto MQTT Listener*******************************")
+            print(f"Topic: {msg.topic}")
+            try:
+                payload = msg.payload.decode()
+                print("Raw MQTT message:", payload)
+                outputJS = json.loads(payload)
+                thing = outputJS.get('value', {})
+                thing_id = thing.get('thingId')
+                attributes = thing.get('attributes', {})
+                toe_id = attributes.get('toe_id')
+                level = attributes.get('category')
+                print(f"thing_id: {thing_id}, toe_id: {toe_id}, level: {level}")
+                self.get_evidence(toe_id=toe_id, level=level, thing_id=thing_id, notify=True)
+            except Exception as e:
+                print("Error parsing MQTT message:", e)
+
+        client = mqtt.Client()
+        client.on_connect = on_connect
+        client.on_message = on_message
+        client.connect("test.mosquitto.org", 1883, 60)
+        client.loop_forever()
 
     def run_ditto_listener(self):
         """It starts a new thread invoking method run_default()

@@ -1,0 +1,17 @@
+{
+  "id": "06cdb55f-d91c-48fb-b8c7-e19b85afa5fd",
+  "timestamp": "2025-05-08T11:01:31.185396+00:00",
+  "target_of_evaluation_id": "11111111-1111-1111-1111-111111111111",
+  "toolId": "QPU Evidence Collector",
+  "resource": {
+    "@type": "type.googleapis.com/clouditor.ontology.v1.QPU",
+    "creationTime": "2025-05-08T11:01:31.185396+00:00",
+    "id": "22e9d490-0769-4bd5-817e-c259c587bd8e",
+    "name": "FOKUS-QPU",
+    "OneQubitErrorRate": "9.999999999998899e-05",
+    "TwoQubitErrorRate": "0.00019998999999992773",
+    "SpamErrorRate": "9.999999999998899e-05",
+    "ErrorCorrectionEnabled": false,
+    "raw": "[{\"id\": \"OneQubitGateErrorRate\", \"value\": 9.999999999998899e-05, \"type\": \"float\", \"timestamp\": \"2025-03-31 19:52:30\"}, {\"id\": \"TwoQubitGateErrorRate\", \"value\": 0.00019998999999992773, \"type\": \"float\", \"timestamp\": \"2025-03-31 19:52:30\"}, {\"id\": \"SPAMErrorRate\", \"value\": 9.999999999998899e-05, \"type\": \"float\", \"timestamp\": \"2025-03-31 19:52:30\"}, {\"id\": \"ErrorCorrectionEnabled\", \"value\": false, \"type\": \"bool\", \"timestamp\": \"2025-03-31 19:52:30\"}]"
+  }
+}

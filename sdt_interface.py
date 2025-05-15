@@ -393,4 +393,4 @@ async def health_check():
 #         print(f"Error starting HTTPS server: {str(e)}")
 #         sys.exit(1)
 
-# uvicorn.run(app, port=8005, host='0.0.0.0')
+uvicorn.run(app, port=8005, host='0.0.0.0')
