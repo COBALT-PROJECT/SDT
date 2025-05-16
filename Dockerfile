@@ -14,17 +14,15 @@ RUN mkdir -p /etc/mosquitto/conf.d
 RUN echo "listener 1883 0.0.0.0" > /etc/mosquitto/conf.d/custom.conf \
     && echo "allow_anonymous true" >> /etc/mosquitto/conf.d/custom.conf
 
-# Copy requirements first
-COPY SDT/requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
-
 # Copy the application files - fix the copy destination
-COPY SDT /app/
+COPY . /app
+
+RUN pip install --no-cache-dir -r requirements.txt
 
 # Create necessary directories
 RUN mkdir -p evidence sdt_output logs
 
-# Create startup script to run both Mosquitto and the application
+# Create startup script to run both Mosquitto and the sdt_interface
 RUN echo '#!/bin/bash\n\
 # Start Mosquitto in background\n\
 mosquitto -c /etc/mosquitto/mosquitto.conf -d\n\
