@@ -1,5 +1,6 @@
 # Configuration variables for the SDT service
 import socket
+import os
 
 # Get local IP address
 def get_local_ip():
@@ -15,12 +16,12 @@ def get_local_ip():
         return "127.0.0.1"  # Fallback to localhost
 
 # Eclipse Ditto configuration
-Ditto_IP = "localhost"
-Ditto_PORT = "8080"
+Ditto_IP = os.getenv("DITTO_HOST", "ditto")
+Ditto_PORT = "80"
 
 # Local MQTT broker configuration
 LOCAL_IP = get_local_ip()
-MQTT_BROKER_IP = LOCAL_IP  # Use this for your MQTT connections
+MQTT_BROKER_IP = os.getenv  # Use this for your MQTT connections
 
 # Clouditor configuration
 Clouditor_IP = ""
