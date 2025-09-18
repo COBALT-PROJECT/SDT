@@ -34,9 +34,9 @@ async def connection_startup(app: FastAPI):
         print(response)
     except Exception as e:
         logger.error(f"Failed to establish connection during startup: {str(e)}")
-    
+
     yield  # This line separates startup from shutdown code
-    
+
     # Code that runs on shutdown (if needed)
     # You can add cleanup code here
 
@@ -101,27 +101,27 @@ ctrl.run_ditto_listener()
 async def create(request: Request, toeid: str = Query(default="00000000-0000-0000-0000-000000000000", description="Target of Evaluation ID (UUID format: 00000000-0000-0000-0000-000000000000)"), payload_type: str = Query(default="BOMS", description="Type of payload (AI or QDT)")):
     """
     Endpoint to create a new SDT artifacts in Ditto.
-    
+
     Args:
         request (Request): The request object containing the SDT data.
         toeid (str): Target of Evaluation ID
-        payload_type (str): Type of payload (Resource.(AI or QDT or BOMS)) 
-        
+        payload_type (str): Type of payload (Resource.(AI or QDT or BOMS))
+
     Returns:
         JSONResponse: A JSON response containing the creation status and details.
     """
     try:
         logger.info(f"Received request to create a new SDT artifact with ID: {toeid}, type: {payload_type}")
-        
+
         # Parse the request JSON payload
         payload = await request.json()
         payload_str = json.dumps(payload)
         logger.info(f"Processing payload for SDT artifact creation, size: {len(payload_str)} bytes")
-        
+
         # Create the Digital Twin in Ditto
         result = ctrl.create_in_ditto(payload_str, toeid, payload_type)
         logger.info(f"SDT artifact successfully created in Ditto with ID: {toeid}")
-        
+
         return JSONResponse(
             status_code=201,
             content={
@@ -218,12 +218,12 @@ async def connection(request: Request):
         str: A confirmation message indicating the connection was established.
     """
     logger.info("Received request to establish a connection with the Digital Twin")
-    
+
     # # Parse the request JSON payload
     # payload = await request.json()
     # payload_str = json.dumps(payload)
     # logger.info(f"Processing payload for connection establishment")
-    
+
     # Establish the connection with the Digital Twin
     response = ctrl.connection_create()
     logger.info("Connection successfully established with the Digital Twin")
@@ -233,7 +233,7 @@ async def connection(request: Request):
 
 
 #============================ ENDPOINTS for EVIDENCE COLLECTION and FETCHING for AISHIELD and Quantum files ============================
-    
+
 @app.get("/api/SDT/sync/AI")
 async def sync_ai_evidences(github_url_AI: str = "https://github.com/arehmanq101/testevidenceAI", toeid: str = Query(default="00000000-0000-0000-0000-000000000000", description="Target of Evaluation ID (UUID format: 00000000-0000-0000-0000-000000000000)"), category: str = Query(default= "AI", description="Level of evidence to retrieve")):
     """
@@ -248,10 +248,10 @@ async def sync_ai_evidences(github_url_AI: str = "https://github.com/arehmanq101
     logger.info("Received request to sync data from GitHub repository")
 
     try:
-        ctrl.start_update_sync(github_url_AI, toeid, category)  # Start periodic sync every hour 
+        ctrl.start_update_sync(github_url_AI, toeid, category)  # Start periodic sync every hour
         logger.info(f"Starting sync for GitHub repository: {github_url_AI}")
         # return "Repo thing created and in sync with Ditto"
-    
+
         # ctrl.sync_connector_AI(github_url_AI)
         # logger.info(f"Sync completed for AI repository: {github_url_AI}")
 
@@ -260,7 +260,7 @@ async def sync_ai_evidences(github_url_AI: str = "https://github.com/arehmanq101
         return "Repo thing created in Ditto"
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
-    
+
 
 @app.get("/api/SDT/sync/QDT")
 async def sync_quantum_evidences(github_url_QDT: str = "https://github.com/COBALT-PROJECT/Quantum-UC", toeid: str = Query(default="00000000-0000-0000-0000-000000000000", description="Target of Evaluation ID (UUID format: 00000000-0000-0000-0000-000000000000)"), category: str = Query(default= "QDT", description="Level of evidence to retrieve")):
@@ -276,7 +276,7 @@ async def sync_quantum_evidences(github_url_QDT: str = "https://github.com/COBAL
     logger.info("Received request to sync data from GitHub repository")
 
     try:
-        ctrl.start_update_sync(github_url_QDT, toeid, category)  # Start periodic sync every hour 
+        ctrl.start_update_sync(github_url_QDT, toeid, category)  # Start periodic sync every hour
         logger.info(f"Starting sync for GitHub repository: {github_url_QDT}")
         # return "Repo thing created and in sync with Ditto"
 
@@ -294,11 +294,11 @@ async def sync_quantum_evidences(github_url_QDT: str = "https://github.com/COBAL
 async def get_evidence(toeid: str = Query(default="00000000-0000-0000-0000-000000000000", description="Target of Evaluation ID (UUID format: 00000000-0000-0000-0000-000000000000)"), category: str = Query(..., description="Level of evidence to retrieve")):
     """
     Get evidence from Watchtower for a specific TOE.
-    
+
     Args:
         toeid (str): Target of Evaluation ID
      category (str): Level of evidence to retrieve
-        
+
     Returns:
         FileResponse or dict: A zip file of evidence or an error message
     """
@@ -344,7 +344,7 @@ async def health_check():
             "timestamp": time.time(),
             "container": {}
         }
-        
+
         # Get container resource stats if running in Docker
         if os.path.exists("/.dockerenv"):
             # We're in a Docker container
@@ -354,15 +354,15 @@ async def health_check():
                     for line in f:
                         if "VmRSS" in line:
                             health_data["container"]["memory_usage_kb"] = int(line.split()[1])
-                
+
                 # CPU usage (simplified)
                 health_data["container"]["cpu_count"] = os.cpu_count()
-                
+
                 # Disk space
                 disk = os.statvfs("/")
                 free_space_gb = (disk.f_bavail * disk.f_frsize) / (1024 ** 3)
                 health_data["container"]["disk_free_gb"] = round(free_space_gb, 2)
-                
+
                 # Container uptime
                 with open("/proc/uptime") as f:
                     uptime_seconds = float(f.read().split()[0])
@@ -371,7 +371,7 @@ async def health_check():
                 health_data["container"]["metrics_error"] = str(e)
         else:
             health_data["container"]["is_docker"] = False
-        
+
         return JSONResponse(content=health_data)
     except Exception as e:
         logger.error(f"Health check failed: {e}")
@@ -385,8 +385,8 @@ async def health_check():
 #     try:
 #         print("Starting server with HTTPS...")
 #         uvicorn.run(
-#             app, 
-#             host='127.0.0.1', 
+#             app,
+#             host='127.0.0.1',
 #             port=8000,
 #             # ssl_certfile="certs/cert.pem",
 #             # ssl_keyfile="certs/key.pem",

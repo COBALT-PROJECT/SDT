@@ -1,6 +1,6 @@
 # CycloneDX VEX Use Cases (CISA)
 
-These examples map to the [Vulnerability Exploitability Exchange (VEX) use cases defined by CISA](https://docs.google.com/document/d/13WBVlLxZZPo2S9TG1lEfxZsZBjw1DffKuAvMLD6I73o). 
+These examples map to the [Vulnerability Exploitability Exchange (VEX) use cases defined by CISA](https://docs.google.com/document/d/13WBVlLxZZPo2S9TG1lEfxZsZBjw1DffKuAvMLD6I73o).
 
 | Case # | Description | Support |
 |------|------|------|

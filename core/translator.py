@@ -10,8 +10,8 @@ from core.util import FileUtils
 class Translator():
     """
     A class to handle translation between connector and SDT
-    
-    
+
+
     Methods:
 
         fetch_push_save_repo(repo_url: str, local_dir: str = 'evidence') -> dict:
@@ -23,7 +23,7 @@ class Translator():
         get_file_hash(file_path: str, hash_algorithm: str = 'sha256') -> str:
             Computes the hash of a file.
 
-        
+
     """
     def __init__(self):
         print("SDT-translator instance created.")
@@ -35,7 +35,7 @@ class Translator():
     # def to_clouditor(self, s):
     #     r = self.__to_clouditor(s)
     #     return r
-    
+
     # def from_cloud(self, s):
     #     r = self.__from_cloud(s)
     #     return r
@@ -241,7 +241,7 @@ class Translator():
     #     # t_json = json.dumps(s_data["resource"])
 
     #     return None
-    
+
 
 #===================DEMO METHODS======================
     def fetch_push_save_repo(self,toeid: str, category:str,  repo_url, local_dir='evidence'):
@@ -263,21 +263,21 @@ class Translator():
             repo_name = repo_url.split('/')[-1]
             if repo_name.endswith('.git'):
                 repo_name = repo_name[:-4]
-            
+
             # Use current working directory for local storage
             current_dir = os.getcwd()
             save_dir = os.path.join(current_dir, local_dir)
             repo_path = os.path.join(save_dir, repo_name)
-            
+
             # Create directory if it doesn't exist
             os.makedirs(save_dir, exist_ok=True)
-            
+
             # Remove existing repository if it exists
             if os.path.exists(repo_path):
                 import shutil
                 print(f"Repository already exists at {repo_path}. Removing...")
                 shutil.rmtree(repo_path)
-            
+
             # Clone the repository
             print(f"Cloning repository {repo_url} to {repo_path}...")
             # Check if repo already exists and is a git repository
@@ -291,16 +291,16 @@ class Translator():
                 if os.path.exists(repo_path):
                     print(f"Path exists but is not a git repository. Removing...")
                     shutil.rmtree(repo_path)
-                
+
                 # Clone the repository
                 print(f"Cloning repository {repo_url} to {repo_path}...")
                 repository = git.Repo.clone_from(repo_url, repo_path)
-            
+
             # Generate file tree with hashes and modification times
             thing =self.generate_things_for_repo(toeid, category, repo_path, repository)
 
             file_tree = self._generate_file_tree_with_hashes_and_times(repo_path, repository)
-            
+
             # # Create transformed thing object
             # payload = {
             #     "thingId": "toe.ai.repo:b10359fb-7d9e-4bf2-b83b-8b0244a0dd4e",
@@ -328,23 +328,23 @@ class Translator():
             # payload = json.dumps(payload)
             # ctrl.create_in_ditto(payload)
             return thing
-                
+
         except Exception as e:
             raise Exception(f"Failed to clone repository: {str(e)}")
-        
+
     def generate_things_for_repo(self, toeid, category, repo_path, repository):
         """
         Generates a file tree with hashes and modification times for each file in the repository.
-        
+
         Args:
             repo_path (str): Path to the local repository.
             repository (git.Repo): Git repository object.
-            
+
         Returns:
             dict: A dictionary representing the file tree with hashes and modification times.
         """
         file_info = []
-        
+
         # Generate file tree with hashes and modification times
         file_tree = self._generate_file_tree_with_hashes_and_times(repo_path, repository)
         file_tree_object = {}
@@ -374,7 +374,7 @@ class Translator():
                 }
             }
         }
-        
+
         return json.dumps(payload)
 
 
@@ -383,32 +383,32 @@ class Translator():
     def generate_things_for_repo_files(self, repo_path, repository):
         """
         Generates a file tree with hashes and modification times for each file in the repository.
-        
+
         Args:
             repo_path (str): Path to the local repository.
             repository (git.Repo): Git repository object.
-            
+
         Returns:
             dict: A dictionary representing the file tree with hashes and modification times.
         """
         file_info = []
-        
+
         for root, dirs, files in os.walk(repo_path):
             # Skip .git directory
             if '.git' in dirs:
                 dirs.remove('.git')
-            
+
             for file in files:
                 file_path = os.path.join(root, file)
                 file_extension = os.path.splitext(file)[1]
-                
+
                 try:
                     # Get file hash
                     file_hash = self.get_file_hash(file_path)
-                    
+
                     # Get last modification time from git
                     mod_time = self._get_git_modification_time(repository, os.path.relpath(file_path, repo_path))
-                    
+
                     # Store file info as dictionary with extension, path, hash, and modification time
                     file_info = {
                         "extension": file_extension,
@@ -422,7 +422,7 @@ class Translator():
                         "path": file_path,
                         "error": f"Error processing file: {str(e)}"
                     }
-        
+
                 # Create transformed thing object
                 payload = {
                     # "thingId": "toe.ai" + file_extension + ":b10359fb-7d9e-4bf2-b83b-8b0244a0dd4e",
@@ -442,38 +442,38 @@ class Translator():
                 # Send payload to Ditto
                 # ctrl.create_in_ditto(json.dumps(payload))
                 print("File info sent to Controller.")
-                
+
         return json.dumps(payload)
-    
+
     def _generate_file_tree_with_hashes_and_times(self, repo_path, repository):
         """
         Generates a file list with hashes, modification times, and paths for each file in the repository.
-        
+
         Args:
             repo_path (str): Path to the local repository.
             repository (git.Repo): Git repository object.
-            
+
         Returns:
             list: A list of dictionaries containing file information (name, path, hash, and modification time).
         """
         file_list = []
-        
+
         for root, dirs, files in os.walk(repo_path):
             # Skip .git directory
             if '.git' in dirs:
                 dirs.remove('.git')
-            
+
             for file in files:
                 file_path = os.path.join(root, file)
                 rel_file_path = os.path.relpath(file_path, repo_path)
-                
+
                 try:
                     # Get file hash
                     file_hash = self.get_file_hash(file_path)
-                    
+
                     # Get last modification time from git
                     mod_time = self._get_git_modification_time(repository, rel_file_path)
-                    
+
                     # Add file info to the list with the full path
                     file_list.append({
                         "name": file,  # Add the name of the file
@@ -487,17 +487,17 @@ class Translator():
                         "path": file_path,  # Use full path instead of relative path
                         "error": f"Error processing file: {str(e)}"
                     })
-        
+
         return file_list
 
     def _get_git_modification_time(self, repository, file_path):
         """
         Gets the last modification time of a file from git history.
-        
+
         Args:
             repository (git.Repo): Git repository object.
             file_path (str): Relative path to the file from repository root.
-            
+
         Returns:
             str: ISO formatted timestamp of last modification.
         """
@@ -516,10 +516,10 @@ class Translator():
     def _get_last_commit_info(self, repository):
         """
         Gets information about the last commit in the repository.
-        
+
         Args:
             repository (git.Repo): Git repository object.
-            
+
         Returns:
             dict: Information about the last commit.
         """
@@ -537,7 +537,7 @@ class Translator():
     def _get_current_timestamp(self):
         """
         Gets the current timestamp in ISO format.
-        
+
         Returns:
             str: Current timestamp in ISO format.
         """
@@ -562,11 +562,11 @@ class Translator():
             current_dir = os.getcwd()
             file_name = github_url.split('/')[-1]
             file_extension = os.path.splitext(file_name)[1]
-            
+
             # Create directory if it doesn't exist
             save_dir = os.path.join(current_dir, local_dir)
             os.makedirs(save_dir, exist_ok=True)
-            
+
             # Set full file path
             local_path = os.path.join(save_dir, file_name)
 
@@ -579,14 +579,14 @@ class Translator():
             # Download file
             response = requests.get(raw_url)
             response.raise_for_status()  # Raises error for bad status codes
-            
+
             # Save file
             with open(local_path, 'wb') as file:
                 file.write(response.content)
-            
+
             # Get file hash
             downloaded_file_hash = self.get_file_hash(local_path)
-            
+
             # Determine file type and component
             file_types = {
                 '.h5': ("toe.ai.h5", "AI Model"),
@@ -615,12 +615,12 @@ class Translator():
                     }
                 }
             }
-            
+
         except requests.RequestException as e:
             raise Exception(f"Failed to fetch file: {str(e)}")
         except IOError as e:
             raise Exception(f"Failed to save file: {str(e)}")
-        
+
     def get_file_hash(self, file_path, hash_algorithm='sha256'):
         """
         Computes the hash of a file.
@@ -637,4 +637,3 @@ class Translator():
             for chunk in iter(lambda: f.read(4096), b""):
                 hash_func.update(chunk)
         return hash_func.hexdigest()
- 

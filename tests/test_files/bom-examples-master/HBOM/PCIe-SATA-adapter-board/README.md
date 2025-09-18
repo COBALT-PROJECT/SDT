@@ -9,11 +9,11 @@ use cases for hardware devices.
 
 CycloneDX can represent any type of software component, service, and the firmware and hardware devices in an 'as-built'
 product. A formal property taxonomy can be leveraged and extended to describe any type of hardware attribute or configuration.
-CycloneDX can also reference documentation that may describe the 'recipe' for how the product is manufactured.  
+CycloneDX can also reference documentation that may describe the 'recipe' for how the product is manufactured.
 Organizations, or entire industries, can also leverage multiple extension points to develop advanced models.
 
 ## PCIe SATA adapter board
 
-This specific example is a PCIe SATA adapter board created by the [Computer Architecture Group, University of Cambridge 
+This specific example is a PCIe SATA adapter board created by the [Computer Architecture Group, University of Cambridge
 Computer Laboratory](http://www.cl.cam.ac.uk/research/comparch/). The design and parts lists were derived from
 https://github.com/ucam-comparch/pcie-sata-adaptor-board

@@ -9,10 +9,10 @@ The Security Digital Twin (SDT) Service provides a centralized middleware betwee
 Currently three modules are implemented in the preliminary phase:
 
 **SDT-Manager- ADAPTOR**: This module injests data from Target of Evaluation (ToE) e.g BOMS files in CycloneDX, validates the CycloneDX schema and sends to controller
-        
+
 **SDT - CONTROLLER**: Controller receives the data from adaptor, verifies and pushes it to for SDT (e.g Eclipse Ditto)
 
-**SDT- EVIDENCE PROVIDER**: It curates the evidences for each collector e.g Watchtower, Clouditor 
+**SDT- EVIDENCE PROVIDER**: It curates the evidences for each collector e.g Watchtower, Clouditor
 
 **SDT- TRANSLATOR**: It synchronizes the changes through connector and ingest with appropriate data models for SDT (e.g Eclipse Ditto)
 
@@ -66,7 +66,7 @@ Currently three modules are implemented in the preliminary phase:
 curl -X POST "http://127.0.0.1:8000/api/SDT/create/" \
   -H "Content-Type: application/json" \
   -d '{
-    "name": "example", 
+    "name": "example",
     "payload": {
       "bomFormat": "CycloneDX",
       "specVersion": "1.4",
@@ -84,5 +84,4 @@ curl -X GET "http://127.0.0.1:8000/api/SDT/fetch/repo/?github_url=https://github
   -H "accept: application/json"
 ```
 
-## Basic Operations of SDT 
-
+## Basic Operations of SDT

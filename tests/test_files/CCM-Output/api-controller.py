@@ -18,7 +18,7 @@ async def create(request: Request):
     """
     Endpoint to create a Digital Twin (DT) in Ditto.
 
-    This endpoint receives a JSON payload from the request, processes it, 
+    This endpoint receives a JSON payload from the request, processes it,
     and sends it to the Ditto service to create a new Digital Twin.
 
     Args:
@@ -28,9 +28,9 @@ async def create(request: Request):
         str: A confirmation message indicating that the Digital Twin has been created.
 
     Note:
-        The function currently prints the payload and calls the `create_in_ditto` method 
-        from the `ctrl` module to handle the creation in Ditto. The commented-out code 
-        shows an alternative approach using the `requests` library to send the payload 
+        The function currently prints the payload and calls the `create_in_ditto` method
+        from the `ctrl` module to handle the creation in Ditto. The commented-out code
+        shows an alternative approach using the `requests` library to send the payload
         to a Ditto instance running at a specified IP address.
     """
     payload = await request.json()

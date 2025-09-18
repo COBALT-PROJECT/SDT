@@ -59,9 +59,9 @@
               "status": {
                 "on": {
                   "changeLog": {
-                    "changedAt": "2022-08-02T04:30:07", 
+                    "changedAt": "2022-08-02T04:30:07",
                     "changedBy": {
-                      "name": "ditto", 
+                      "name": "ditto",
                       "mail": "ditto@mail.com"
                     }
                   }

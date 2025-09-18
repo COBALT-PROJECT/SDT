@@ -7,7 +7,7 @@ cyclonedx-python-lib
 cyclonedx-python-lib[validation]
 gitpython
 rdflib
-sseclient-py 
+sseclient-py
 python-multipart
 paho-mqtt
 pytest

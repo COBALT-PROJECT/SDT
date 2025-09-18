@@ -23,11 +23,11 @@ class EvidenceProvider():
         controller (object): The controller instance to interact with.
 
     Methods:
-        __init__(self, controller=None): 
+        __init__(self, controller=None):
             Initializes the EvidenceProvider instance.
-        process_query(self, toe_id: str, level: str, json_data: dict): 
+        process_query(self, toe_id: str, level: str, json_data: dict):
             Processes the incoming query and returns the evidence based on the specified level.
-        notification_push(): 
+        notification_push():
             Handles notifications for evidence collectors.
 
     """
@@ -35,17 +35,17 @@ class EvidenceProvider():
 
     def __init__(self, controller=None):
         print(f"SDT-EvidenceProvider instance created")
-    
+
     def process_query(self, toe_id: str, level: str, json_data: dict):
         logger.info(f"Processing query for toe_id: {toe_id}, level: {level}")
-    
+
         # print(json_data)
         # print("************")
         if level == "AI":
             # Get the evidence directory path from the controller for watch tower
             logger.info("Processing AI query")
-        
-            
+
+
             # print(repo_path)
             template = {
                 "evidence_collector": "aishield",
@@ -53,18 +53,18 @@ class EvidenceProvider():
                 "evidence_format": "zip",
                 "evidence_categories": ["AI"],
             }
-         
+
             logger.info(f"AI evidence template send")
             return template
-        
+
         elif level == "BOMS":
             logger.info("Processing toe.BOMS query - not implemented")
             return
         elif level == "QDT":
             # Get the evidence directory path from the controller for clouditor
             logger.info("Processing QDT template")
-        
-            
+
+
             # print(repo_path)
             template = {
                 "evidence_collector": "clouditor",
@@ -73,14 +73,14 @@ class EvidenceProvider():
                 "evidence_format": "file-by-file", # single  "file"
                 "evidence_categories": ["QDT"],
             }
-         
+
             logger.info(f"QDT evidence template send")
             return template
-        
+
         elif level == "cloud":
             logger.info("Processing toe.cloud query - not implemented")
-            return  
-   
+            return
+
 
     def notification_push_AI(self, evidence_dir, toe_id):
         """
@@ -89,9 +89,9 @@ class EvidenceProvider():
         """
         # Use the zip_file utility function instead of doing it manually
         zip_path, zip_filename = FileUtils.zip_file(evidence_dir, toe_id)
-        
+
         dummy_url = "http://localhost:8002/upload/ai"  # Changed to localhost for testing
-        
+
         with open(zip_path, "rb") as f:
             files = {"file": (zip_filename, f, "application/zip")}
             try:
@@ -105,26 +105,26 @@ class EvidenceProvider():
                 # Clean up the temp file even if there's an error
                 os.remove(zip_path)
                 return None
-            
+
     # def notification_push_QDT(self, file_path, toe_id=None, filename=None, media_type="application/json"):
     #     """
     #     Reads a QPU data JSON file, transforms it to the required format, and sends it to the QDT endpoint.
     #     """
 
     #     dummy_url = f"http://10.160.101.141:8080/v1/assessment/evidences"
-        
+
     #     # Read the JSON file
     #     try:
     #         with open(file_path, "r") as f:
     #             qpu_data = json.load(f)
-            
+
     #         # Transform data
     #         transformed_data = self._transform_qpu_data(qpu_data, toe_id)
-            
+
     #         # Send the transformed data
     #         try:
     #             response = requests.post(
-    #                 dummy_url, 
+    #                 dummy_url,
     #                 json=transformed_data,
     #                 headers={"Content-Type": "application/json"}
     #             )
@@ -133,7 +133,7 @@ class EvidenceProvider():
     #         except Exception as e:
     #             logger.error(f"Failed to send QDT notification: {e}")
     #             return None
-                
+
     #     except Exception as e:
     #         logger.error(f"Failed to process QPU data file: {e}")
     #         return None
@@ -177,18 +177,18 @@ class EvidenceProvider():
             except Exception as e:
                 logger.error(f"Failed to process QPU data file: {e}")
                 return None
-            
+
             # Step 3: Send evidence to QDT endpoint
             evidence_url = "http://10.160.101.137:8080/v1/assessment/evidences"
             evidence_headers = {
                 "Authorization": f"Bearer {access_token}",
                 "Content-Type": "application/json"
             }
-            
+
             logger.info(f"Evidence request URL: {evidence_url}")
             logger.info(f"Evidence request headers: {evidence_headers}")
             logger.info(f"Evidence request payload: {json.dumps(transformed_data, indent=2)}")
-            
+
             try:
                 response = requests.post(
                     evidence_url,
@@ -202,7 +202,7 @@ class EvidenceProvider():
             except Exception as e:
                 logger.error(f"Failed to send QDT notification: {e}")
                 return None
-        
+
         except Exception as e:
             logger.error(f"Failed to obtain access token: {e}")
             logger.error(f"Failed to send QDT notification: {e}")

@@ -10,14 +10,14 @@ The specification also provides a mechanism to store URLs to documentation, incl
 
 ## Example-1 Decoupled
 
-This example describes an application called Keycloak, its software inventory and the runtime and environmental 
-configuration. Inventory described in an SBOM will typically remain static until such time the inventory changes. 
-However, operational information is much more dynamic and subject to change. Therefore, it is recommended to decouple 
-the OBOM from the SBOM as this example illustrates. This allows operational information to be updated without having to 
+This example describes an application called Keycloak, its software inventory and the runtime and environmental
+configuration. Inventory described in an SBOM will typically remain static until such time the inventory changes.
+However, operational information is much more dynamic and subject to change. Therefore, it is recommended to decouple
+the OBOM from the SBOM as this example illustrates. This allows operational information to be updated without having to
 create and track additional SBOMs.
 
-The example is not complete, but does attempt to show the types of data that can be captured for operational concerns. 
-The example uses CycloneDX properties to store this data. All properties start with `internal`, 
+The example is not complete, but does attempt to show the types of data that can be captured for operational concerns.
+The example uses CycloneDX properties to store this data. All properties start with `internal`,
 which is a reserved namespace defined in the [CycloneDX Property Taxonomy](https://github.com/CycloneDX/cyclonedx-property-taxonomy).
 
 ### Referencing BOMs
