@@ -10,7 +10,7 @@
             "connectionType": "mqtt",
             "connectionStatus": "open",
             "failoverEnabled": true,
-            "uri": "tcp://{{MQTT_BROKER_IP}}:1883",
+            "uri": "tcp://{{MQTT_BROKER_HOST}}:1883",
             "sources": [{
                 "addresses": ["ditto-cobalt/#"],
                 "authorizationContext": ["nginx:ditto"],

@@ -21,7 +21,7 @@ Ditto_PORT = "80"
 
 # Local MQTT broker configuration
 LOCAL_IP = get_local_ip()
-MQTT_BROKER_IP = os.getenv("MQTT_BROKER_HOST")# Use this for your MQTT connections
+MQTT_BROKER_HOST = os.getenv("MQTT_BROKER_HOST")# Use this for your MQTT connections
 
 # Clouditor configuration
 Clouditor_IP = os.getenv("CLOUDITOR_HOST")

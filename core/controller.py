@@ -21,7 +21,7 @@ from datetime import datetime
 from core.translator import Translator
 from core.evidence_provider import EvidenceProvider
 from core.util import FileUtils
-from .config import MQTT_BROKER_IP
+from .config import MQTT_BROKER_HOST
 import ast
 
 # Setup logging
@@ -625,10 +625,10 @@ class Controller():
                 
                 with open(connection_file, 'r') as json_data:
                     payload_str = json_data.read()
-                    # Replace the MQTT_BROKER_IP placeholder with actual value from config
-                    payload_str = payload_str.replace("{{MQTT_BROKER_IP}}", MQTT_BROKER_IP)
+                    # Replace theMQTT_BROKER_HOST placeholder with actual value from config
+                    payload_str = payload_str.replace("{{MQTT_BROKER_HOST}}",MQTT_BROKER_HOST)
                     payload = json.loads(payload_str)
-                    logger.info(f"Connection configuration loaded and substituted MQTT broker IP: {MQTT_BROKER_IP}")
+                    logger.info(f"Connection configuration loaded and substituted MQTT broker IP: {MQTT_BROKER_HOST}")
             
             # Send the request - using 10000ms timeout as specified
             url = f'http://{Ditto_IP}:{Ditto_PORT}/devops/piggyback/connectivity?timeout=1'
@@ -719,7 +719,7 @@ class Controller():
         client = mqtt.Client()
         client.on_connect = on_connect
         client.on_message = on_message
-        client.connect(MQTT_BROKER_IP, 1883, 60)
+        client.connect(localhost, 1883, 60)
         client.loop_forever()
 
     def run_ditto_listener(self):

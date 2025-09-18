@@ -35,8 +35,6 @@ exec uvicorn sdt_interface:app --host 0.0.0.0 --port 8000\n\
 
 RUN chmod +x /app/start.sh
 
-# Update config.py to use container networking
-RUN sed -i 's/MQTT_BROKER_IP = LOCAL_IP/MQTT_BROKER_IP = "localhost"/g' /app/SDT/core/config.py
 
 # Expose both the API and MQTT ports
 EXPOSE 8000 1883
