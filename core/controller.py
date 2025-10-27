@@ -8,7 +8,9 @@ import threading
 import time
 import random
 from datetime import datetime
-
+import hashlib
+import traceback
+from datetime import datetime
 
 from _thread import start_new_thread
 from sseclient import SSEClient
@@ -17,6 +19,7 @@ from fastapi import HTTPException
 from fastapi.responses import FileResponse
 from .config import Ditto_IP, Ditto_PORT
 from datetime import datetime
+import paho.mqtt.client as mqtt
 
 from core.translator import Translator
 from core.evidence_provider import EvidenceProvider
@@ -138,16 +141,66 @@ class Controller():
     #         print(e)
     #     return None
 
-    def create_in_ditto(self, payload, toe_id ,payload_type):
+    def create_in_ditto(self, payload, toe_id, payload_type, create_genesis: bool = True):
+        """
+        Creates a thing in Ditto and optionally updates the genesis thing.
+        
+        Args:
+            payload: Thing payload
+            toe_id: Target of Evaluation ID
+            payload_type: Type of payload
+            create_genesis: Whether to create/update genesis thing (default: True)
+        """
 
+        # Check if thing already exists using pattern-based search
+        existing_thing_id = self.search_item(toe_id, payload_type)
+        if existing_thing_id is not None:
+            logger.warning(f"Thing with toe_id={toe_id} and type={payload_type} already exists: {existing_thing_id}")
+            
+            # Parse the new payload to compare with existing
+            payload_json = json.loads(payload)
+            
+            # Compare the existing thing with the new payload
+            if self.compare_items(existing_thing_id, payload_json):
+                logger.info(f"Thing content is identical, no update needed")
+                return {
+                    "success": False,
+                    "error": "Thing already exists with identical content",
+                    "thing_id": existing_thing_id,
+                    "message": "Thing already exists and content is identical"
+                }
+            else:
+                # Content differs - AUTO-UPDATE the existing thing
+                logger.info(f"Thing exists but content differs, automatically updating")
+                
+                # Add thingId to payload for update
+                payload_json["thingId"] = existing_thing_id
+                
+                # Call update_item to update the existing thing
+                update_result = self.update_item(existing_thing_id, payload_json)
+                
+                if update_result.get("success"):
+                    # Update genesis thing
+                    if create_genesis:
+                        self.update_genesis_thing(toe_id, existing_thing_id, payload_type, operation="update")
+                    
+                    return {
+                        "success": True,
+                        "status_code": update_result.get("status_code"),
+                        "thing_id": existing_thing_id,
+                        "message": "Thing updated successfully with new content",
+                        "action": "updated"
+                    }
+                else:
+                    return {
+                        "success": False,
+                        "error": "Failed to update thing",
+                        "thing_id": existing_thing_id,
+                        "details": update_result.get("error")
+                    }
 
-        # if toe_id is None and level is None:
-        #     ctrl_id = self.define_thing_id(toe_id, level)
-        # else:
-        #     ctrl_id = self.name_thiing_id(toe_id, level)
-
+        # Generate new unique ID only after confirming thing doesn't exist
         ctrl_id = self.name_thiing_id(toe_id, payload_type)
-
 
         payload_json = json.loads(payload)
         payload_json["thingId"] = ctrl_id
@@ -180,11 +233,26 @@ class Controller():
             response_data = r.json() if r.text else {}
             logger.info(f"Ditto response status: {r.status_code}")
 
-            return {
+            result = {
                 "success": 200 <= r.status_code < 300,
                 "status_code": r.status_code,
-                "response": response_data
+                "response": response_data,
+                "thing_id": thing_id,
+                "action": "created"
             }
+            
+            # Create/Update genesis thing
+            if create_genesis and result["success"]:
+                # Ensure genesis thing exists
+                genesis_result = self.create_genesis_thing(toe_id)
+                
+                # Add child thing to genesis
+                self.update_genesis_thing(toe_id, thing_id, payload_type, operation="add")
+                
+                result["genesis_thing_id"] = self.get_genesis_thing_id(toe_id)
+            
+            return result
+            
         except JSONDecodeError as e:
             logger.error(f"Invalid JSON payload: {e}")
             return {"success": False, "error": f"Invalid JSON: {str(e)}"}
@@ -361,18 +429,24 @@ class Controller():
             return None
 
 
-    def delete_item(self, toe_id, level):
+    def delete_item(self, toe_id, level, update_genesis: bool = True):
+        """
+        Deletes a thing and updates the genesis thing.
+        
+        Args:
+            toe_id: Target of Evaluation ID
+            level: Thing type/level
+            update_genesis: Whether to update genesis thing
+        """
 
-
-        # Use name_thiing_id function to generate the proper item ID
-        item_id = self.name_thiing_id(toe_id, level)
-        logger.info(f"Attempting to delete thing with ID: {item_id}")
-
-        # First verify the item exists before trying to delete
-        existing_item = self.read_item(toe_id, level)
-        if not existing_item:
-            logger.error(f"Thing with ID {item_id} does not exist and cannot be deleted")
+        # First search for the existing thing ID
+        item_id = self.search_item(toe_id, level)
+        
+        if not item_id:
+            logger.error(f"Thing with toe_id {toe_id} and level {level} does not exist and cannot be deleted")
             return {"success": False, "error": "Thing does not exist"}
+        
+        logger.info(f"Attempting to delete thing with ID: {item_id}")
 
         url = f'http://{Ditto_IP}:{Ditto_PORT}/api/2/things/{item_id}'
 
@@ -384,9 +458,14 @@ class Controller():
             # Check if response is successful (2xx status code)
             if 200 <= r.status_code < 300:
                 # Verify deletion by checking if the thing still exists
-                verification = self.read_item(toe_id, level)
+                verification = self.read_item(item_id)
                 if verification is None:
                     logger.info(f"Thing with ID {item_id} was successfully deleted")
+                    
+                    # Update genesis thing
+                    if update_genesis:
+                        self.update_genesis_thing(toe_id, item_id, level, operation="delete")
+                    
                     return {"success": True, "status_code": r.status_code, "message": "Thing deleted successfully"}
                 else:
                     logger.error(f"Thing with ID {item_id} still exists after deletion attempt")
@@ -400,6 +479,7 @@ class Controller():
             return {"success": False, "error": f"Connection error: {str(e)}"}
         except Exception as e:
             logger.error(f"Error deleting thing in Ditto: {e}")
+            return {"success": False, "error": str(e)}
             return {"success": False, "error": str(e)}
 
     def update_item(self, item_id, payload):
@@ -464,33 +544,380 @@ class Controller():
 
     def compare_items(self, item_id1, payload2):
         """
-        Compares two items in Ditto based on their IDs.
-
+        Compares two items based on their source type and appropriate identifiers.
+        
         Args:
-            item_id1 (str): The ID of the first item.
-            item_id2 (str): The ID of the second item.
-
+            item_id1 (str): The ID of the first item in Ditto
+            payload2 (dict or str): The new payload to compare
+            
         Returns:
-            bool: True if the items are equal, False otherwise.
+            bool: True if items are equal, False otherwise
         """
-        # logger.info(f"Comparing items {item_id1} and {item_id2}")
-        print("============OLD==============")
+        logger.info(f"Comparing item {item_id1} with new payload")
+        
+        # Get existing thing from Ditto
         payload1 = self.read_item(item_id1)
-        print(payload1)
-        item1_last_modified = payload1.get("features", {}).get("repository", {}).get("properties", {}).get("last_commit", {})
-        print(item1_last_modified)
-        print("=============NEW=============")
-        # Convert payload2 to JSON if it's a string
+        if payload1 is None:
+            logger.error(f"Could not read item {item_id1}")
+            return False
+        
+        # Convert payload2 to dict if string
         if isinstance(payload2, str):
             payload2 = json.loads(payload2)
-        print(payload2)
+        
+        # Determine source type
+        source_type = payload1.get("attributes", {}).get("sourceType") or payload2.get("attributes", {}).get("sourceType")
+        
+        logger.info(f"Comparing items of type: {source_type}")
+        
+        # Compare based on source type
+        if source_type == "cyclonedx":
+            return self._compare_cyclonedx(payload1, payload2)
+        elif source_type == "oscal-component":
+            return self._compare_oscal(payload1, payload2)
+        elif source_type == "arm-template":
+            return self._compare_arm(payload1, payload2)
+        else:
+            logger.warning(f"Unknown source type: {source_type}, falling back to last_commit comparison")
+            return self._compare_by_last_commit(payload1, payload2)
+
+    def _compare_cyclonedx(self, payload1, payload2):
+        """Compare CycloneDX BOMs using serialNumber and specVersion."""
+        serial1 = payload1.get("attributes", {}).get("serialNumber")
+        serial2 = payload2.get("attributes", {}).get("serialNumber")
+        
+        if serial1 != serial2:
+            logger.info(f"CycloneDX serialNumber differs: {serial1} vs {serial2}")
+            return False
+        
+        # Check BOM version (version field in CycloneDX)
+        version1 = payload1.get("attributes", {}).get("version")
+        version2 = payload2.get("attributes", {}).get("version")
+        
+        if version1 != version2:
+            logger.info(f"CycloneDX version differs: {version1} vs {version2}")
+            return False
+
+        # Also check spec version for additional validation
+        spec1 = payload1.get("attributes", {}).get("specVersion")
+        spec2 = payload2.get("attributes", {}).get("specVersion")
+        
+        if spec1 != spec2:
+            logger.info(f"CycloneDX specVersion differs: {spec1} vs {spec2}")
+            return False
+        
+        # Optional: Compare component count
+        components1 = payload1.get("features", {}).get("components", {}).get("properties", {})
+        components2 = payload2.get("features", {}).get("components", {}).get("properties", {})
+        
+        if len(components1) != len(components2):
+            logger.info(f"CycloneDX component count differs: {len(components1)} vs {len(components2)}")
+            return False
+        
+        logger.info("CycloneDX BOMs are identical")
+        return True
+
+    def _compare_oscal(self, payload1, payload2):
+        """Compare OSCAL components using metadata UUID."""
+        # Get UUID from metadata feature
+        metadata1 = payload1.get("features", {}).get("metadata", {}).get("properties", {})
+        metadata2 = payload2.get("features", {}).get("metadata", {}).get("properties", {})
+        
+        uuid1 = metadata1.get("uuid")
+        uuid2 = metadata2.get("uuid")
+        
+        if uuid1 != uuid2:
+            logger.info(f"OSCAL UUID differs: {uuid1} vs {uuid2}")
+            return False
+        
+        # Also compare version
+        version1 = metadata1.get("version")
+        version2 = metadata2.get("version")
+        
+        if version1 != version2:
+            logger.info(f"OSCAL version differs: {version1} vs {version2}")
+            return False
+        
+        # Optional: Compare component count
+        components1 = payload1.get("features", {}).get("components", {}).get("properties", {})
+        components2 = payload2.get("features", {}).get("components", {}).get("properties", {})
+        
+        if len(components1) != len(components2):
+            logger.info(f"OSCAL component count differs: {len(components1)} vs {len(components2)}")
+            return False
+        
+        logger.info("OSCAL components are identical")
+        return True
+
+    def _compare_arm(self, payload1, payload2):
+        """Compare ARM templates using content hash."""
+       
+        
+        # Get schema and contentVersion
+        schema1 = payload1.get("attributes", {}).get("$schema")
+        schema2 = payload2.get("attributes", {}).get("$schema")
+        
+        if schema1 != schema2:
+            logger.info(f"ARM schema differs: {schema1} vs {schema2}")
+            return False
+        
+        version1 = payload1.get("attributes", {}).get("contentVersion")
+        version2 = payload2.get("attributes", {}).get("contentVersion")
+        
+        if version1 != version2:
+            logger.info(f"ARM contentVersion differs: {version1} vs {version2}")
+            return False
+        
+        # Compare resource count
+        resources1 = payload1.get("features", {}).get("resources", {}).get("properties", {})
+        resources2 = payload2.get("features", {}).get("resources", {}).get("properties", {})
+        
+        if len(resources1) != len(resources2):
+            logger.info(f"ARM resource count differs: {len(resources1)} vs {len(resources2)}")
+            return False
+        
+        # Deep compare: hash the entire resources section
+        hash1 = hashlib.sha256(json.dumps(resources1, sort_keys=True).encode()).hexdigest()
+        hash2 = hashlib.sha256(json.dumps(resources2, sort_keys=True).encode()).hexdigest()
+        
+        if hash1 != hash2:
+            logger.info(f"ARM resources content differs (hash mismatch)")
+            return False
+        
+        logger.info("ARM templates are identical")
+        return True
+
+    def _compare_by_last_commit(self, payload1, payload2):
+        """Fallback comparison using Git last_commit (for repositories)."""
+        item1_last_modified = payload1.get("features", {}).get("repository", {}).get("properties", {}).get("last_commit", {})
         item2_last_modified = payload2.get("features", {}).get("repository", {}).get("properties", {}).get("last_commit", {})
-        print(item2_last_modified)
+        
+        if item1_last_modified == item2_last_modified:
+            logger.info("Items have same last_commit")
+            return True
+        else:
+            logger.info("Items have different last_commit")
+            return False
 
-        return item1_last_modified == item2_last_modified
+    # ======================= Genesis Thing Methods =======================
+
+    def create_genesis_thing(self, toe_id: str, metadata: dict = None):
+        """
+        Creates a genesis (parent) thing for a TOE ID that tracks all related things.
+        
+        Args:
+            toe_id (str): Target of Evaluation ID
+            metadata (dict): Optional metadata about the TOE
+            
+        Returns:
+            dict: Result of genesis thing creation
+        """
+        logger.info(f"Creating genesis thing for TOE ID: {toe_id}")
+        
+        # Check if genesis thing already exists
+        genesis_id = self.get_genesis_thing_id(toe_id)
+        existing_genesis = self.read_item(genesis_id)
+        
+        if existing_genesis:
+            logger.info(f"Genesis thing already exists: {genesis_id}")
+            return {
+                "success": True,
+                "thing_id": genesis_id,
+                "message": "Genesis thing already exists",
+                "action": "exists"
+            }
+        
+        # Create genesis thing payload
+        genesis_payload = {
+            "thingId": genesis_id,
+            "attributes": {
+                "toe_id": toe_id,
+                "type": "genesis",
+                "description": metadata.get("description", f"Genesis thing for TOE {toe_id}") if metadata else f"Genesis thing for TOE {toe_id}",
+                "created_at": datetime.now().isoformat(),
+                "owner": metadata.get("owner", "unknown") if metadata else "unknown",
+                "project": metadata.get("project", "unknown") if metadata else "unknown",
+                "metadata": metadata or {}
+            },
+            "features": {
+                "child_things": {
+                    "properties": {}
+                },
+                "statistics": {
+                    "properties": {
+                        "total_things": 0,
+                        "things_by_type": {},
+                        "last_updated": datetime.now().isoformat()
+                    }
+                }
+            }
+        }
+        
+        # Create policy and attach
+        policy_response, policy_name = self.create_policy()
+        genesis_payload["policyId"] = policy_name
+        
+        # Create the genesis thing in Ditto
+        url = f'http://{Ditto_IP}:{Ditto_PORT}/api/2/things/{genesis_id}'
+        
+        try:
+            session = requests.Session()
+            session.auth = ("ditto", "ditto")
+            r = session.put(url, json=genesis_payload, headers={'Content-Type': 'application/json'})
+            
+            response_data = r.json() if r.text else {}
+            logger.info(f"Genesis thing created with status: {r.status_code}")
+            
+            return {
+                "success": 200 <= r.status_code < 300,
+                "status_code": r.status_code,
+                "thing_id": genesis_id,
+                "response": response_data,
+                "action": "created"
+            }
+        except Exception as e:
+            logger.error(f"Error creating genesis thing: {e}")
+            return {"success": False, "error": str(e)}
+
+    def get_genesis_thing_id(self, toe_id: str):
+        """
+        Generates the genesis thing ID for a TOE ID.
+        
+        Args:
+            toe_id (str): Target of Evaluation ID
+            
+        Returns:
+            str: Genesis thing ID
+        """
+        namespace = "cobalt.sdt"
+        return f"{namespace}:genesis-{toe_id}"
+
+    def update_genesis_thing(self, toe_id: str, child_thing_id: str, payload_type: str, operation: str = "add"):
+        """
+        Updates the genesis thing when child things are added/updated/deleted.
+        
+        Args:
+            toe_id (str): Target of Evaluation ID
+            child_thing_id (str): ID of the child thing
+            payload_type (str): Type of the child thing (AI, QDT, BOMS, etc.)
+            operation (str): Operation type - "add", "update", or "delete"
+            
+        Returns:
+            dict: Result of genesis thing update
+        """
+        logger.info(f"Updating genesis thing for TOE {toe_id}, operation: {operation}")
+        
+        genesis_id = self.get_genesis_thing_id(toe_id)
+        genesis_thing = self.read_item(genesis_id)
+        
+        if not genesis_thing:
+            logger.error(f"Genesis thing not found: {genesis_id}")
+            return {"success": False, "error": "Genesis thing not found"}
+        
+        # Get current child things
+        child_things = genesis_thing.get("features", {}).get("child_things", {}).get("properties", {})
+        statistics = genesis_thing.get("features", {}).get("statistics", {}).get("properties", {})
+        things_by_type = statistics.get("things_by_type", {})
+        
+        # Perform operation
+        if operation == "add" or operation == "update":
+            # Read the child thing to get its details
+            child_thing = self.read_item(child_thing_id)
+            
+            if child_thing:
+                child_things[child_thing_id] = {
+                    "thing_id": child_thing_id,
+                    "type": payload_type,
+                    "created_at": child_thing.get("attributes", {}).get("transformedAt") or datetime.now().isoformat(),
+                    "last_updated": datetime.now().isoformat(),
+                    "attributes": {
+                        "sourceType": child_thing.get("attributes", {}).get("sourceType"),
+                        "componentName": child_thing.get("attributes", {}).get("componentName"),
+                        "componentVersion": child_thing.get("attributes", {}).get("componentVersion")
+                    }
+                }
+                
+                # Update statistics
+                things_by_type[payload_type] = things_by_type.get(payload_type, 0) + (1 if operation == "add" else 0)
+                
+        elif operation == "delete":
+            if child_thing_id in child_things:
+                removed_type = child_things[child_thing_id].get("type")
+                del child_things[child_thing_id]
+                
+                # Update statistics
+                if removed_type in things_by_type:
+                    things_by_type[removed_type] = max(0, things_by_type[removed_type] - 1)
+        
+        # Update statistics
+        statistics["total_things"] = len(child_things)
+        statistics["things_by_type"] = things_by_type
+        statistics["last_updated"] = datetime.now().isoformat()
+        
+        # Update genesis thing
+        genesis_thing["features"]["child_things"]["properties"] = child_things
+        genesis_thing["features"]["statistics"]["properties"] = statistics
+        
+        # Send update to Ditto
+        return self.update_item(genesis_id, genesis_thing)
+
+    def get_genesis_thing(self, toe_id: str):
+        """
+        Retrieves the genesis thing for a TOE ID.
+        
+        Args:
+            toe_id (str): Target of Evaluation ID (can be plain UUID or full genesis thing ID)
+            
+        Returns:
+            dict: Genesis thing or None
+        """
+        # If toe_id already contains the genesis prefix, use it directly
+        if toe_id.startswith("cobalt.sdt:genesis-"):
+            genesis_id = toe_id
+        else:
+            # Otherwise, construct the genesis ID
+            genesis_id = self.get_genesis_thing_id(toe_id)
+        
+        return self.read_item(genesis_id)
+
+    def list_child_things(self, toe_id: str):
+        """
+        Lists all child things under a genesis thing.
+        
+        Args:
+            toe_id (str): Target of Evaluation ID
+            
+        Returns:
+            dict: List of child things
+        """
+        genesis_thing = self.get_genesis_thing(toe_id)
+        
+        if not genesis_thing:
+            return {"success": False, "error": "Genesis thing not found"}
+        
+        child_things = genesis_thing.get("features", {}).get("child_things", {}).get("properties", {})
+        statistics = genesis_thing.get("features", {}).get("statistics", {}).get("properties", {})
+        
+        return {
+            "success": True,
+            "toe_id": toe_id,
+            "genesis_thing_id": self.get_genesis_thing_id(toe_id),
+            "total_things": statistics.get("total_things", 0),
+            "things_by_type": statistics.get("things_by_type", {}),
+            "child_things": child_things,
+            "last_updated": statistics.get("last_updated")
+        }
+
+        
+        if item1_last_modified == item2_last_modified:
+            logger.info("Items have same last_commit")
+            return True
+        else:
+            logger.info("Items have different last_commit")
+            return False
 
 
-
+# ===========================================Evidence Provider methods===========================================
     def get_evidence(self, toe_id: str, level: str, thing_id= None , notify=False):
         """
         Retrieves evidence data based on the provided Target of Evaluation ID and level.
@@ -684,10 +1111,48 @@ class Controller():
     #     except Exception as e:
     #         print("Failed to connect to Ditto SSE:", e)
 
+# changed on 10th Oct 2023 to MQTT
+    # def listen_to_ditto(self):
+        
 
+    #     def on_connect(client, userdata, flags, rc):
+    #         print("Connected to MQTT broker with result code", rc)
+    #         client.subscribe("ditto-cobalt/#")
+
+    #     def on_message(client, userdata, msg):
+    #         print("*************************************Ditto MQTT Listener*******************************")
+    #         print(f"Topic: {msg.topic}")
+    #         try:
+    #             payload = msg.payload.decode()
+    #             print("Raw MQTT message:", payload)
+    #             outputJS = json.loads(payload)
+
+    #             # Check if this is a deletion event by inspecting the topic
+    #             topic = outputJS.get('topic', '')
+    #             if '/events/deleted' in topic:
+    #                 print("Deletion event detected - ignoring")
+    #                 return
+
+    #             thing = outputJS.get('value', {})
+    #             thing_id = thing.get('thingId')
+    #             attributes = thing.get('attributes', {})
+    #             toe_id = attributes.get('toe_id')
+    #             level = attributes.get('category')
+    #             print(f"thing_id: {thing_id}, toe_id: {toe_id}, level: {level}")
+    #             self.get_evidence(toe_id=toe_id, level=level, thing_id=thing_id, notify=True)
+    #         except Exception as e:
+    #             print("Error parsing MQTT message:", e)
+
+    #     client = mqtt.Client()
+    #     client.on_connect = on_connect
+    #     client.on_message = on_message
+    #     client.connect("localhost", 1883, 60)
+    #     client.loop_forever()
     def listen_to_ditto(self):
-        import paho.mqtt.client as mqtt
-
+        """
+        Enhanced MQTT listener that routes to configured evidence collectors
+        """
+        
         def on_connect(client, userdata, flags, rc):
             print("Connected to MQTT broker with result code", rc)
             client.subscribe("ditto-cobalt/#")
@@ -695,12 +1160,13 @@ class Controller():
         def on_message(client, userdata, msg):
             print("*************************************Ditto MQTT Listener*******************************")
             print(f"Topic: {msg.topic}")
+            
             try:
                 payload = msg.payload.decode()
                 print("Raw MQTT message:", payload)
                 outputJS = json.loads(payload)
 
-                # Check if this is a deletion event by inspecting the topic
+                # Check if this is a deletion event
                 topic = outputJS.get('topic', '')
                 if '/events/deleted' in topic:
                     print("Deletion event detected - ignoring")
@@ -711,16 +1177,38 @@ class Controller():
                 attributes = thing.get('attributes', {})
                 toe_id = attributes.get('toe_id')
                 level = attributes.get('category')
+                
                 print(f"thing_id: {thing_id}, toe_id: {toe_id}, level: {level}")
-                self.get_evidence(toe_id=toe_id, level=level, thing_id=thing_id, notify=True)
+                
+                # NEW: Route to configured evidence collectors based on template
+                matching_collectors = self.ep.get_subscribed_collectors(msg.topic, thing)
+                
+                if matching_collectors:
+                    print(f"Found {len(matching_collectors)} matching collectors")
+                    for collector in matching_collectors:
+                        collector_id = collector.get("collector_id")
+                        print(f"Notifying collector: {collector_id}")
+                        
+                        try:
+                            self.ep.send_notification(collector, thing)
+                        except Exception as e:
+                            logger.error(f"Error notifying {collector_id}: {e}")
+                else:
+                    # Fallback to old method for backward compatibility
+                    print("No matching collectors, using legacy notification")
+                    self.get_evidence(toe_id=toe_id, level=level, thing_id=thing_id, notify=True)
+                    
             except Exception as e:
                 print("Error parsing MQTT message:", e)
+                import traceback
+                traceback.print_exc()
 
         client = mqtt.Client()
         client.on_connect = on_connect
         client.on_message = on_message
-        client.connect(localhost, 1883, 60)
+        client.connect("localhost", 1883, 60)
         client.loop_forever()
+
 
     def run_ditto_listener(self):
         """It starts a new thread invoking method run_default()
@@ -731,7 +1219,7 @@ class Controller():
         except Exception as e:
             print("ERROR:{}".format(e))
 
-#==========================Demo Methods==========================
+#==========================OLD Demo Github sync Methods==========================
 
     def sync_connector_AI(self, github_url: str, toe_id, level): # Hardcoding the URL for now
         """
@@ -986,3 +1474,538 @@ class Controller():
     #             for thread_id, thread in self._sync_threads.items()
     #         }
     #     }
+
+#==========================IDS Connector Methods==========================
+
+    # OLD METHODS - COMMENTED OUT
+    # def sync_ids_connector(self, data_source_url: str, toe_id: str, category: str):
+    #     """
+    #     Handles IDS connector communication and data fetching
+    #     """
+    #     logger.info(f"Controller: Initiating IDS connector sync from {data_source_url}")
+    #     
+    #     try:
+    #         # Make HTTP call to IDS connector
+    #         
+    #         response = requests.post(
+    #             "http://true-connector:8080/api/data/fetch",
+    #             json={
+    #                 "source_url": data_source_url,
+    #                 "callback_url": f"http://your-sdt-api:8000/api/SDT/receive",
+    #                 "toeid": toe_id,
+    #                 "category": category
+    #             },
+    #             timeout=30
+    #         )
+    #         response.raise_for_status()
+    #         
+    #         logger.info("IDS connector fetch initiated successfully")
+    #         return {"message": "Data fetch initiated", "status": "pending"}
+    #         
+    #     except Exception as e:
+    #         logger.error(f"Error in IDS connector sync: {e}")
+    #         raise Exception(f"IDS connector sync failed: {str(e)}")
+
+    # def receive_and_process_file(self, file_content: bytes, filename: str, toe_id: str, category: str, metadata: str = "{}"):
+    #     """
+    #     Processes received files and creates digital twin
+    #     """
+    #     logger.info(f"Controller: Processing received file {filename}")
+    #     
+    #     try:
+    #         import os
+    #         # Create evidence directory if it doesn't exist
+    #         os.makedirs("evidence", exist_ok=True)
+    #         
+    #         # Save the file
+    #         file_path = f"evidence/{toe_id}_{category}_{filename}"
+    #         with open(file_path, "wb") as f:
+    #             f.write(file_content)
+    #         
+    #         # Forward to translator for processing
+    #         result = self.trs.process_received_file(file_path, filename, toe_id, category, metadata)
+    #         
+    #         # Create digital twin in Ditto
+    #         self.create_in_ditto(result, toe_id, category)
+    #         
+    #         logger.info(f"File processed and digital twin created successfully")
+    #         return {"message": "File processed and twin created", "file_path": file_path}
+    #         
+    #     except Exception as e:
+    #         logger.error(f"Error processing received file: {e}")
+    #         raise Exception(f"File processing failed: {str(e)}")
+
+    # def register_webhook(self, provider_id: str, dataset_id: str, toe_id: str, category: str, webhook_url: str):
+    #     """
+    #     Registers webhook with external IDS connector
+    #     """
+    #     logger.info(f"Controller: Registering webhook for provider {provider_id}")
+    #     
+    #     try:
+    #         webhook_payload = {
+    #             "webhook_url": webhook_url,
+    #             "provider_id": provider_id,
+    #             "dataset_id": dataset_id,
+    #             "filters": {"category": category, "file_types": [".h5", ".py", ".ipynb", ".txt"]}
+    #         }
+    #         
+    #         response = requests.post(
+    #             "http://ids-connector:8080/api/subscribe",
+    #             json=webhook_payload,
+    #             timeout=30
+    #         )
+    #         response.raise_for_status()
+    #         
+    #         logger.info("Webhook registration successful")
+    #         return {"message": "Subscription created", "status": "active"}
+    #         
+    #     except Exception as e:
+    #         logger.error(f"Error registering webhook: {e}")
+    #         raise Exception(f"Webhook registration failed: {str(e)}")
+
+    # def process_webhook(self, toe_id: str, payload: dict):
+    #     """
+    #     Processes webhook notifications and downloads files
+    #     """
+    #     logger.info(f"Controller: Processing webhook for TOE {toe_id}")
+    #     
+    #     try:
+    #         # Extract file URL from webhook payload
+    #         file_url = payload.get("file_url")
+    #         category = payload.get("category", "AI")
+    #         
+    #         if not file_url:
+    #             raise Exception("No file_url found in webhook payload")
+    #         
+    #         # Forward to translator to download and process file
+    #         result = self.trs.download_and_process_file(file_url, toe_id, category)
+    #         
+    #         # Create digital twin in Ditto
+    #         self.create_in_ditto(result["thing_data"], toe_id, category)
+    #         
+    #         logger.info("Webhook processed successfully")
+    #         return {"message": "Webhook processed successfully", "file_path": result.get("file_path")}
+    #         
+    #     except Exception as e:
+    #         logger.error(f"Error processing webhook: {e}")
+    #         raise Exception(f"Webhook processing failed: {str(e)}")
+
+    # NEW IDS CONNECTOR METHODS - Based on IDSconnector.yml specification
+    
+    def sync_ids_connector(self, data_path: str, toe_id: str, ids_connector_url: str = "http://localhost:8080"):
+        """
+        Sync data from IDS connector
+        
+        Args:
+            data_path: Path to data in IDS connector ('all' or specific resource name)
+            toe_id: Target of Evaluation ID
+            ids_connector_url: Base URL of IDS connector
+            
+        Returns:
+            dict: Result of sync operation
+        """
+        logger.info(f"Syncing from IDS connector: {ids_connector_url}, data_path: {data_path}")
+        
+        try:
+            # Call IDS connector endpoint
+            url = f"{ids_connector_url}/api/IDSconnector/get_data_request"
+            params = {"data_path": data_path}
+            
+            logger.info(f"Calling IDS connector: {url} with params: {params}")
+            response = requests.get(url, params=params, timeout=30)
+            response.raise_for_status()
+            
+            ids_response = response.json()
+            logger.info(f"Received IDS response: {ids_response.get('data_type')}")
+            
+            # Process IDS response through translator
+            processed_things = self.trs.process_ids_response(ids_response, toe_id)
+            
+            logger.info(f"Processed {len(processed_things)} things from IDS connector")
+            
+            # Create things in Ditto and update genesis
+            results = []
+            for thing_json in processed_things:
+                thing = json.loads(thing_json)
+                category = thing.get("attributes", {}).get("category", "UNKNOWN")
+                
+                # Create thing in Ditto
+                result = self.create_in_ditto(thing_json, toe_id, category, create_genesis=True)
+                
+                results.append({
+                    "category": category,
+                    "thing_id": result.get("thing_id"),
+                    "success": result.get("success"),
+                    "action": result.get("action")
+                })
+            
+            # Update genesis thing with IDS sync metadata
+            self._update_genesis_with_ids_sync(toe_id, data_path, len(processed_things))
+            
+            return {
+                "success": True,
+                "message": f"Synced {len(processed_things)} artifacts from IDS connector",
+                "data_path": data_path,
+                "results": results
+            }
+            
+        except requests.exceptions.HTTPError as e:
+            if e.response.status_code == 404:
+                logger.error(f"Resource not found in IDS connector: {data_path}")
+                return {
+                    "success": False,
+                    "error": f"Resource not found: {data_path}",
+                    "detail": e.response.json() if e.response.text else str(e)
+                }
+            else:
+                raise
+        except Exception as e:
+            logger.error(f"Error syncing from IDS connector: {e}")
+
+            logger.error(traceback.format_exc())
+            return {
+                "success": False,
+                "error": str(e)
+            }
+
+    def _update_genesis_with_ids_sync(self, toe_id: str, data_path: str, artifact_count: int):
+        """
+        Update genesis thing with IDS sync metadata
+        """
+        
+        
+        try:
+            genesis_id = self.get_genesis_thing_id(toe_id)
+            genesis_thing = self.read_item(genesis_id)
+            
+            if not genesis_thing:
+                return
+            
+            # Add IDS sync history
+            if "ids_sync_history" not in genesis_thing.get("features", {}):
+                genesis_thing["features"]["ids_sync_history"] = {"properties": {}}
+            
+            sync_id = datetime.now().strftime("%Y%m%d_%H%M%S")
+            genesis_thing["features"]["ids_sync_history"]["properties"][sync_id] = {
+                "data_path": data_path,
+                "artifact_count": artifact_count,
+                "timestamp": datetime.now().isoformat()
+            }
+            
+            # Update genesis
+            self.update_item(genesis_id, genesis_thing)
+            logger.info(f"Updated genesis thing with IDS sync metadata")
+            
+        except Exception as e:
+            logger.error(f"Error updating genesis with IDS sync: {e}")
+
+
+    # NEW GITHUB METHODS Similar to NEW IDS methods
+
+    def sync_github_repository(self, github_url: str, toe_id: str, category: str):
+        """
+        Sync GitHub repository to Ditto instance and update genesis thing
+        
+        Args:
+            github_url: The URL of the GitHub repository to clone
+            toe_id: Target of Evaluation ID
+            category: Category/type of evidence (AI, BOMS, etc.)
+            
+        Returns:
+            dict: Result of sync operation with repository details
+        """
+        logger.info(f"Syncing GitHub repository: {github_url} for TOE: {toe_id}, category: {category}")
+        
+        try:
+            # Clone and process repository using translator
+            repo_thing_json = self.trs.fetch_push_save_repo(toe_id, category, github_url)
+            repo_thing = json.loads(repo_thing_json)
+            
+            # Extract repository name from URL
+            repo_name = github_url.split('/')[-1]
+            if repo_name.endswith('.git'):
+                repo_name = repo_name[:-4]
+            
+            logger.info(f"Repository '{repo_name}' cloned and processed")
+            
+            # Check if repository thing already exists
+            thing_id = self.search_item(toe_id, category)
+            
+            action = None
+            if thing_id is not None:
+                logger.info(f"Repository thing already exists: {thing_id}")
+                
+                # Compare existing thing with new one
+                if self.compare_items(thing_id, repo_thing_json):
+                    logger.info(f"Repository content unchanged, no update needed")
+                    action = "unchanged"
+                    result_thing_id = thing_id
+                else:
+                    logger.info(f"Repository content changed, updating thing")
+                    update_result = self.update_item(thing_id, repo_thing)
+                    action = "updated"
+                    result_thing_id = thing_id
+            else:
+                # Create new thing in Ditto
+                logger.info(f"Creating new repository thing in Ditto")
+                create_result = self.create_in_ditto(repo_thing_json, toe_id, category, create_genesis=True)
+                action = "created"
+                result_thing_id = create_result.get("thing_id")
+            
+            # Update genesis thing with GitHub sync metadata
+            self._update_genesis_with_github_sync(toe_id, github_url, repo_name, category)
+            
+            return {
+                "success": True,
+                "message": f"GitHub repository '{repo_name}' {action} successfully",
+                "repository_name": repo_name,
+                "thing_id": result_thing_id,
+                "action": action,
+                "genesis_updated": True
+            }
+            
+        except Exception as e:
+            logger.error(f"Error syncing GitHub repository: {e}")
+            
+            logger.error(traceback.format_exc())
+            return {
+                "success": False,
+                "error": f"Failed to sync GitHub repository: {str(e)}"
+            }
+
+    def _update_genesis_with_github_sync(self, toe_id: str, github_url: str, repo_name: str, category: str):
+        """
+        Update genesis thing with GitHub sync metadata
+        """
+        
+        
+        try:
+            genesis_id = self.get_genesis_thing_id(toe_id)
+            genesis_thing = self.read_item(genesis_id)
+            
+            if not genesis_thing:
+                logger.warning(f"Genesis thing not found for TOE: {toe_id}")
+                return
+            
+            # Add GitHub sync history feature if it doesn't exist
+            if "github_sync_history" not in genesis_thing.get("features", {}):
+                genesis_thing["features"]["github_sync_history"] = {"properties": {}}
+            
+            # Create unique sync ID with timestamp
+            sync_id = datetime.now().strftime("%Y%m%d_%H%M%S")
+            genesis_thing["features"]["github_sync_history"]["properties"][sync_id] = {
+                "github_url": github_url,
+                "repository_name": repo_name,
+                "category": category,
+                "timestamp": datetime.now().isoformat()
+            }
+            
+            # Update genesis thing
+            self.update_item(genesis_id, genesis_thing)
+            logger.info(f"Updated genesis thing with GitHub sync metadata for repo: {repo_name}")
+            
+        except Exception as e:
+            logger.error(f"Error updating genesis with GitHub sync: {e}")
+    
+    def get_evidence_flexible(self, toe_id: str, category: str = None, 
+                              evidence_type: str = "thing", files: list = None,
+                              include_patterns: list = None, exclude_patterns: list = None,
+                              format: str = "json", transform: str = None,
+                              include_features: list = None):
+        """
+        Flexible evidence retrieval with dynamic configuration.
+        
+        Args:
+            toe_id: Target of Evaluation ID
+            category: Category to filter (optional)
+            evidence_type: Type of evidence (thing|zip|files|specific|auto)
+            files: Specific files to retrieve (for files/specific type)
+            include_patterns: Include patterns for ZIP (for zip type)
+            exclude_patterns: Exclude patterns for ZIP (for zip type)
+            format: Response format (json|download)
+            transform: Transform name or custom mapping JSON
+            include_features: Features to include (for thing type)
+        
+        Returns:
+            Evidence data in requested format
+        """
+        logger.info(f"Flexible evidence retrieval: toe_id={toe_id}, type={evidence_type}, format={format}")
+        
+        try:
+            # Get genesis thing
+            genesis_id = self.get_genesis_thing_id(toe_id)
+            genesis_thing = self.read_item(genesis_id)
+            
+            if not genesis_thing:
+                logger.error(f"Genesis thing not found for TOE: {toe_id}")
+                return {"error": "Genesis thing not found", "toe_id": toe_id}
+            
+            # Get thing IDs from correct feature structure
+            child_things_feature = genesis_thing.get("features", {}).get("child_things", {})
+            child_things_dict = child_things_feature.get("properties", {})
+            
+            # Extract thing IDs from child_things dictionary
+            thing_ids = list(child_things_dict.keys())
+            
+            logger.info(f"Found {len(thing_ids)} things in genesis for TOE {toe_id}")
+            
+            if not thing_ids:
+                logger.warning(f"No child things found in genesis for TOE: {toe_id}")
+                return {
+                    "error": "No things found in genesis",
+                    "toe_id": toe_id,
+                    "hint": "Create things first using /api/SDT/create or /api/SDT/sync/github"
+                }
+            
+            # Filter by category if specified
+            if category:
+                filtered_ids = []
+                for thing_id, thing_info in child_things_dict.items():
+                    if thing_info.get("type") == category:
+                        filtered_ids.append(thing_id)
+                
+                if not filtered_ids:
+                    logger.warning(f"No things found for category: {category}")
+                    available_categories = list(set(t.get("type") for t in child_things_dict.values()))
+                    return {
+                        "error": f"No things found for category: {category}",
+                        "toe_id": toe_id,
+                        "available_categories": available_categories
+                    }
+                
+                thing_ids = filtered_ids
+            
+            # Get the first matching thing
+            thing_id = thing_ids[0]
+            thing = self.read_item(thing_id)
+            if not thing:
+                logger.error(f"Thing not found: {thing_ids[0]}")
+                return {"error": "Thing not found", "thing_id": thing_ids[0]}
+            
+            # Build evidence configuration
+            evidence_config = {
+                "type": evidence_type,
+                "files": files or [],
+                "include": include_patterns or ["*"],
+                "exclude": exclude_patterns or [],
+                "include_features": include_features
+            }
+            
+            # Prepare evidence using evidence provider
+            evidence_data = self.ep.prepare_evidence_flexible(thing, evidence_config)
+            
+            # Apply transformation if specified
+            if transform:
+                evidence_data = self.ep.apply_transform_flexible(thing, evidence_data, transform)
+                # When transform is applied, return only the transformed content
+                return evidence_data
+            
+            # Return based on format
+            if format == "json":
+                return self._return_evidence_json(evidence_data, thing, evidence_type)
+            elif format == "download":
+                return self._return_evidence_download(evidence_data, thing, evidence_type)
+            else:
+                logger.warning(f"Unknown format: {format}, returning JSON")
+                return self._return_evidence_json(evidence_data, thing, evidence_type)
+        
+        except Exception as e:
+            logger.error(f"Error in flexible evidence retrieval: {e}")
+            import traceback
+            traceback.print_exc()
+            return {"error": str(e), "toe_id": toe_id}
+    
+    def _return_evidence_json(self, evidence_data: dict, thing: dict, evidence_type: str):
+        """
+        Return evidence as JSON metadata.
+        """
+        result = {
+            "thing_id": thing.get("thingId"),
+            "evidence_type": evidence_type,
+            "timestamp": datetime.now().isoformat(),
+            "data": evidence_data
+        }
+        
+        # Add file metadata if files are present
+        if evidence_type in ["files", "specific"] and isinstance(evidence_data, dict):
+            files = evidence_data.get("files", [])
+            result["files_count"] = len(files)
+            result["files_metadata"] = [
+                {"name": f.get("name"), "size": f.get("size"), "hash": f.get("hash")} 
+                for f in files
+            ]
+        
+        return result
+    
+    def _return_evidence_download(self, evidence_data: dict, thing: dict, evidence_type: str):
+        """
+        Return evidence as file download.
+        This returns metadata that the API endpoint will use to construct FileResponse.
+        """
+        if evidence_type == "zip":
+            # ZIP was created, return path for download
+            if isinstance(evidence_data, dict) and "zip_path" in evidence_data:
+                return {
+                    "download": True,
+                    "file_path": evidence_data["zip_path"],
+                    "filename": f"{thing.get('thingId', 'evidence').replace(':', '_')}.zip",
+                    "media_type": "application/zip"
+                }
+        
+        elif evidence_type in ["files", "specific"]:
+            # Create ZIP from specific files
+            files_info = evidence_data.get("files", [])
+            if files_info:
+                zip_path = self._create_files_zip(files_info, thing.get("thingId"))
+                return {
+                    "download": True,
+                    "file_path": zip_path,
+                    "filename": f"{thing.get('thingId', 'evidence').replace(':', '_')}_files.zip",
+                    "media_type": "application/zip"
+                }
+        
+        elif evidence_type == "thing":
+            # Convert thing to JSON file
+            import tempfile
+            temp_dir = tempfile.mkdtemp()
+            thing_id = thing.get("thingId", "unknown").replace(":", "_")
+            json_path = os.path.join(temp_dir, f"{thing_id}.json")
+            
+            with open(json_path, 'w') as f:
+                json.dump(evidence_data, f, indent=2)
+            
+            return {
+                "download": True,
+                "file_path": json_path,
+                "filename": f"{thing_id}.json",
+                "media_type": "application/json"
+            }
+        
+        # Fallback to JSON return
+        return {
+            "download": False,
+            "error": "Cannot create download for this evidence type",
+            "data": evidence_data
+        }
+    
+    def _create_files_zip(self, files_info: list, thing_id: str):
+        """
+        Create a ZIP archive from list of files.
+        """
+        import tempfile
+        import zipfile
+        
+        temp_dir = tempfile.mkdtemp()
+        zip_filename = f"{thing_id.replace(':', '_')}_files.zip"
+        zip_path = os.path.join(temp_dir, zip_filename)
+        
+        with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
+            for file_info in files_info:
+                file_path = file_info.get("path")
+                file_name = file_info.get("name")
+                
+                if file_path and os.path.exists(file_path):
+                    zipf.write(file_path, file_name)
+        
+        logger.info(f"Created files ZIP with {len(files_info)} files at: {zip_path}")
+        return zip_path

@@ -1,20 +1,26 @@
-# Security Digital Twin (SDT) Service v0.2.1
+# Security Digital Twin (SDT) Service v0.2.5
+
 
 ## Overview
 
-The Security Digital Twin (SDT) Service provides a centralized middleware between various security evidence sources of Target of Evaluation and the (Eclipse Ditto) as stored representaion in Digital Twin platform. This service offers a comprehensive REST API for validating CycloneDX payloads, managing Digital Twin instances, collecting security evidence, and Synchronizing with ToE through connector .
+The Security Digital Twin (SDT) Service v0.2.5 is a centralized middleware for integrating, validating, and synchronizing security evidence from multiple sources (CycloneDX, OSCAL, ARM, Watchtower, Clouditor, GitHub, Quantum DT) into a Digital Twin platform (Eclipse Ditto). It now supports Template 3.0, advanced evidence packaging, flexible authentication, and custom transformation for automated security and compliance workflows.
+
 
 ## Architecture
 
-Currently three modules are implemented in the preliminary phase:
+**Core Modules:**
 
-**SDT-Manager- ADAPTOR**: This module injests data from Target of Evaluation (ToE) e.g BOMS files in CycloneDX, validates the CycloneDX schema and sends to controller
+- **SDT-Manager-ADAPTOR**: Ingests and validates evidence (CycloneDX, OSCAL, ARM, etc.) from Target of Evaluation (ToE), then forwards to Controller.
+- **SDT-CONTROLLER**: Orchestrates evidence flow, manages Digital Twin lifecycle, and routes data to Ditto and collectors.
+- **SDT-EVIDENCE PROVIDER**: Prepares, transforms, and packages evidence for collectors (Watchtower, Clouditor, AIShield, SPECTRA, BOM Analyzer, Quantum DT, etc.) using Template 3.0.
+- **SDT-TRANSLATOR**: Synchronizes changes and ingests data models for Ditto via connectors (IDS, GitHub, Webhook, Quantum).
 
-**SDT - CONTROLLER**: Controller receives the data from adaptor, verifies and pushes it to for SDT (e.g Eclipse Ditto)
+**New in v0.2.5:**
+- Template 3.0: Unified evidence combinations, flexible packaging, and transformation
+- Advanced authentication: Bearer, API Key, OAuth2
+- Custom mapping and variable substitution for evidence
+- Collector integration with auto-routing and notification
 
-**SDT- EVIDENCE PROVIDER**: It curates the evidences for each collector e.g Watchtower, Clouditor
-
-**SDT- TRANSLATOR**: It synchronizes the changes through connector and ingest with appropriate data models for SDT (e.g Eclipse Ditto)
 
 ## Table of Contents
 
@@ -29,13 +35,16 @@ Currently three modules are implemented in the preliminary phase:
 
 
 
+
 ## Features
 
-- **CycloneDX Integration**: Convert and validate CycloneDX payloads
-- **Digital Twin Management**: Create, read, update, and delete Digital Twins in Eclipse Ditto
-- **Evidence Collection**: Retrieve and package evidence from Watchtower and Clouditor
-- **GitHub Integration**: Fetch files and clone repositories from GitHub
-- **RESTful API**: Simple HTTP interface for all operations
+- **Template 3.0 Evidence Combinations**: 22+ combinations for thing, files, zip, with flexible authentication and transformation
+- **CycloneDX, OSCAL, ARM Integration**: Validate and transform evidence from multiple formats
+- **Digital Twin Management**: Full CRUD for Eclipse Ditto instances
+- **Custom Transformation**: Named transformers and custom field mapping with variable substitution
+- **GitHub & IDS Connector**: Fetch, clone, and synchronize repositories and external data sources
+
+
 
 ## Installation
 
@@ -45,24 +54,44 @@ Currently three modules are implemented in the preliminary phase:
 - FastAPI
 - Uvicorn
 - Eclipse Ditto instance
-- Git (for repository operations)
+- Git
+- Mosquitto MQTT broker
 
 ### Setup
 
 1. Clone the repository:
-   git clone https://github.com/COBALT-PROJECT/SDT
+  git clone https://github.com/COBALT-PROJECT/SDT
 
 2. Install dependencies:
-  python setup.py
+  pip install -r requirements.txt
 
 3. Run the service:
   python SDT/sdt_service.py
 
+Or use Docker:
+  docker build -t sdt-service .
+  docker run -p 8000:8000 -p 1883:1883 sdt-service
+
+
 ## API Reference
 
-## Basic Operations for SDT Manager
-### Create a Digital Twin from CycloneDX data
-```ts
+### Core Endpoints
+
+- **Create Digital Twin from CycloneDX/OSCAL/ARM:**
+  POST /api/SDT/create/
+- **Read/Update/Delete Digital Twin:**
+  GET /api/SDT/read/, PUT /api/SDT/update/, DELETE /api/SDT/delete/
+- **Sync Evidence from GitHub/IDS Connector:**
+  GET /api/SDT/sync/github, GET /api/SDT/sync/ids
+- **Collector Evidence Notification:**
+  GET /api/SDT/evidence/
+- **Genesis Thing Management:**
+  POST /api/SDT/genesis/create, GET /api/SDT/genesis/read
+- **Health Check:**
+  GET /api/SDT/health
+
+### Example: Create a Digital Twin from CycloneDX
+```bash
 curl -X POST "http://127.0.0.1:8000/api/SDT/create/" \
   -H "Content-Type: application/json" \
   -d '{
@@ -77,11 +106,52 @@ curl -X POST "http://127.0.0.1:8000/api/SDT/create/" \
   }'
 ```
 
-
-### Fetch a Evidence from Github repository
-```ts
-curl -X GET "http://127.0.0.1:8000/api/SDT/fetch/repo/?github_url=https://github.com/username/repo.git" \
+### Example: Fetch Evidence from GitHub
+```bash
+curl -X GET "http://127.0.0.1:8000/api/SDT/sync/github?github_url=https://github.com/username/repo.git&toeid=test-001&category=AI" \
   -H "accept: application/json"
 ```
 
-## Basic Operations of SDT
+## Template 3.0 Evidence Combinations
+
+Supports 22+ combinations for evidence packaging, authentication, and transformation. See `EVIDENCE_COMBINATIONS_TABLE.md` for full matrix.
+
+| Evidence Type | Packaging | Auth | Transform | Output | Use Case |
+|--------------|-----------|------|-----------|--------|----------|
+| thing        | JSON      | Any  | Any       | Full/partial thing | Storage, analysis |
+| files        | JSON      | Any  | Any       | File metadata      | File analysis |
+| zip          | Multipart | Any  | None      | ZIP archive        | Repo scan |
+
+**Authentication:** None, Bearer, API Key, OAuth2
+**Transformation:** Direct, named transformer, custom mapping with variable substitution
+
+**Collector Examples:**
+- AIShield: ZIP archive, no auth
+- SPECTRA: Specific files, Bearer token, custom mapping
+- Clouditor: QPU data, OAuth2, custom mapping
+- BOM Analyzer: Thing with features, API Key
+
+## Usage Examples
+
+### AI Repository Scan
+1. Create thing from GitHub repo (category: AI)
+2. AIShield receives ZIP archive
+3. SPECTRA receives selected files with custom mapping
+
+### Quantum DT Evidence
+1. Create thing from Quantum repo (category: QDT)
+2. Clouditor receives QPU data with OAuth2 authentication
+
+### BOM Analysis
+1. Create thing from CycloneDX BOM
+2. BOM Analyzer receives filtered thing JSON with API Key
+
+## Changelog v0.2.5
+
+- Template 3.0: Unified evidence combinations and flexible packaging
+- Advanced authentication: Bearer, API Key, OAuth2
+- Custom mapping and variable substitution for evidence
+- Collector integration with auto-routing and notification
+- Quantum DT and QPU evidence support
+- Improved Dockerfile and MQTT integration
+- Enhanced API endpoints and health checks

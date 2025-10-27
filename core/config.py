@@ -21,12 +21,18 @@ Ditto_PORT = "80"
 
 # Local MQTT broker configuration
 LOCAL_IP = get_local_ip()
-MQTT_BROKER_HOST = os.getenv("MQTT_BROKER_HOST")# Use this for your MQTT connections
-
+# MQTT_BROKER_HOST = os.getenv("MQTT_BROKER_HOST", "localhost")# Use this for your MQTT connections
+MQTT_BROKER_HOST = os.getenv("MQTT_BROKER_HOST", "localhost")  # Fixed typo
 # Clouditor configuration
 Clouditor_IP = os.getenv("CLOUDITOR_HOST")
 Clouditor_PORT = "8080"
 
+#IDS Connector configuration
+
 # Other global configuration parameters can be added here
 LOG_LEVEL = "INFO"
 OUTPUT_DIR = "/home/abdul/DigitalTwin/Cobalt/SDT/sdt_output"
+
+
+IDS_CONNECTOR_HOST = os.getenv("IDS_CONNECTOR_HOST", "localhost")
+IDS_CONNECTOR_PORT = os.getenv("IDS_CONNECTOR_PORT", "8080")

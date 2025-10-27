@@ -4,8 +4,14 @@ import os
 import git
 import hashlib
 import shutil
+import sys
+import time
+import logging
+import traceback
+from datetime import datetime
 
-from core.util import FileUtils
+from .util import FileUtils
+from .adapter_all import DTModelAdapter
 
 class Translator():
     """
@@ -274,7 +280,6 @@ class Translator():
 
             # Remove existing repository if it exists
             if os.path.exists(repo_path):
-                import shutil
                 print(f"Repository already exists at {repo_path}. Removing...")
                 shutil.rmtree(repo_path)
 
@@ -309,7 +314,7 @@ class Translator():
             #         "TOE": "cobalt:TOE",
             #         "repo_name": repo_name,
             #         "github": repo_url,
-            #         "component_type": "Repository",
+            #         "source": "Repository",
             #         "clone_timestamp": self._get_current_timestamp()
             #     },
             #     "features": {
@@ -358,7 +363,7 @@ class Translator():
                 "category": category,
                 "repo_name": os.path.basename(repo_path),
                 "github": repo_path,
-                "component_type": "Repository",
+                "sourceType": "Repository",
                 "clone_timestamp": self._get_current_timestamp()
             },
             "features": {
@@ -508,7 +513,6 @@ class Translator():
                 return logs.strip()
             else:
                 # If no git history for the file, return current time
-                from datetime import datetime
                 return datetime.now().isoformat()
         except Exception as e:
             return f"Error getting modification time: {str(e)}"
@@ -541,9 +545,6 @@ class Translator():
         Returns:
             str: Current timestamp in ISO format.
         """
-        from datetime import datetime
-
-
         return datetime.now().isoformat()
 
     def fetch_push_save_file(self, github_url, local_dir='evidence'):
@@ -603,7 +604,7 @@ class Translator():
                     "TOE": "cobalt:TOE",
                     "file_name": file_name,
                     "github": github_url,
-                    "component_type": component
+                    "source": component
                 },
                 "features": {
                     "file": {
@@ -637,3 +638,502 @@ class Translator():
             for chunk in iter(lambda: f.read(4096), b""):
                 hash_func.update(chunk)
         return hash_func.hexdigest()
+
+#==========================IDS Connector File Processing Methods==========================
+
+    def process_received_file(self, file_path: str, filename: str, toe_id: str, category: str, metadata: str = "{}"):
+        """
+        Processes received files based on their type and returns thing format for Ditto
+        """
+        print(f"Translator: Processing received file {filename} at {file_path}")
+        
+        try:
+            file_ext = filename.split('.')[-1].lower()
+            
+            # Route to appropriate processor based on file extension
+            processors = {
+                'h5': self._process_h5_file,
+                'py': self._process_python_file,
+                'ipynb': self._process_notebook_file,
+                'txt': self._process_text_file
+            }
+            
+            processor = processors.get(file_ext, self._process_generic_file)
+            result = processor(file_path, toe_id, category, metadata)
+            
+            print(f"Translator: File processing completed for {filename}")
+            return result
+            
+        except Exception as e:
+            print(f"Error in translator processing file: {e}")
+            raise Exception(f"File processing failed: {str(e)}")
+
+    def download_and_process_file(self, file_url: str, toe_id: str, category: str):
+        """
+        Downloads file from URL and processes it, returning thing format
+        """
+        print(f"Translator: Downloading file from {file_url}")
+        
+        try:
+            response = requests.get(file_url, timeout=30)
+            response.raise_for_status()
+            
+            # Extract filename from URL
+            filename = file_url.split('/')[-1]
+            if not filename:
+                filename = f"downloaded_file_{int(time.time())}"
+            
+            # Create evidence directory if it doesn't exist
+            os.makedirs("evidence", exist_ok=True)
+            
+            # Save file
+            file_path = f"evidence/{toe_id}_{category}_{filename}"
+            with open(file_path, 'wb') as f:
+                f.write(response.content)
+            
+            # Process the file
+            thing_data = self.process_received_file(file_path, filename, toe_id, category)
+            
+            print(f"Translator: File downloaded and processed successfully")
+            return {
+                "thing_data": thing_data,
+                "file_path": file_path,
+                "message": "File downloaded and processed"
+            }
+            
+        except Exception as e:
+            print(f"Error downloading and processing file: {e}")
+            raise Exception(f"Download and processing failed: {str(e)}")
+
+    def _process_h5_file(self, file_path: str, toe_id: str, category: str, metadata: str = "{}"):
+        """Process .h5 AI model files - returns thing format"""
+        return json.dumps({
+            "attributes": {
+                "toe_id": toe_id,
+                "category": category,
+                "file_path": file_path,
+                "file_type": "h5",
+                "model_framework": "tensorflow",
+                "file_hash": self.get_file_hash(file_path),
+                "processing_timestamp": time.time(),
+                "metadata": metadata
+            },
+            "features": {
+                "ai_model": {
+                    "properties": {
+                        "model_type": "neural_network",
+                        "file_size": os.path.getsize(file_path),
+                        "framework": "tensorflow"
+                    }
+                }
+            }
+        })
+
+    def _process_python_file(self, file_path: str, toe_id: str, category: str, metadata: str = "{}"):
+        """Process .py Python files - returns thing format"""
+        return json.dumps({
+            "attributes": {
+                "toe_id": toe_id,
+                "category": category,
+                "file_path": file_path,
+                "file_type": "py",
+                "language": "python",
+                "file_hash": self.get_file_hash(file_path),
+                "processing_timestamp": time.time(),
+                "metadata": metadata
+            },
+            "features": {
+                "source_code": {
+                    "properties": {
+                        "file_size": os.path.getsize(file_path),
+                        "line_count": self._count_lines(file_path),
+                        "language": "python"
+                    }
+                }
+            }
+        })
+
+    def _process_notebook_file(self, file_path: str, toe_id: str, category: str, metadata: str = "{}"):
+        """Process .ipynb Jupyter notebook files - returns thing format"""
+        return json.dumps({
+            "attributes": {
+                "toe_id": toe_id,
+                "category": category,
+                "file_path": file_path,
+                "file_type": "ipynb",
+                "notebook_type": "jupyter",
+                "file_hash": self.get_file_hash(file_path),
+                "processing_timestamp": time.time(),
+                "metadata": metadata
+            },
+            "features": {
+                "notebook": {
+                    "properties": {
+                        "file_size": os.path.getsize(file_path),
+                        "notebook_type": "jupyter"
+                    }
+                }
+            }
+        })
+
+    def _process_text_file(self, file_path: str, toe_id: str, category: str, metadata: str = "{}"):
+        """Process .txt text files - returns thing format"""
+        return json.dumps({
+            "attributes": {
+                "toe_id": toe_id,
+                "category": category,
+                "file_path": file_path,
+                "file_type": "txt",
+                "content_type": "text",
+                "file_hash": self.get_file_hash(file_path),
+                "processing_timestamp": time.time(),
+                "metadata": metadata
+            },
+            "features": {
+                "document": {
+                    "properties": {
+                        "file_size": os.path.getsize(file_path),
+                        "line_count": self._count_lines(file_path),
+                        "content_type": "text"
+                    }
+                }
+            }
+        })
+
+    def _process_generic_file(self, file_path: str, toe_id: str, category: str, metadata: str = "{}"):
+        """Process generic files - returns thing format"""
+        return json.dumps({
+            "attributes": {
+                "toe_id": toe_id,
+                "category": category,
+                "file_path": file_path,
+                "file_type": "unknown",
+                "file_hash": self.get_file_hash(file_path),
+                "processing_timestamp": time.time(),
+                "metadata": metadata
+            },
+            "features": {
+                "generic_file": {
+                    "properties": {
+                        "file_size": os.path.getsize(file_path)
+                    }
+                }
+            }
+        })
+
+    def _count_lines(self, file_path: str) -> int:
+        """Count lines in a text file"""
+        try:
+            with open(file_path, 'r', encoding='utf-8') as f:
+                return sum(1 for _ in f)
+        except Exception:
+            return 0
+
+    #===================IDS CONNECTOR METHODS======================
+    
+    def process_ids_response(self, ids_response: dict, toe_id: str):
+        """
+        Process IDS connector response and route to appropriate handler
+        
+        Args:
+            ids_response: Response from IDS connector GET /api/IDSconnector/get_data_request
+            toe_id: Target of Evaluation ID
+            
+        Returns:
+            list: List of processed things
+        """
+        logger = logging.getLogger(__name__)
+        
+        logger.info(f"Processing IDS response for TOE: {toe_id}")
+        
+        processed_things = []
+        
+        try:
+            # Parse the IDS response
+            data_type = ids_response.get("data_type")
+            data_str = ids_response.get("data")
+            
+            if data_type != "json":
+                logger.error(f"Unsupported data type: {data_type}")
+                return processed_things
+            
+            # Parse the data string
+            data = json.loads(data_str)
+            
+            # Check if it's a list of resources or single resource
+            resources = data.get("resources", [data]) if isinstance(data, dict) else [data]
+            
+            for resource in resources:
+                # Extract resource metadata
+                resource_id = resource.get("@id", "")
+                resource_type = resource.get("@type", "")
+                title = resource.get("ids:title", [{}])[0].get("@value", "Unknown")
+                description = resource.get("ids:description", [{}])[0].get("@value", "")
+                
+                logger.info(f"Processing resource: {title} (Type: {resource_type})")
+                
+                # Detect artifact type from description or content
+                artifact_type = self._detect_artifact_type_from_ids(resource, description)
+                
+                if artifact_type:
+                    logger.info(f"Detected artifact type: {artifact_type}")
+                    thing = self._process_ids_artifact(resource, toe_id, artifact_type)
+                    if thing:
+                        processed_things.append(thing)
+                else:
+                    # Store as generic file
+                    logger.info(f"Storing as generic evidence file")
+                    thing = self._store_ids_evidence_file(resource, toe_id)
+                    if thing:
+                        processed_things.append(thing)
+            
+            return processed_things
+            
+        except Exception as e:
+            logger.error(f"Error processing IDS response: {e}")
+            logger.error(traceback.format_exc())
+            return processed_things
+
+    def _detect_artifact_type_from_ids(self, resource: dict, description: str):
+        """
+        Detect artifact type from IDS resource
+        
+        Returns:
+            str: 'cyclonedx', 'oscal', 'arm', or None
+        """
+        # Try to parse description as JSON to detect type
+        try:
+            desc_json = json.loads(description)
+            
+            # Check for CycloneDX identifiers
+            if "bomFormat" in desc_json or "specVersion" in desc_json:
+                return "cyclonedx"
+            
+            # Check for OSCAL identifiers
+            if "component-definition" in desc_json or "component" in desc_json:
+                return "oscal"
+            
+            # Check for ARM template identifiers
+            if "$schema" in desc_json and "microsoft.com/schemas" in str(desc_json.get("$schema", "")).lower():
+                return "arm"
+            
+            # Check for Clouditor evidence (your use case)
+            if "cloudServiceId" in desc_json or "toolId" in desc_json:
+                return "clouditor"
+                
+        except:
+            pass
+        
+        # Check resource title/keywords
+        keywords = resource.get("ids:keyword", [])
+        for keyword in keywords:
+            keyword_value = keyword.get("@value", "").lower()
+            if "bom" in keyword_value or "sbom" in keyword_value:
+                return "cyclonedx"
+            if "oscal" in keyword_value:
+                return "oscal"
+            if "arm" in keyword_value or "azure" in keyword_value:
+                return "arm"
+        
+        return None
+
+    def _process_ids_artifact(self, resource: dict, toe_id: str, artifact_type: str):
+        """
+        Process IDS artifact based on type
+        
+        Returns:
+            str: JSON string of Thing
+        """
+        logger = logging.getLogger(__name__)
+        
+        try:
+            # Extract description which contains the actual data
+            description = resource.get("ids:description", [{}])[0].get("@value", "{}")
+            artifact_data = json.loads(description)
+            
+            # Route to appropriate processor
+            if artifact_type == "cyclonedx":
+                return self.from_cyclonedx_ids(artifact_data, resource, toe_id)
+            elif artifact_type == "oscal":
+                return self.from_oscal_ids(artifact_data, resource, toe_id)
+            elif artifact_type == "arm":
+                return self.from_arm_ids(artifact_data, resource, toe_id)
+            elif artifact_type == "clouditor":
+                return self.from_clouditor_ids(artifact_data, resource, toe_id)
+            else:
+                return None
+                
+        except Exception as e:
+            logger.error(f"Error processing IDS artifact: {e}")
+            return None
+
+    def from_cyclonedx_ids(self, cyclone_data: dict, ids_resource: dict, toe_id: str):
+        """
+        Transform CycloneDX from IDS connector to Thing format
+        """
+        logger = logging.getLogger(__name__)
+        
+        logger.info("Transforming CycloneDX from IDS connector")
+        
+        # Use existing from_cyclone logic but add IDS metadata
+        cyclone_json = json.dumps(cyclone_data)
+        
+        adapter = DTModelAdapter()
+        thing = adapter.from_cyclone(cyclone_json)
+        
+        # Add IDS metadata
+        thing["attributes"]["source"] = "ids_connector"
+        thing["attributes"]["ids_resource_id"] = ids_resource.get("@id")
+        thing["attributes"]["ids_title"] = ids_resource.get("ids:title", [{}])[0].get("@value")
+        thing["attributes"]["toe_id"] = toe_id
+        thing["attributes"]["category"] = "BOMS"
+        
+        return json.dumps(thing)
+
+    def from_oscal_ids(self, oscal_data: dict, ids_resource: dict, toe_id: str):
+        """
+        Transform OSCAL from IDS connector to Thing format
+        """
+        logger = logging.getLogger(__name__)
+        
+        logger.info("Transforming OSCAL from IDS connector")
+        
+        # Use existing adapter logic
+        adapter = DTModelAdapter()
+        oscal_json = json.dumps(oscal_data)
+        thing = adapter.from_oscal_component(oscal_json)
+        
+        # Add IDS metadata
+        thing["attributes"]["source"] = "ids_connector"
+        thing["attributes"]["ids_resource_id"] = ids_resource.get("@id")
+        thing["attributes"]["ids_title"] = ids_resource.get("ids:title", [{}])[0].get("@value")
+        thing["attributes"]["toe_id"] = toe_id
+        thing["attributes"]["category"] = "OSCAL"
+        
+        return json.dumps(thing)
+
+    def from_arm_ids(self, arm_data: dict, ids_resource: dict, toe_id: str):
+        """
+        Transform ARM template from IDS connector to Thing format
+        """
+        logger = logging.getLogger(__name__)
+        
+        logger.info("Transforming ARM template from IDS connector")
+        
+        # Use existing adapter logic
+        adapter = DTModelAdapter()
+        arm_json = json.dumps(arm_data)
+        thing = adapter.from_arm_template(arm_json)
+        
+        # Add IDS metadata
+        thing["attributes"]["source"] = "ids_connector"
+        thing["attributes"]["ids_resource_id"] = ids_resource.get("@id")
+        thing["attributes"]["ids_title"] = ids_resource.get("ids:title", [{}])[0].get("@value")
+        thing["attributes"]["toe_id"] = toe_id
+        thing["attributes"]["category"] = "ARM"
+        
+        return json.dumps(thing)
+
+    def from_clouditor_ids(self, clouditor_data: dict, ids_resource: dict, toe_id: str):
+        """
+        Transform Clouditor evidence from IDS connector to Thing format
+        """
+        logger = logging.getLogger(__name__)
+        
+        logger.info("Transforming Clouditor evidence from IDS connector")
+        
+        # Extract resource information
+        resource_info = clouditor_data.get("resource", {})
+        
+        thing = {
+            "attributes": {
+                "toe_id": toe_id,
+                "category": "CLOUD",
+                "source": "ids_connector",
+                "ids_resource_id": ids_resource.get("@id"),
+                "ids_title": ids_resource.get("ids:title", [{}])[0].get("@value"),
+                "evidence_id": clouditor_data.get("id"),
+                "timestamp": clouditor_data.get("timestamp"),
+                "cloud_service_id": clouditor_data.get("cloudServiceId"),
+                "tool_id": clouditor_data.get("toolId"),
+                "sourceType": "clouditor",
+                "transformedAt": datetime.utcnow().isoformat() + "Z"
+            },
+            "features": {
+                "resource": {
+                    "properties": resource_info
+                },
+                "raw_data": {
+                    "properties": {
+                        "raw": clouditor_data.get("raw", "")
+                    }
+                }
+            }
+        }
+        
+        return json.dumps(thing)
+
+    def _store_ids_evidence_file(self, resource: dict, toe_id: str):
+        """
+        Store IDS resource as generic evidence file
+        
+        Returns:
+            str: JSON string of Thing with file metadata
+        """
+        logger = logging.getLogger(__name__)
+        
+        try:
+            # Extract metadata
+            resource_id = resource.get("@id", "unknown")
+            title = resource.get("ids:title", [{}])[0].get("@value", "Unknown")
+            description = resource.get("ids:description", [{}])[0].get("@value", "")
+            created = resource.get("ids:created", {}).get("@value", datetime.now().isoformat())
+            
+            # Create evidence directory
+            evidence_dir = "evidence"
+            os.makedirs(evidence_dir, exist_ok=True)
+            
+            # Generate filename from resource ID
+            
+            filename = f"{toe_id}_{hashlib.md5(resource_id.encode()).hexdigest()[:8]}.json"
+            file_path = os.path.join(evidence_dir, filename)
+            
+            # Save resource to file
+            with open(file_path, 'w') as f:
+                json.dump(resource, f, indent=2)
+            
+            logger.info(f"Stored IDS evidence file: {file_path}")
+            
+            # Create Thing for file metadata
+            thing = {
+                "attributes": {
+                    "toe_id": toe_id,
+                    "category": "IDS_EVIDENCE",
+                    "source": "ids_connector",
+                    "ids_resource_id": resource_id,
+                    "title": title,
+                    "file_path": file_path,
+                    "filename": filename,
+                    "created": created,
+                    "sourceType": "ids_evidence",
+                    "transformedAt": datetime.utcnow().isoformat() + "Z"
+                },
+                "features": {
+                    "metadata": {
+                        "properties": {
+                            "description": description,
+                            "file_size": os.path.getsize(file_path),
+                            "keywords": [kw.get("@value") for kw in resource.get("ids:keyword", [])]
+                        }
+                    },
+                    "ids_resource": {
+                        "properties": resource
+                    }
+                }
+            }
+            
+            return json.dumps(thing)
+            
+        except Exception as e:
+            logger.error(f"Error storing IDS evidence file: {e}")
+            return None
