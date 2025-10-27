@@ -1,0 +1,409 @@
+openapi: 3.0.3
+info:
+  title: SDT Service Interface
+  version: v0.3.0
+  description: |
+    REST API for Security Digital Twin (SDT) Service. Provides endpoints for managing Digital Twin instances, evidence collection, synchronization, and health checks.
+servers:
+  - url: http://localhost:8000
+paths:
+  /api/SDT/create/:
+    post:
+      summary: Create a new SDT artifact in Ditto
+      description: Create a Digital Twin with optional genesis thing management.
+      parameters:
+        - name: toeid
+          in: query
+          required: false
+          schema:
+            type: string
+            default: "00000000-0000-0000-0000-000000000000"
+          description: Target of Evaluation ID (UUID)
+        - name: payload_type
+          in: query
+          required: false
+          schema:
+            type: string
+            default: BOMS
+          description: Type of payload (AI, QDT, BOMS)
+        - name: create_genesis
+          in: query
+          required: false
+          schema:
+            type: boolean
+            default: true
+          description: Create/update genesis thing
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '201':
+          description: SDT artifact successfully created
+          content:
+            application/json:
+              schema:
+                type: object
+        '500':
+          description: Error creating SDT artifact
+          content:
+            application/json:
+              schema:
+                type: object
+  /api/SDT/read/:
+    get:
+      summary: Read an item from the Digital Twin model
+      parameters:
+        - name: toeid
+          in: query
+          required: false
+          schema:
+            type: string
+            default: "00000000-0000-0000-0000-000000000000"
+        - name: category
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Item data
+          content:
+            application/json:
+              schema:
+                type: object
+        '500':
+          description: Error reading item
+          content:
+            application/json:
+              schema:
+                type: object
+  /api/SDT/update/:
+    put:
+      summary: Update an item in the Digital Twin model
+      parameters:
+        - name: toeid
+          in: query
+          required: false
+          schema:
+            type: string
+            default: "00000000-0000-0000-0000-000000000000"
+        - name: category
+          in: query
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: Updated item data
+          content:
+            application/json:
+              schema:
+                type: object
+        '500':
+          description: Error updating item
+          content:
+            application/json:
+              schema:
+                type: object
+  /api/SDT/delete/:
+    delete:
+      summary: Delete an item from the Digital Twin model
+      parameters:
+        - name: toeid
+          in: query
+          required: false
+          schema:
+            type: string
+            default: "00000000-0000-0000-0000-000000000000"
+        - name: category
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Item deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+        '500':
+          description: Error deleting item
+          content:
+            application/json:
+              schema:
+                type: object
+  /api/SDT/connection/:
+    post:
+      summary: Establish a connection with the Digital Twin
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: Connection established
+          content:
+            application/json:
+              schema:
+                type: object
+  /api/SDT/sync/github:
+    get:
+      summary: Sync data from GitHub repository to Ditto
+      parameters:
+        - name: github_url
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: toeid
+          in: query
+          required: false
+          schema:
+            type: string
+            default: "00000000-0000-0000-0000-000000000000"
+        - name: category
+          in: query
+          required: false
+          schema:
+            type: string
+            default: AI
+      responses:
+        '200':
+          description: Sync results
+          content:
+            application/json:
+              schema:
+                type: object
+        '500':
+          description: Error syncing GitHub repository
+          content:
+            application/json:
+              schema:
+                type: object
+  /api/SDT/sync/ids:
+    get:
+      summary: Sync artifacts from IDS connector
+      parameters:
+        - name: data_path
+          in: query
+          required: false
+          schema:
+            type: string
+            default: all
+        - name: toeid
+          in: query
+          required: false
+          schema:
+            type: string
+            default: "00000000-0000-0000-0000-000000000000"
+        - name: ids_connector_url
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Sync results
+          content:
+            application/json:
+              schema:
+                type: object
+        '400':
+          description: Not found or bad request
+          content:
+            application/json:
+              schema:
+                type: object
+        '500':
+          description: Error in IDS sync
+          content:
+            application/json:
+              schema:
+                type: object
+  /api/SDT/evidence/:
+    get:
+      summary: Flexible endpoint to retrieve evidence from a Digital Twin
+      parameters:
+        - name: toeid
+          in: query
+          required: false
+          schema:
+            type: string
+            default: "00000000-0000-0000-0000-000000000000"
+        - name: category
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: evidence_type
+          in: query
+          required: false
+          schema:
+            type: string
+            default: thing
+        - name: files
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: include_patterns
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: exclude_patterns
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: format
+          in: query
+          required: false
+          schema:
+            type: string
+            default: json
+        - name: transform
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: include_features
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Evidence data or downloadable file
+          content:
+            application/json:
+              schema:
+                type: object
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        '404':
+          description: Evidence file not found
+          content:
+            application/json:
+              schema:
+                type: object
+        '500':
+          description: Error retrieving evidence
+          content:
+            application/json:
+              schema:
+                type: object
+  /api/SDT/genesis/create:
+    post:
+      summary: Explicitly create a genesis thing for a TOE ID
+      parameters:
+        - name: toeid
+          in: query
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '201':
+          description: Genesis thing created
+          content:
+            application/json:
+              schema:
+                type: object
+        '200':
+          description: Genesis thing already exists
+          content:
+            application/json:
+              schema:
+                type: object
+        '500':
+          description: Error creating genesis thing
+          content:
+            application/json:
+              schema:
+                type: object
+  /api/SDT/genesis/read:
+    get:
+      summary: Get the genesis thing for a TOE ID
+      parameters:
+        - name: toeid
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Genesis thing data
+          content:
+            application/json:
+              schema:
+                type: object
+        '404':
+          description: Genesis thing not found
+          content:
+            application/json:
+              schema:
+                type: object
+        '500':
+          description: Error reading genesis thing
+          content:
+            application/json:
+              schema:
+                type: object
+  /api/SDT/genesis/children:
+    get:
+      summary: List all child things under a genesis thing
+      parameters:
+        - name: toeid
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of child things
+          content:
+            application/json:
+              schema:
+                type: object
+        '500':
+          description: Error listing child things
+          content:
+            application/json:
+              schema:
+                type: object
+  /api/SDT/health:
+    get:
+      summary: Check health status of the service and container
+      responses:
+        '200':
+          description: Health status
+          content:
+            application/json:
+              schema:
+                type: object
+        '500':
+          description: Health check failed
+          content:
+            application/json:
+              schema:
+                type: object
