@@ -177,7 +177,7 @@ class Controller():
                 payload_json["thingId"] = existing_thing_id
                 
                 # Call update_item to update the existing thing
-                update_result = self.update_item(existing_thing_id, payload_json)
+                update_result = self.update_item(toe_id, payload_type, payload_json)
                 
                 if update_result.get("success"):
                     # Update genesis thing
@@ -305,24 +305,77 @@ class Controller():
 
         return str(''.join(filter(str.isdigit, datetime.now().isoformat())))+"-"+str(random.randint(1000000000, 9999999999))
 
-    def read_item(self, item_id):
-
-
+    def read_item(self, toe_id, category):
+        """
+        Reads a thing from Ditto by toe_id and category.
+        
+        Args:
+            toe_id (str): Target of Evaluation ID
+            category (str): Category (e.g., 'AI', 'BOMS')
+        
+        Returns:
+            dict or None: Thing data if found, None otherwise
+        """
+        logger.info(f"Reading thing for toe_id: {toe_id}, category: {category}")
+        
+        # Search for the Thing ID
+        item_id = self.search_item(toe_id, category)
+        if not item_id:
+            logger.error(f"Thing not found for toe_id {toe_id} and category {category}")
+            return None
+        
         logger.info(f"Attempting to read thing with ID: {item_id}")
-
+        
         url = f'http://{Ditto_IP}:{Ditto_PORT}/api/2/things/{item_id}'
-
+        
         try:
             session = requests.Session()
             session.auth = ("ditto", "ditto")
             logger.info(f"Sending GET request to {url}")
             r = session.get(url, headers={'accept': 'application/json'})
-
+            
             if r.status_code == 200:
                 try:
                     response_json = r.json()
                     logger.info(f"Successfully retrieved thing with ID: {item_id}")
-                    # logger.info(f"Response data: {response_json}")
+                    return response_json  # Return the response data
+                except json.JSONDecodeError as e:
+                    logger.error(f"JSON decode error: {e}")
+                    return None
+            else:
+                logger.error(f"Error retrieving item: Status code {r.status_code}")
+                return None
+        except requests.exceptions.ConnectionError as e:
+            logger.error(f"Connection error while reading thing: {e}")
+            return None
+        except Exception as e:
+            logger.error(f"Error reading thing from Ditto: {e}")
+            return None
+
+    def read_item_by_id(self, item_id):
+        """
+        Reads a thing from Ditto by its full thing ID.
+        
+        Args:
+            item_id (str): Full Thing ID
+        
+        Returns:
+            dict or None: Thing data if found, None otherwise
+        """
+        logger.info(f"Attempting to read thing with ID: {item_id}")
+        
+        url = f'http://{Ditto_IP}:{Ditto_PORT}/api/2/things/{item_id}'
+        
+        try:
+            session = requests.Session()
+            session.auth = ("ditto", "ditto")
+            logger.info(f"Sending GET request to {url}")
+            r = session.get(url, headers={'accept': 'application/json'})
+            
+            if r.status_code == 200:
+                try:
+                    response_json = r.json()
+                    logger.info(f"Successfully retrieved thing with ID: {item_id}")
                     return response_json  # Return the response data
                 except json.JSONDecodeError as e:
                     logger.error(f"JSON decode error: {e}")
@@ -458,7 +511,7 @@ class Controller():
             # Check if response is successful (2xx status code)
             if 200 <= r.status_code < 300:
                 # Verify deletion by checking if the thing still exists
-                verification = self.read_item(item_id)
+                verification = self.read_item_by_id(item_id)
                 if verification is None:
                     logger.info(f"Thing with ID {item_id} was successfully deleted")
                     
@@ -482,54 +535,61 @@ class Controller():
             return {"success": False, "error": str(e)}
             return {"success": False, "error": str(e)}
 
-    def update_item(self, item_id, payload):
-
-        # payload_json = json.loads(payload)
-        print("payload000000000000000000000000000000000000000000")
-        print(payload)
-        # Use name_thiing_id function to generate the proper item ID
-        # item_id = self.name_thiing_id(toe_id, level)
-        logger.info(f"Updating thing with ID: {item_id}")
-
-        # Check if the item exists using read_item
-        # existing_item = self.read_item(toe_id, level)
-
-        # if not existing_item:
-        #     logger.error(f"Thing with ID {item_id} does not exist and cannot be updated")
-        #     return {"success": False, "error": "Thing does not exist"}
-
+    def update_item(self, toe_id, category, payload):
+        """
+        Updates a thing in Ditto after validating existence and content.
+        
+        Args:
+            toe_id (str): Target of Evaluation ID
+            category (str): Category (e.g., 'AI', 'BOMS')
+            payload (dict or str): Updated payload
+        
+        Returns:
+            dict: Update result
+        """
+        logger.info(f"Updating thing for toe_id: {toe_id}, category: {category}")
+        
+        # Step 1: Search for existing Thing ID
+        item_id = self.search_item(toe_id, category)
+        if not item_id:
+            logger.error(f"Thing not found for toe_id {toe_id} and category {category}")
+            return {"success": False, "error": "Thing not found"}
+        
+        # Step 2: Read existing Thing for full content validation
+        existing_thing = self.read_item_by_id(item_id)
+        if not existing_thing:
+            return {"success": False, "error": "Failed to read existing thing"}
+        
         try:
-            # Parse the payload if it's a string
+            # Step 3: Parse and validate payload
             payload_json = payload if isinstance(payload, dict) else json.loads(payload)
-
-            # Set the thing ID in the payload
-            # payload_json["thingId"] = item_id
-
-            # Get policy ID from existing item
-            # policy_id = payload_json.get("policyId")
-            # if policy_id:
-            #     payload_json["policyId"] = policy_id
-            #     logger.info(f"Using existing policy ID: {policy_id}")
-            # else:
-            #     # If policy cannot be obtained, create a new one
-            #     logger.info("Existing policy not found, creating a new one")
+            
+            # Step 4: Merge payload with existing Thing (full content check)
+            updated_thing = existing_thing.copy()
+            updated_thing.update(payload_json)  # Merge attributes/features
+            updated_thing["thingId"] = item_id  # Ensure correct ID
+            
+            # Step 5: Create/update policy
             policy_response, policy_name = self.create_policy()
-            payload_json["policyId"] = policy_name
-
-            # Perform the update
+            updated_thing["policyId"] = policy_name
+            
+            # Step 6: Send update to Ditto
             url = f'http://{Ditto_IP}:{Ditto_PORT}/api/2/things/{item_id}'
-
             session = requests.Session()
             session.auth = ("ditto", "ditto")
-            r = session.put(url, json=payload_json, headers={'Content-Type': 'application/json'})
-
+            r = session.put(url, json=updated_thing, headers={'Content-Type': 'application/json'})
+            
             response_data = r.json() if r.text else {}
             logger.info(f"Ditto update response status: {r.status_code}")
-
+            
+            # Step 7: Update genesis thing
+            self.update_genesis_thing(toe_id, item_id, category, operation="update")
+            
             return {
                 "success": 200 <= r.status_code < 300,
                 "status_code": r.status_code,
-                "response": response_data
+                "response": response_data,
+                "thing_id": item_id
             }
         except JSONDecodeError as e:
             logger.error(f"Invalid JSON payload: {e}")
@@ -556,7 +616,7 @@ class Controller():
         logger.info(f"Comparing item {item_id1} with new payload")
         
         # Get existing thing from Ditto
-        payload1 = self.read_item(item_id1)
+        payload1 = self.read_item_by_id(item_id1)
         if payload1 is None:
             logger.error(f"Could not read item {item_id1}")
             return False
@@ -582,70 +642,114 @@ class Controller():
             return self._compare_by_last_commit(payload1, payload2)
 
     def _compare_cyclonedx(self, payload1, payload2):
-        """Compare CycloneDX BOMs using serialNumber and specVersion."""
+        """Compare CycloneDX BOMs comprehensively including deployment details."""
+        # Check basic metadata
+        print (payload1)
+        print("--------------------")
+        print (payload2)
         serial1 = payload1.get("attributes", {}).get("serialNumber")
         serial2 = payload2.get("attributes", {}).get("serialNumber")
-        
+
         if serial1 != serial2:
             logger.info(f"CycloneDX serialNumber differs: {serial1} vs {serial2}")
             return False
-        
-        # Check BOM version (version field in CycloneDX)
+
+        # Check BOM version
         version1 = payload1.get("attributes", {}).get("version")
         version2 = payload2.get("attributes", {}).get("version")
-        
+
         if version1 != version2:
             logger.info(f"CycloneDX version differs: {version1} vs {version2}")
             return False
 
-        # Also check spec version for additional validation
+        # Check spec version
         spec1 = payload1.get("attributes", {}).get("specVersion")
         spec2 = payload2.get("attributes", {}).get("specVersion")
-        
+
         if spec1 != spec2:
             logger.info(f"CycloneDX specVersion differs: {spec1} vs {spec2}")
             return False
-        
-        # Optional: Compare component count
+
+        # Compare components count
         components1 = payload1.get("features", {}).get("components", {}).get("properties", {})
         components2 = payload2.get("features", {}).get("components", {}).get("properties", {})
-        
+
         if len(components1) != len(components2):
             logger.info(f"CycloneDX component count differs: {len(components1)} vs {len(components2)}")
             return False
-        
+
+        # Hash the entire components section
+        hash1 = hashlib.sha256(json.dumps(components1, sort_keys=True).encode()).hexdigest()
+        hash2 = hashlib.sha256(json.dumps(components2, sort_keys=True).encode()).hexdigest()
+
+        if hash1 != hash2:
+            logger.info(f"CycloneDX components content differs (hash mismatch)")
+            return False
+
+        # Compare vulnerabilities count
+        vuln1 = payload1.get("features", {}).get("vulnerabilities", {}).get("properties", {})
+        vuln2 = payload2.get("features", {}).get("vulnerabilities", {}).get("properties", {})
+
+        if len(vuln1) != len(vuln2):
+            logger.info(f"CycloneDX vulnerability count differs: {len(vuln1)} vs {len(vuln2)}")
+            return False
+
+        # Hash the entire vulnerabilities section
+        vuln_hash1 = hashlib.sha256(json.dumps(vuln1, sort_keys=True).encode()).hexdigest()
+        vuln_hash2 = hashlib.sha256(json.dumps(vuln2, sort_keys=True).encode()).hexdigest()
+
+        if vuln_hash1 != vuln_hash2:
+            logger.info(f"CycloneDX vulnerabilities content differs (hash mismatch)")
+            return False
+
+        # Compare x-services
+        services1 = payload1.get("features", {}).get("x-services", {}).get("properties", [])
+        services2 = payload2.get("features", {}).get("x-services", {}).get("properties", [])
+
+        if services1 != services2:
+            logger.info(f"CycloneDX x-services differ")
+            return False
+
         logger.info("CycloneDX BOMs are identical")
         return True
 
     def _compare_oscal(self, payload1, payload2):
-        """Compare OSCAL components using metadata UUID."""
-        # Get UUID from metadata feature
+        """Compare OSCAL components comprehensively including deployment details."""
+        # Check basic metadata
         metadata1 = payload1.get("features", {}).get("metadata", {}).get("properties", {})
         metadata2 = payload2.get("features", {}).get("metadata", {}).get("properties", {})
-        
+
         uuid1 = metadata1.get("uuid")
         uuid2 = metadata2.get("uuid")
-        
+
         if uuid1 != uuid2:
             logger.info(f"OSCAL UUID differs: {uuid1} vs {uuid2}")
             return False
-        
-        # Also compare version
+
+        # Check version
         version1 = metadata1.get("version")
         version2 = metadata2.get("version")
-        
+
         if version1 != version2:
             logger.info(f"OSCAL version differs: {version1} vs {version2}")
             return False
-        
-        # Optional: Compare component count
-        components1 = payload1.get("features", {}).get("components", {}).get("properties", {})
-        components2 = payload2.get("features", {}).get("components", {}).get("properties", {})
-        
+
+        # Compare components count
+        components1 = payload1.get("features", {}).get("components", {}).get("properties", [])
+        components2 = payload2.get("features", {}).get("components", {}).get("properties", [])
+
         if len(components1) != len(components2):
             logger.info(f"OSCAL component count differs: {len(components1)} vs {len(components2)}")
             return False
-        
+
+        # Hash the entire components section
+        hash1 = hashlib.sha256(json.dumps(components1, sort_keys=True).encode()).hexdigest()
+        hash2 = hashlib.sha256(json.dumps(components2, sort_keys=True).encode()).hexdigest()
+
+        if hash1 != hash2:
+            logger.info(f"OSCAL components content differs (hash mismatch)")
+            return False
+
         logger.info("OSCAL components are identical")
         return True
 
@@ -716,7 +820,7 @@ class Controller():
         
         # Check if genesis thing already exists
         genesis_id = self.get_genesis_thing_id(toe_id)
-        existing_genesis = self.read_item(genesis_id)
+        existing_genesis = self.read_item_by_id(genesis_id)
         
         if existing_genesis:
             logger.info(f"Genesis thing already exists: {genesis_id}")
@@ -808,7 +912,7 @@ class Controller():
         logger.info(f"Updating genesis thing for TOE {toe_id}, operation: {operation}")
         
         genesis_id = self.get_genesis_thing_id(toe_id)
-        genesis_thing = self.read_item(genesis_id)
+        genesis_thing = self.read_item_by_id(genesis_id)
         
         if not genesis_thing:
             logger.error(f"Genesis thing not found: {genesis_id}")
@@ -822,7 +926,7 @@ class Controller():
         # Perform operation
         if operation == "add" or operation == "update":
             # Read the child thing to get its details
-            child_thing = self.read_item(child_thing_id)
+            child_thing = self.read_item_by_id(child_thing_id)
             
             if child_thing:
                 child_things[child_thing_id] = {
@@ -859,7 +963,24 @@ class Controller():
         genesis_thing["features"]["statistics"]["properties"] = statistics
         
         # Send update to Ditto
-        return self.update_item(genesis_id, genesis_thing)
+        url = f'http://{Ditto_IP}:{Ditto_PORT}/api/2/things/{genesis_id}'
+        try:
+            session = requests.Session()
+            session.auth = ("ditto", "ditto")
+            r = session.put(url, json=genesis_thing, headers={'Content-Type': 'application/json'})
+            
+            response_data = r.json() if r.text else {}
+            logger.info(f"Genesis thing updated with status: {r.status_code}")
+            
+            return {
+                "success": 200 <= r.status_code < 300,
+                "status_code": r.status_code,
+                "thing_id": genesis_id,
+                "response": response_data
+            }
+        except Exception as e:
+            logger.error(f"Error updating genesis thing: {e}")
+            return {"success": False, "error": str(e)}
 
     def get_genesis_thing(self, toe_id: str):
         """
@@ -878,7 +999,7 @@ class Controller():
             # Otherwise, construct the genesis ID
             genesis_id = self.get_genesis_thing_id(toe_id)
         
-        return self.read_item(genesis_id)
+        return self.read_item_by_id(genesis_id)
 
     def list_child_things(self, toe_id: str):
         """
@@ -935,7 +1056,7 @@ class Controller():
         if thing_id is None:
             thing_id = self.search_item(toe_id, level)
 
-        thing_with_repo = self.read_item(thing_id)
+        thing_with_repo = self.read_item_by_id(thing_id)
         print(thing_with_repo)
         # print("************")
         logger.info(f"Retrieved thing with repository for toe_id: {toe_id}")
@@ -1311,7 +1432,7 @@ class Controller():
                 else:
                     logger.info(f"Items are not equal, updating")
                     # Update the existing item
-                    response = self.update_item(thingid, repo_path_thing)
+                    response = self.update_item(toe_id, level, repo_path_thing)
                     print(response)
                     return {"success": False, "error": "Item already exists"}
             else:
@@ -1676,7 +1797,7 @@ class Controller():
         
         try:
             genesis_id = self.get_genesis_thing_id(toe_id)
-            genesis_thing = self.read_item(genesis_id)
+            genesis_thing = self.read_item_by_id(genesis_id)
             
             if not genesis_thing:
                 return
@@ -1693,7 +1814,10 @@ class Controller():
             }
             
             # Update genesis
-            self.update_item(genesis_id, genesis_thing)
+            url = f'http://{Ditto_IP}:{Ditto_PORT}/api/2/things/{genesis_id}'
+            session = requests.Session()
+            session.auth = ("ditto", "ditto")
+            session.put(url, json=genesis_thing, headers={'Content-Type': 'application/json'})
             logger.info(f"Updated genesis thing with IDS sync metadata")
             
         except Exception as e:
@@ -1742,7 +1866,7 @@ class Controller():
                     result_thing_id = thing_id
                 else:
                     logger.info(f"Repository content changed, updating thing")
-                    update_result = self.update_item(thing_id, repo_thing)
+                    update_result = self.update_item(toe_id, category, repo_thing)
                     action = "updated"
                     result_thing_id = thing_id
             else:
@@ -1781,7 +1905,7 @@ class Controller():
         
         try:
             genesis_id = self.get_genesis_thing_id(toe_id)
-            genesis_thing = self.read_item(genesis_id)
+            genesis_thing = self.read_item_by_id(genesis_id)
             
             if not genesis_thing:
                 logger.warning(f"Genesis thing not found for TOE: {toe_id}")
@@ -1801,7 +1925,10 @@ class Controller():
             }
             
             # Update genesis thing
-            self.update_item(genesis_id, genesis_thing)
+            url = f'http://{Ditto_IP}:{Ditto_PORT}/api/2/things/{genesis_id}'
+            session = requests.Session()
+            session.auth = ("ditto", "ditto")
+            session.put(url, json=genesis_thing, headers={'Content-Type': 'application/json'})
             logger.info(f"Updated genesis thing with GitHub sync metadata for repo: {repo_name}")
             
         except Exception as e:
@@ -1834,7 +1961,7 @@ class Controller():
         try:
             # Get genesis thing
             genesis_id = self.get_genesis_thing_id(toe_id)
-            genesis_thing = self.read_item(genesis_id)
+            genesis_thing = self.read_item_by_id(genesis_id)
             
             if not genesis_thing:
                 logger.error(f"Genesis thing not found for TOE: {toe_id}")
@@ -1877,7 +2004,7 @@ class Controller():
             
             # Get the first matching thing
             thing_id = thing_ids[0]
-            thing = self.read_item(thing_id)
+            thing = self.read_item_by_id(thing_id)
             if not thing:
                 logger.error(f"Thing not found: {thing_ids[0]}")
                 return {"error": "Thing not found", "thing_id": thing_ids[0]}

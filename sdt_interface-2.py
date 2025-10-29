@@ -1,9 +1,9 @@
 # ADD APPMAP HERE - BEFORE FastAPI imports
 import os
-os.environ.setdefault("APPMAP", "true")
-os.environ.setdefault("APPMAP_CONFIG", "/home/abdul/DigitalTwin/Cobalt/SDT/appmap.yml")
-import appmap
-import appmap.fastapi
+# os.environ.setdefault("APPMAP", "true")
+# os.environ.setdefault("APPMAP_CONFIG", "/home/abdul/DigitalTwin/Cobalt/SDT/appmap.yml")
+# import appmap
+# import appmap.fastapi
 import requests
 import uvicorn
 import json
@@ -56,7 +56,7 @@ async def connection_startup(app: FastAPI):
 
 
 # Initialize FastAPI app
-app = FastAPI(title="SDT Service Interface", lifespan=connection_startup)
+app = FastAPI(title="SDT Service Interface", version="0.2.5", lifespan=connection_startup)
 
 
 ctrl.run_ditto_listener()
@@ -750,7 +750,7 @@ async def health_check():
 #         sys.exit(1)
 
 # Wrap with AppMap middleware, enabling remote if you like
-app = appmap.fastapi.Middleware(app).init_app()
+# app = appmap.fastapi.Middleware(app).init_app()
 # app.add_middleware(AppMapMiddleware)
 
 # if __name__ == '__main__':
