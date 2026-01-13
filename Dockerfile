@@ -30,7 +30,7 @@ echo "Started Mosquitto MQTT broker on port 1883"\n\
 \n\
 # Start the SDT interface\n\
 cd /app/SDT\n\
-exec uvicorn sdt_interface:app --host 0.0.0.0 --port 8000\n\
+exec uvicorn sdt_interface-2:app --host 0.0.0.0 --port 8000\n\
 ' > /app/start.sh
 
 RUN chmod +x /app/start.sh

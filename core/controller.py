@@ -208,7 +208,15 @@ class Controller():
         logger.info(f"Controller attaching thing ID: {payload_json['thingId']}")
         logger.info("Creating policy in Ditto")
 
-        policy_response, policy_name = self.create_policy()
+        policy_result = self.create_policy()
+        if policy_result is None:
+            logger.error("Failed to create policy")
+            return {
+                "success": False,
+                "error": "Failed to create policy in Ditto"
+            }
+        
+        policy_response, policy_name = policy_result
         print(policy_response)
         payload_json["policyId"] = policy_name
         logger.info(f"Policy ID: {payload_json['policyId']} attached to thing ID: {payload_json['thingId']}")
@@ -481,6 +489,59 @@ class Controller():
             logger.error(f"Error searching for thing in Ditto: {e}")
             return None
 
+    def search_file_by_name(self, toe_id: str, category: str, filename: str):
+        """
+        Search for a FILE type thing by toe_id, category, and specific filename.
+        This prevents different files from overwriting each other.
+        
+        Args:
+            toe_id: Target of Evaluation ID
+            category: Category (FILE)
+            filename: Exact filename to search for
+            
+        Returns:
+            str: Thing ID if found with matching filename, None otherwise
+        """
+        logger.info(f"Searching for FILE by filename: toe_id={toe_id}, category={category}, filename={filename}")
+        
+        namespace = "cobalt.sdt"
+        item_pattern = f"{namespace}:toe-{toe_id}-{category}"
+        
+        # Get all FILE things for this TOE
+        url = f'http://{Ditto_IP}:{Ditto_PORT}/api/2/search/things?filter=like(thingId,"{item_pattern}*")&fields=thingId,attributes'
+        
+        try:
+            session = requests.Session()
+            session.auth = ("ditto", "ditto")
+            logger.info(f"Sending GET request to {url}")
+            r = session.get(url, headers={'accept': 'application/json'})
+            
+            if r.status_code == 200:
+                response_json = r.json()
+                items = response_json.get("items", [])
+                
+                logger.info(f"Found {len(items)} FILE things, checking filenames...")
+                
+                # Check each item's filename attribute
+                for item in items:
+                    item_filename = item.get("attributes", {}).get("filename")
+                    thing_id = item.get("thingId")
+                    
+                    logger.info(f"  Checking {thing_id}: filename='{item_filename}'")
+                    
+                    if item_filename == filename:
+                        logger.info(f"✅ Found matching file: {thing_id}")
+                        return thing_id
+                
+                logger.info(f"❌ No FILE thing found with filename: {filename}")
+                return None
+            else:
+                logger.error(f"Error searching files: Status code {r.status_code}")
+                return None
+                
+        except Exception as e:
+            logger.error(f"Error searching for file by name: {e}")
+            return None
 
     def delete_item(self, toe_id, level, update_genesis: bool = True):
         """
@@ -637,9 +698,13 @@ class Controller():
             return self._compare_oscal(payload1, payload2)
         elif source_type == "arm-template":
             return self._compare_arm(payload1, payload2)
-        else:
-            logger.warning(f"Unknown source type: {source_type}, falling back to last_commit comparison")
+        elif source_type == "extracted_file":
+            return self._compare_extracted_file(payload1, payload2)
+        elif source_type == "Repository":
             return self._compare_by_last_commit(payload1, payload2)
+        else:
+            logger.warning(f"Unknown source type: {source_type}, falling back to basic comparison")
+            return self._compare_basic(payload1, payload2)
 
     def _compare_cyclonedx(self, payload1, payload2):
         """Compare CycloneDX BOMs comprehensively including deployment details."""
@@ -802,6 +867,108 @@ class Controller():
         else:
             logger.info("Items have different last_commit")
             return False
+
+    def _compare_extracted_file(self, payload1, payload2):
+        """
+        Compare extracted files from IDS connector using file metadata.
+        For FILE category things with uploaded/extracted files.
+        """
+        logger.info("Comparing extracted files")
+        
+        # ✅ PRIORITY 1: Compare filenames first (most specific identifier)
+        filename1 = payload1.get("attributes", {}).get("filename")
+        filename2 = payload2.get("attributes", {}).get("filename")
+        
+        if filename1 and filename2 and filename1 != filename2:
+            logger.info(f"Extracted files differ by filename: '{filename1}' vs '{filename2}'")
+            return False
+        
+        logger.info(f"Comparing files with same filename: {filename1}")
+        
+        # ✅ PRIORITY 2: Compare file size (quick check)
+        size1 = payload1.get("features", {}).get("file_metadata", {}).get("properties", {}).get("size")
+        size2 = payload2.get("features", {}).get("file_metadata", {}).get("properties", {}).get("size")
+        
+        if size1 != size2:
+            logger.info(f"Extracted files differ by size: {size1} bytes vs {size2} bytes")
+            return False
+        
+        logger.info(f"Files have same size: {size1} bytes")
+        
+        # ✅ PRIORITY 3: Compare file type/format
+        type1 = payload1.get("features", {}).get("file_metadata", {}).get("properties", {}).get("type")
+        type2 = payload2.get("features", {}).get("file_metadata", {}).get("properties", {}).get("type")
+        
+        if type1 != type2:
+            logger.info(f"Extracted files differ by type: '{type1}' vs '{type2}'")
+            return False
+        
+        logger.info(f"Files have same type: {type1}")
+        
+        # ✅ PRIORITY 4: Compare file hash if both files exist on disk (most reliable for content)
+        file_path1 = payload1.get("attributes", {}).get("file_path")
+        file_path2 = payload2.get("attributes", {}).get("file_path")
+        
+        if file_path1 and file_path2 and os.path.exists(file_path1) and os.path.exists(file_path2):
+            try:
+                hash1 = self.trs.get_file_hash(file_path1)
+                hash2 = self.trs.get_file_hash(file_path2)
+                
+                logger.info(f"File hash comparison: hash1={hash1[:16]}..., hash2={hash2[:16]}...")
+                
+                if hash1 != hash2:
+                    logger.info(f"Extracted files differ by content hash - FILES ARE DIFFERENT")
+                    return False
+                
+                logger.info(f"Files have identical content (hash match)")
+            except Exception as e:
+                logger.warning(f"Could not compare file hashes: {e}")
+        
+        # ✅ PRIORITY 5: Compare updated timestamp (detects re-uploads of same file)
+        updated1 = payload1.get("features", {}).get("timestamps", {}).get("properties", {}).get("updated")
+        updated2 = payload2.get("features", {}).get("timestamps", {}).get("properties", {}).get("updated")
+        
+        if updated1 != updated2:
+            logger.info(f"Extracted files differ by update time: {updated1} vs {updated2}")
+            return False
+        
+        logger.info(f"Files have same update timestamp: {updated1}")
+        
+        # ✅ PRIORITY 6: Compare resource_id (IDS resource identifier)
+        resource_id1 = payload1.get("attributes", {}).get("resource_id")
+        resource_id2 = payload2.get("attributes", {}).get("resource_id")
+        
+        if resource_id1 and resource_id2 and resource_id1 != resource_id2:
+            logger.info(f"Extracted files differ by resource_id: {resource_id1} vs {resource_id2}")
+            return False
+        
+        logger.info("✅ Extracted files are IDENTICAL - all checks passed")
+        return True
+
+    def _compare_basic(self, payload1, payload2):
+        """
+        Basic fallback comparison for unknown types.
+        Compares key attributes only.
+        """
+        logger.info("Using basic comparison (attributes only)")
+        
+        # Compare key attributes
+        attrs1 = payload1.get("attributes", {})
+        attrs2 = payload2.get("attributes", {})
+        
+        # Compare critical fields
+        critical_fields = ["toe_id", "category", "sourceType", "updated", "transformedAt"]
+        
+        for field in critical_fields:
+            val1 = attrs1.get(field)
+            val2 = attrs2.get(field)
+            
+            if val1 != val2:
+                logger.info(f"Items differ in {field}: {val1} vs {val2}")
+                return False
+        
+        logger.info("Items appear identical (basic comparison)")
+        return True
 
     # ======================= Genesis Thing Methods =======================
 
@@ -1713,7 +1880,7 @@ class Controller():
 
     # NEW IDS CONNECTOR METHODS - Based on IDSconnector.yml specification
     
-    def sync_ids_connector(self, data_path: str, toe_id: str, ids_connector_url: str = "http://localhost:8080"):
+    def sync_ids_connector(self, data_path: str, toe_id: str, ids_connector_url: str = "http://localhost:8004"):
         """
         Sync data from IDS connector
         
@@ -1730,7 +1897,11 @@ class Controller():
         try:
             # Call IDS connector endpoint
             url = f"{ids_connector_url}/api/IDSconnector/get_data_request"
-            params = {"data_path": data_path}
+            params = {
+                "data_path": data_path,
+                "toe_id": toe_id,
+                "data_type": "json"  # Default to json for now
+            }
             
             logger.info(f"Calling IDS connector: {url} with params: {params}")
             response = requests.get(url, params=params, timeout=30)
@@ -1738,6 +1909,7 @@ class Controller():
             
             ids_response = response.json()
             logger.info(f"Received IDS response: {ids_response.get('data_type')}")
+            logger.info(f"Response data length: {len(ids_response.get('data', ''))}")
             
             # Process IDS response through translator
             processed_things = self.trs.process_ids_response(ids_response, toe_id)
@@ -1750,11 +1922,95 @@ class Controller():
                 thing = json.loads(thing_json)
                 category = thing.get("attributes", {}).get("category", "UNKNOWN")
                 
-                # Create thing in Ditto
+                # ✅ For FILE types, check by filename first to prevent overwriting different files
+                if category == "FILE":
+                    filename = thing.get("attributes", {}).get("filename")
+                    if filename:
+                        existing_thing_id = self.search_file_by_name(toe_id, category, filename)
+                        
+                        if existing_thing_id:
+                            # File with same name exists - compare and update if different
+                            if self.compare_items(existing_thing_id, thing):
+                                logger.info(f"File '{filename}' already exists with identical content, skipping")
+                                results.append({
+                                    "category": category,
+                                    "filename": filename,
+                                    "thing_id": existing_thing_id,
+                                    "success": False,
+                                    "action": "skipped",
+                                    "message": "Identical file already exists"
+                                })
+                                continue
+                            else:
+                                # Same filename, different content - update
+                                logger.info(f"File '{filename}' exists but content differs, updating")
+                                update_result = self.update_item(toe_id, category, thing)
+                                
+                                if update_result.get("success"):
+                                    self.update_genesis_thing(toe_id, existing_thing_id, category, operation="update")
+                                
+                                results.append({
+                                    "category": category,
+                                    "filename": filename,
+                                    "thing_id": existing_thing_id,
+                                    "success": update_result.get("success"),
+                                    "action": "updated"
+                                })
+                                continue
+                        else:
+                            # File doesn't exist - create new thing directly without search
+                            logger.info(f"File '{filename}' not found, creating new Thing")
+                            
+                            # Generate new unique ID
+                            ctrl_id = self.name_thiing_id(toe_id, category)
+                            thing["thingId"] = ctrl_id
+                            thing["policyId"] = "cobalt:policy"
+                            thing["definition"] = "cobalt:evidence-file:1.0.0"
+                            thing_json = json.dumps(thing)
+                            
+                            # Create policy
+                            self.create_policy()
+                            
+                            # Create thing in Ditto directly
+                            url = f'http://{Ditto_IP}:{Ditto_PORT}/api/2/things/{ctrl_id}'
+                            
+                            session = requests.Session()
+                            session.auth = ("ditto", "ditto")
+                            
+                            logger.info(f"Creating thing with ID: {ctrl_id}")
+                            r = session.put(url, json=thing, headers={'Content-Type': 'application/json'})
+                            logger.info(f"Ditto response status: {r.status_code}")
+                            
+                            if r.status_code in [201, 204]:
+                                # Update genesis thing
+                                genesis_result = self.create_genesis_thing(toe_id)
+                                self.update_genesis_thing(toe_id, ctrl_id, category, operation="add")
+                                
+                                results.append({
+                                    "category": category,
+                                    "filename": filename,
+                                    "thing_id": ctrl_id,
+                                    "success": True,
+                                    "action": "created"
+                                })
+                                continue
+                            else:
+                                results.append({
+                                    "category": category,
+                                    "filename": filename,
+                                    "thing_id": ctrl_id,
+                                    "success": False,
+                                    "action": "failed",
+                                    "error": r.text
+                                })
+                                continue
+                
+                # For non-FILE types, use standard create_in_ditto logic
                 result = self.create_in_ditto(thing_json, toe_id, category, create_genesis=True)
                 
                 results.append({
                     "category": category,
+                    "filename": thing.get("attributes", {}).get("filename"),
                     "thing_id": result.get("thing_id"),
                     "success": result.get("success"),
                     "action": result.get("action")
@@ -1938,7 +2194,7 @@ class Controller():
                               evidence_type: str = "thing", files: list = None,
                               include_patterns: list = None, exclude_patterns: list = None,
                               format: str = "json", transform: str = None,
-                              include_features: list = None):
+                              include_features: list = None, filename: str = None):
         """
         Flexible evidence retrieval with dynamic configuration.
         
@@ -2001,6 +2257,24 @@ class Controller():
                     }
                 
                 thing_ids = filtered_ids
+            
+            # Filter by filename if specified (for FILE category)
+            if filename and category == "FILE":
+                filename_filtered = []
+                for thing_id in thing_ids:
+                    thing = self.read_item_by_id(thing_id)
+                    if thing and thing.get("attributes", {}).get("filename") == filename:
+                        filename_filtered.append(thing_id)
+                
+                if not filename_filtered:
+                    logger.warning(f"No FILE found with filename: {filename}")
+                    return {
+                        "error": f"No FILE found with filename: {filename}",
+                        "toe_id": toe_id,
+                        "hint": "Check available filenames using format=json"
+                    }
+                
+                thing_ids = filename_filtered
             
             # Get the first matching thing
             thing_id = thing_ids[0]

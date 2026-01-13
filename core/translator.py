@@ -12,6 +12,7 @@ from datetime import datetime
 
 from .util import FileUtils
 from .adapter_all import DTModelAdapter
+from .unified_file_extractor import file_extractor
 
 class Translator():
     """
@@ -831,7 +832,545 @@ class Translator():
 
     #===================IDS CONNECTOR METHODS======================
     
+    # def process_ids_response(self, ids_response: dict, toe_id: str):
+    #     """
+    #     Process IDS connector response and route to appropriate handler
+        
+    #     Args:
+    #         ids_response: Response from IDS connector GET /api/IDSconnector/get_data_request
+    #         toe_id: Target of Evaluation ID
+            
+    #     Returns:
+    #         list: List of processed things
+    #     """
+    #     logger = logging.getLogger(__name__)
+        
+    #     logger.info(f"Processing IDS response for TOE: {toe_id}")
+        
+    #     processed_things = []
+        
+    #     try:
+    #         # Parse the IDS response
+    #         data_type = ids_response.get("data_type")
+    #         data_str = ids_response.get("data")
+            
+    #         if data_type != "json":
+    #             logger.error(f"Unsupported data type: {data_type}")
+    #             return processed_things
+            
+    #         # Parse the data string
+    #         data = json.loads(data_str)
+            
+    #         # Check if it's a list of resources or single resource
+    #         resources = data.get("resources", [data]) if isinstance(data, dict) else [data]
+            
+    #         for resource in resources:
+    #             # Extract resource metadata
+    #             resource_id = resource.get("@id", "")
+    #             resource_type = resource.get("@type", "")
+    #             title = resource.get("ids:title", [{}])[0].get("@value", "Unknown")
+    #             description = resource.get("ids:description", [{}])[0].get("@value", "")
+                
+    #             logger.info(f"Processing resource: {title} (Type: {resource_type})")
+                
+    #             # Detect artifact type from description or content
+    #             artifact_type = self._detect_artifact_type_from_ids(resource, description)
+                
+    #             if artifact_type:
+    #                 logger.info(f"Detected artifact type: {artifact_type}")
+    #                 thing = self._process_ids_artifact(resource, toe_id, artifact_type)
+    #                 if thing:
+    #                     processed_things.append(thing)
+    #             else:
+    #                 # Store as generic file
+    #                 logger.info(f"Storing as generic evidence file")
+    #                 thing = self._store_ids_evidence_file(resource, toe_id)
+    #                 if thing:
+    #                     processed_things.append(thing)
+            
+    #         return processed_things
+            
+    #     except Exception as e:
+    #         logger.error(f"Error processing IDS response: {e}")
+    #         logger.error(traceback.format_exc())
+    #         return processed_things
+
     def process_ids_response(self, ids_response: dict, toe_id: str):
+        """
+        Process IDS connector response and extract all files with metadata.
+        Route each file to appropriate processing based on type:
+        - OSCAL, ARM, BOMs: Transform and create structured things
+        - Other files: Create file-based things
+
+        Args:
+            ids_response: Response from IDS connector GET /api/IDSconnector/get_data_request
+            toe_id: Target of Evaluation ID
+
+        Returns:
+            list: List of processed things
+        """
+        logger = logging.getLogger(__name__)
+
+        logger.info(f"Processing IDS response for TOE: {toe_id}")
+
+        processed_things = []
+
+        try:
+            # Ensure evidence directory exists
+            evidence_dir = "/home/sdtm/SDTM/SDT/evidence"
+            os.makedirs(evidence_dir, exist_ok=True)
+
+            # Extract data from IDS response
+            data_type = ids_response.get("data_type")
+            data_str = ids_response.get("data")
+
+            logger.info(f"Processing IDS response with data_type: {data_type}")
+            logger.info(f"Data string length: {len(data_str) if data_str else 0}")
+
+            if not data_str:
+                logger.error("No data in IDS response")
+                return processed_things
+
+            # Check if data is JSON
+            if data_type == "json":
+                try:
+                    data = json.loads(data_str)
+                    logger.info(f"Parsed JSON data type: {type(data)}")
+                    logger.info(f"Data keys: {list(data.keys()) if isinstance(data, dict) else 'Not a dict'}")
+
+                    # Handle consumer response format with resource and extracted_file
+                    if isinstance(data, dict) and "resource" in data and "extracted_file" in data:
+                        # Extract from the resource directly, not the consumer's extracted_file
+                        resource = data["resource"]
+                        processed_things.extend(self._process_resource_directly(resource, toe_id))
+
+                    # Handle consumer response with multiple files
+                    elif isinstance(data, dict) and "files" in data:
+                        logger.info("Detected consumer response format with multiple files")
+                        files_data = data["files"]
+
+                        for file_item in files_data:
+                            if "resource" in file_item:
+                                resource = file_item["resource"]
+                                processed_things.extend(self._process_resource_directly(resource, toe_id))
+                            else:
+                                logger.warning("File item missing resource, skipping")
+
+                    # Check if it's a list of resources or single resource (original logic)
+                    elif isinstance(data, dict) and "resources" in data:
+                        resources = data["resources"]
+                        logger.info(f"Found {len(resources)} resources in IDS response")
+
+                        for resource in resources:
+                            logger.info(f"Processing resource: {resource.get('@id', 'unknown')}")
+                            processed_things.extend(self._process_resource_directly(resource, toe_id))
+
+                    else:
+                        # Single resource or unknown format
+                        resources = [data] if isinstance(data, dict) else [data]
+
+                        for resource in resources:
+                            processed_things.extend(self._process_resource_directly(resource, toe_id))
+
+                except json.JSONDecodeError:
+                    logger.warning("Failed to parse JSON data, treating as base64 encoded file")
+                    # Fall through to file extraction
+
+            # For non-JSON data types or failed JSON parsing, use unified extractor
+            if data_type != "json" or (data_type == "json" and not processed_things):
+                logger.info("Using unified file extractor for data processing")
+
+                # Use the unified file extractor
+                extractor = file_extractor()
+                file_data, metadata, data_type_result = extractor.extract_file_from_json(ids_response)
+                if file_data:
+                    # Save the extracted file to /evidence directory
+                    filename = metadata.get("filename", f"extracted_file_{toe_id}")
+                    # Add appropriate extension based on data_type_result
+                    if not os.path.splitext(filename)[1]:
+                        if "zip" in data_type_result.lower():
+                            filename += ".zip"
+                        elif "ipynb" in data_type_result.lower():
+                            filename += ".ipynb"
+                        elif "py" in data_type_result.lower():
+                            filename += ".py"
+                        elif "json" in data_type_result.lower():
+                            filename += ".json"
+
+                    file_path = os.path.join(evidence_dir, filename)
+                    saved_path = extractor.save_file(file_data, metadata, data_type_result, file_path)
+                    logger.info(f"Saved extracted file to: {saved_path}")
+
+                    file_info = {
+                        "resource_id": f"{toe_id}_extracted_{hashlib.md5(str(metadata).encode()).hexdigest()[:8]}",
+                        "title": metadata.get("filename", "Extracted File"),
+                        "format": data_type_result,
+                        "data_size": len(file_data),
+                        "permission": "read",
+                        "created": metadata.get("upload_timestamp", datetime.utcnow().isoformat() + "Z"),
+                        "updated": metadata.get("upload_timestamp", datetime.utcnow().isoformat() + "Z"),
+                        "file_path": saved_path,
+                        "filename": filename
+                    }
+                    # Create Ditto thing from extracted file metadata
+                    thing = self._create_thing_from_metadata(file_info, toe_id)
+                    if thing:
+                        processed_things.append(thing)
+
+            return processed_things
+
+        except Exception as e:
+            logger.error(f"Error processing IDS response: {e}")
+            logger.error(traceback.format_exc())
+            return processed_things
+
+    def _process_resource_directly(self, resource: dict, toe_id: str):
+        """
+        Process a single IDS resource directly by extracting embedded file from ids:description.
+
+        Args:
+            resource: IDS resource dictionary
+            toe_id: Target of Evaluation ID
+
+        Returns:
+            list: List of processed things
+        """
+        logger = logging.getLogger(__name__)
+        processed_things = []
+
+        logger.info(f"Processing resource directly: {resource.get('@id', 'unknown')}")
+
+        try:
+            # Extract embedded file data from ids:description
+            descriptions = resource.get("ids:description", [])
+            if not descriptions:
+                logger.warning("No description found in resource")
+                return processed_things
+
+            description_value = descriptions[0].get("@value", "{}")
+            logger.info(f"Raw description value: {description_value[:200]}...")
+
+            # Parse the description as JSON to get embedded file data
+            try:
+                # Handle multiple-encoded JSON (escaped quotes)
+                description_to_parse = description_value
+                if description_value.startswith('{') and '\\\\"' in description_value:
+                    logger.info("Detected multiple-encoded JSON, unescaping")
+                    # Unescape twice for double-encoded JSON
+                    description_to_parse = description_value.replace('\\\\"', '"')
+                    logger.info(f"Unescaped once: {description_to_parse[:200]}...")
+                    description_to_parse = description_to_parse.replace('\\"', '"')
+                    logger.info(f"Unescaped twice: {description_to_parse[:200]}...")
+                
+                embedded_data = json.loads(description_to_parse)
+                logger.info(f"Successfully parsed embedded data, type: {embedded_data.get('type', 'unknown')}")
+            except json.JSONDecodeError as e:
+                logger.warning(f"Description is not valid JSON after unescaping: {e}")
+                logger.warning(f"Description content: {description_value[:500]}")
+                return processed_things
+
+            # Check if this contains embedded file data
+            if ("data" in embedded_data or "content" in embedded_data) and "metadata" in embedded_data:
+                logger.info("Found embedded file data in resource description")
+
+                # Use unified extractor on the embedded data
+                extractor = file_extractor()
+                file_data, metadata, data_type_result = extractor.extract_file_from_json(embedded_data)
+                
+                logger.info(f"Extractor returned: file_data={type(file_data)}, len={len(file_data) if file_data else 0}, metadata={metadata}, data_type={data_type_result}")
+
+                if file_data:
+                    # Determine filename with correct extension
+                    filename = metadata.get("filename", f"resource_file_{toe_id}")
+                    mime_type = metadata.get("mime_type", "")
+
+                    # Add extension if missing based on type
+                    if not os.path.splitext(filename)[1]:
+                        if "python" in mime_type or "py" in filename:
+                            filename += ".py"
+                        elif "ipynb" in mime_type or "jupyter" in mime_type:
+                            filename += ".ipynb"
+                        elif "zip" in mime_type:
+                            filename += ".zip"
+                        elif "json" in mime_type:
+                            filename += ".json"
+
+                    evidence_dir = "/home/sdtm/SDTM/SDT/evidence"
+                    file_path = os.path.join(evidence_dir, filename)
+                    saved_path = extractor.save_file(file_data, metadata, data_type_result, file_path)
+                    logger.info(f"Saved embedded file to: {saved_path}")
+
+                    file_info = {
+                        "resource_id": resource.get("@id", f"{toe_id}_resource_{hashlib.md5(str(resource).encode()).hexdigest()[:8]}"),
+                        "title": resource.get("ids:title", [{}])[0].get("@value", filename),
+                        "format": data_type_result,
+                        "data_size": len(file_data) if isinstance(file_data, (str, bytes)) else 0,
+                        "permission": "read",
+                        "created": resource.get("ids:created", {}).get("@value", datetime.utcnow().isoformat() + "Z"),
+                        "updated": resource.get("ids:modified", {}).get("@value", datetime.utcnow().isoformat() + "Z"),
+                        "file_path": saved_path,
+                        "filename": filename,
+                        "sourceType": "ids_embedded_file"
+                    }
+
+                    # Create Ditto thing from file metadata
+                    thing = self._create_thing_from_metadata(file_info, toe_id)
+                    if thing:
+                        processed_things.append(thing)
+                else:
+                    logger.warning("Failed to extract file data from resource")
+            else:
+                logger.info("No embedded file data found, storing as generic IDS evidence")
+                # Store the resource itself as evidence
+                thing = self._store_ids_evidence_file(resource, toe_id)
+                if thing:
+                    processed_things.append(thing)
+
+        except Exception as e:
+            logger.error(f"Error processing resource directly: {e}")
+            logger.error(traceback.format_exc())
+
+        return processed_things
+        """
+        Process a single extracted file from consumer response.
+        Determines file type and routes to appropriate processing.
+
+        Args:
+            extracted_file: The extracted_file object from consumer response
+            resource: The resource metadata from consumer response
+            toe_id: Target of Evaluation ID
+
+        Returns:
+            list: List of processed things (usually one thing per file)
+        """
+        logger = logging.getLogger(__name__)
+        processed_things = []
+
+        try:
+            if not extracted_file.get("success"):
+                logger.warning("Extracted file indicates failure, skipping")
+                return processed_things
+
+            file_data = extracted_file.get("data")
+            metadata = extracted_file.get("metadata", {})
+
+            if not file_data:
+                logger.warning("No file data in extracted_file")
+                return processed_things
+
+            # Get resource metadata
+            resource_id = resource.get("@id", "")
+            resource_type = resource.get("@type", "")
+            title = resource.get("ids:title", [{}])[0].get("@value", "Unknown")
+            description = resource.get("ids:description", [{}])[0].get("@value", "")
+
+            logger.info(f"Processing extracted file: {title}")
+
+            # Determine file type and content
+            file_type = metadata.get("type", "unknown")
+            mime_type = metadata.get("mime_type", "")
+
+            # Check if this is a structured data format that needs transformation
+            if self._is_structured_data_format(file_data, metadata, description):
+                logger.info("Detected structured data format, attempting transformation")
+
+                # Try to parse the file data as JSON for transformation
+                try:
+                    if isinstance(file_data, str):
+                        # If it's a string, try to parse as JSON
+                        structured_data = json.loads(file_data)
+                    else:
+                        # If it's bytes, decode and parse
+                        structured_data = json.loads(file_data.decode('utf-8'))
+
+                    # Detect artifact type from the structured data
+                    artifact_type = self._detect_artifact_type_from_content(structured_data, metadata, description)
+
+                    if artifact_type:
+                        logger.info(f"Detected artifact type: {artifact_type} for transformation")
+
+                        # Create a synthetic IDS resource for transformation
+                        synthetic_resource = self._create_synthetic_resource(resource, metadata, structured_data)
+
+                        # Process through appropriate transformer
+                        thing = self._process_ids_artifact(synthetic_resource, toe_id, artifact_type)
+                        if thing:
+                            processed_things.append(thing)
+                            logger.info(f"Created transformed thing for {artifact_type}")
+                        else:
+                            logger.warning(f"Failed to transform {artifact_type}, falling back to file storage")
+                            # Fall through to file storage
+                    else:
+                        logger.info("No specific artifact type detected, storing as file")
+
+                except (json.JSONDecodeError, UnicodeDecodeError) as e:
+                    logger.info(f"File is not JSON-structured, storing as regular file: {e}")
+
+            # Store as regular file if not structured or transformation failed
+            if not processed_things:
+                logger.info("Storing extracted file to disk and creating file thing")
+
+                # Save the file directly
+                filename = metadata.get("filename", f"extracted_file_{toe_id}")
+                # Add appropriate extension if missing
+                if not os.path.splitext(filename)[1]:
+                    if file_type == "text":
+                        filename += ".txt"
+                    elif "zip" in mime_type:
+                        filename += ".zip"
+                    elif "ipynb" in mime_type or "jupyter" in mime_type:
+                        filename += ".ipynb"
+                    elif "python" in mime_type:
+                        filename += ".py"
+                    elif "json" in mime_type:
+                        filename += ".json"
+
+                evidence_dir = "/home/sdtm/SDTM/SDT/evidence"
+                file_path = os.path.join(evidence_dir, filename)
+
+                try:
+                    # Write the file
+                    mode = 'wb' if isinstance(file_data, bytes) else 'w'
+                    with open(file_path, mode) as f:
+                        f.write(file_data)
+                    logger.info(f"Saved extracted file to: {file_path}")
+
+                    file_info = {
+                        "resource_id": f"{toe_id}_extracted_{hashlib.md5(str(metadata).encode()).hexdigest()[:8]}",
+                        "title": metadata.get("filename", title),
+                        "format": file_type,
+                        "data_size": len(file_data) if isinstance(file_data, (str, bytes)) else 0,
+                        "permission": "read",
+                        "created": metadata.get("extraction_timestamp", datetime.utcnow().isoformat() + "Z"),
+                        "updated": metadata.get("extraction_timestamp", datetime.utcnow().isoformat() + "Z"),
+                        "file_path": file_path,
+                        "filename": filename,
+                        "sourceType": "extracted_file"
+                    }
+
+                    # Create Ditto thing from extracted file metadata
+                    thing = self._create_thing_from_metadata(file_info, toe_id)
+                    if thing:
+                        processed_things.append(thing)
+                        logger.info(f"Created file thing for extracted file: {filename}")
+
+                except Exception as e:
+                    logger.error(f"Failed to save extracted file: {e}")
+
+        except Exception as e:
+            logger.error(f"Error processing extracted file: {e}")
+            logger.error(traceback.format_exc())
+
+        return processed_things
+
+    def _is_structured_data_format(self, file_data, metadata: dict, description: str):
+        """
+        Determine if the file contains structured data that should be transformed.
+
+        Args:
+            file_data: The raw file data
+            metadata: File metadata
+            description: Resource description
+
+        Returns:
+            bool: True if this appears to be structured data for transformation
+        """
+        # Check metadata indicators
+        mime_type = metadata.get("mime_type", "").lower()
+        file_type = metadata.get("type", "").lower()
+
+        # JSON-based formats are candidates for transformation
+        if "json" in mime_type or file_type in ["json", "cyclonedx", "oscal", "arm"]:
+            return True
+
+        # Check if description contains structured data hints
+        if description:
+            try:
+                desc_data = json.loads(description)
+                if any(key in desc_data for key in ["bomFormat", "component-definition", "$schema", "cloudServiceId"]):
+                    return True
+            except:
+                pass
+
+        # Check file content for JSON structure
+        try:
+            if isinstance(file_data, str):
+                test_data = json.loads(file_data)
+            elif isinstance(file_data, bytes):
+                test_data = json.loads(file_data.decode('utf-8'))
+            else:
+                return False
+
+            # If it's valid JSON, check for known structured formats
+            if isinstance(test_data, dict):
+                if any(key in test_data for key in ["bomFormat", "specVersion", "component-definition", "component", "$schema"]):
+                    return True
+        except:
+            pass
+
+        return False
+
+    def _detect_artifact_type_from_content(self, content: dict, metadata: dict, description: str):
+        """
+        Detect artifact type from actual content data.
+
+        Args:
+            content: Parsed content data
+            metadata: File metadata
+            description: Resource description
+
+        Returns:
+            str: Artifact type ('cyclonedx', 'oscal', 'arm', 'clouditor') or None
+        """
+        # Check content for CycloneDX identifiers
+        if "bomFormat" in content or "specVersion" in content:
+            return "cyclonedx"
+
+        # Check for OSCAL identifiers
+        if "component-definition" in content or "component" in content:
+            return "oscal"
+
+        # Check for ARM template identifiers
+        if "$schema" in content and "microsoft.com/schemas" in str(content.get("$schema", "")).lower():
+            return "arm"
+
+        # Check for Clouditor evidence
+        if "cloudServiceId" in content or "toolId" in content:
+            return "clouditor"
+
+        # Check description for type hints
+        if description:
+            try:
+                desc_data = json.loads(description)
+                return self._detect_artifact_type_from_content(desc_data, metadata, "")
+            except:
+                pass
+
+        return None
+
+    def _create_synthetic_resource(self, original_resource: dict, metadata: dict, content: dict):
+        """
+        Create a synthetic IDS resource for transformation purposes.
+
+        Args:
+            original_resource: Original resource from consumer
+            metadata: File metadata
+            content: Parsed content data
+
+        Returns:
+            dict: Synthetic IDS resource
+        """
+        synthetic = dict(original_resource)  # Copy original
+
+        # Update description with the actual content
+        synthetic["ids:description"] = [{"@value": json.dumps(content)}]
+
+        # Update title if not present
+        if not synthetic.get("ids:title"):
+            filename = metadata.get("filename", "Structured Data")
+            synthetic["ids:title"] = [{"@value": filename}]
+
+        return synthetic
         """
         Process IDS connector response and route to appropriate handler
         
@@ -893,6 +1432,88 @@ class Translator():
             logger.error(f"Error processing IDS response: {e}")
             logger.error(traceback.format_exc())
             return processed_things
+
+    def _create_thing_from_metadata(self, file_info: dict, toe_id: str):
+        """
+        Create a Ditto thing from file metadata extracted by unified extractor
+        
+        Args:
+            file_info: Dictionary containing file metadata from extractor
+            toe_id: Target of Evaluation ID
+            
+        Returns:
+            str: JSON string of Ditto thing
+        """
+        logger = logging.getLogger(__name__)
+        
+        try:
+            # Extract metadata fields
+            resource_id = file_info.get("resource_id") or f"{toe_id}_{hashlib.md5(file_info.get('filename', '').encode()).hexdigest()[:8]}"
+            title = file_info.get("title", "Unknown")
+            file_format = file_info.get("format", "")
+            data_size = file_info.get("data_size", 0)
+            permission = file_info.get("permission", "")
+            created = file_info.get("created") or datetime.utcnow().isoformat() + "Z"
+            updated = file_info.get("updated") or datetime.utcnow().isoformat() + "Z"
+            file_path = file_info.get("file_path", "")
+            filename = file_info.get("filename", "")
+            
+            # Determine category based on file extension or format
+            category = "FILE"
+            if file_format:
+                if "zip" in file_format.lower():
+                    category = "ARCHIVE"
+                elif "ipynb" in file_format.lower():
+                    category = "NOTEBOOK"
+                elif "py" in file_format.lower():
+                    category = "SCRIPT"
+            
+            # Create Ditto thing
+            thing = {
+                "thingId": f"cobalt:{toe_id}:{resource_id or filename}",
+                "policyId": "cobalt:policy",
+                "definition": "cobalt:evidence-file:1.0.0",
+                "attributes": {
+                    "toe_id": toe_id,
+                    "category": category,
+                    "source": "ids_connector",
+                    "resource_id": resource_id,
+                    "title": title,
+                    "format": file_format,
+                    "data_size": data_size,
+                    "permission": permission,
+                    "created": created,
+                    "updated": updated,
+                    "file_path": file_path,
+                    "filename": filename,
+                    "sourceType": "extracted_file",
+                    "transformedAt": datetime.utcnow().isoformat() + "Z"
+                },
+                "features": {
+                    "file_metadata": {
+                        "properties": {
+                            "size": data_size,
+                            "type": file_format,
+                            "path": file_path,
+                            "permissions": permission
+                        }
+                    },
+                    "timestamps": {
+                        "properties": {
+                            "created": created,
+                            "updated": updated,
+                            "transformed": datetime.utcnow().isoformat() + "Z"
+                        }
+                    }
+                }
+            }
+            
+            logger.info(f"Created thing for extracted file: {filename}")
+            return json.dumps(thing)
+            
+        except Exception as e:
+            logger.error(f"Error creating thing from metadata: {e}")
+            return None
 
     def _detect_artifact_type_from_ids(self, resource: dict, description: str):
         """

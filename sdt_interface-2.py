@@ -253,60 +253,60 @@ async def connection(request: Request):
 
 #============================ ENDPOINTS for EVIDENCE COLLECTION and FETCHING through IDS Connector ============================
 
-# OLD ENDPOINTS - COMMENTED OUT
-@app.get("/api/SDT/sync/github")
-async def sync_github_repository(
-    github_url: str = Query(default="https://github.com/arehmanq101/testevidenceAI", description="GitHub repository URL"),
-    toeid: str = Query(default="00000000-0000-0000-0000-000000000000", description="Target of Evaluation ID (UUID format: 00000000-0000-0000-0000-000000000000)"), 
-    category: str = Query(default="AI", description="Category of evidence (AI, BOMS, etc.)")
-):
-    """
-    Sync data from GitHub repository to Ditto instance.
-    Creates repository thing and updates genesis thing.
+# # OLD ENDPOINTS - COMMENTED OUT
+# @app.get("/api/SDT/sync/github")
+# async def sync_github_repository(
+#     github_url: str = Query(default="https://github.com/arehmanq101/testevidenceAI", description="GitHub repository URL"),
+#     toeid: str = Query(default="00000000-0000-0000-0000-000000000000", description="Target of Evaluation ID (UUID format: 00000000-0000-0000-0000-000000000000)"), 
+#     category: str = Query(default="AI", description="Category of evidence (AI, BOMS, etc.)")
+# ):
+#     """
+#     Sync data from GitHub repository to Ditto instance.
+#     Creates repository thing and updates genesis thing.
     
-    Args:
-        github_url: The URL of the GitHub repository to clone
-        toeid: Target of Evaluation ID
-        category: Category/type of evidence
+#     Args:
+#         github_url: The URL of the GitHub repository to clone
+#         toeid: Target of Evaluation ID
+#         category: Category/type of evidence
         
-    Returns:
-        JSONResponse: Sync results with details of created things
-    """
-    try:
-        logger.info(f"Starting GitHub sync for TOE: {toeid}, repository: {github_url}")
+#     Returns:
+#         JSONResponse: Sync results with details of created things
+#     """
+#     try:
+#         logger.info(f"Starting GitHub sync for TOE: {toeid}, repository: {github_url}")
         
-        result = ctrl.sync_github_repository(github_url, toeid, category)
+#         result = ctrl.sync_github_repository(github_url, toeid, category)
         
-        if result.get("success"):
-            return JSONResponse(
-                status_code=200,
-                content={
-                    "status": "success",
-                    "message": result.get("message"),
-                    "data": {
-                        "toe_id": toeid,
-                        "category": category,
-                        "github_url": github_url,
-                        "repository_name": result.get("repository_name"),
-                        "thing_id": result.get("thing_id"),
-                        "genesis_updated": result.get("genesis_updated", False),
-                        "timestamp": time.time()
-                    }
-                }
-            )
-        else:
-            return JSONResponse(
-                status_code=500,
-                content={
-                    "status": "error",
-                    "message": result.get("error", "Failed to sync GitHub repository"),
-                    "toe_id": toeid
-                }
-            )
+#         if result.get("success"):
+#             return JSONResponse(
+#                 status_code=200,
+#                 content={
+#                     "status": "success",
+#                     "message": result.get("message"),
+#                     "data": {
+#                         "toe_id": toeid,
+#                         "category": category,
+#                         "github_url": github_url,
+#                         "repository_name": result.get("repository_name"),
+#                         "thing_id": result.get("thing_id"),
+#                         "genesis_updated": result.get("genesis_updated", False),
+#                         "timestamp": time.time()
+#                     }
+#                 }
+#             )
+#         else:
+#             return JSONResponse(
+#                 status_code=500,
+#                 content={
+#                     "status": "error",
+#                     "message": result.get("error", "Failed to sync GitHub repository"),
+#                     "toe_id": toeid
+#                 }
+#             )
             
-    except Exception as e:
-        logger.error(f"Error syncing GitHub repository: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+#     except Exception as e:
+#         logger.error(f"Error syncing GitHub repository: {e}")
+#         raise HTTPException(status_code=500, detail=str(e))
 
 
 # # @app.get("/api/SDT/sync")
@@ -488,7 +488,8 @@ async def get_evidence(
     exclude_patterns: str = Query(None, description="Comma-separated exclude patterns for ZIP (e.g., .git/*,*.pyc)"),
     format: str = Query(default="json", description="Response format: json|download"),
     transform: str = Query(None, description="Transform name (e.g., qpu_clouditor) or custom mapping JSON"),
-    include_features: str = Query(None, description="Comma-separated features to include (for thing type)")
+    include_features: str = Query(None, description="Comma-separated features to include (for thing type)"),
+    filename: str = Query(None, description="Filter by specific filename (for FILE category)")
 ):
     """
     Flexible endpoint to retrieve evidence from a Digital Twin.
@@ -533,7 +534,8 @@ async def get_evidence(
             exclude_patterns=exclude_list,
             format=format,
             transform=transform,
-            include_features=features_list
+            include_features=features_list,
+            filename=filename
         )
         
         # Check if result is a download request
@@ -655,6 +657,40 @@ async def list_children(toeid: str = Query(..., description="Target of Evaluatio
         )
 
 
+@app.post("/api/SDT/upload-template")
+async def upload_template(file: UploadFile = File(...)):
+    """
+    Upload a new template.json file to SDT/templates/template.json and reload templates.
+    
+    Args:
+        file: The template.json file to upload
+        
+    Returns:
+        JSONResponse: Success message
+    """
+    try:
+        # Path to save
+        template_dir = os.path.join(os.path.dirname(__file__), "templates")
+        os.makedirs(template_dir, exist_ok=True)
+        template_path = os.path.join(template_dir, "template.json")
+        
+        # Save the file
+        with open(template_path, "wb") as f:
+            content = await file.read()
+            f.write(content)
+        
+        # Reload templates
+        ctrl.ep._load_usecase_templates()
+        
+        return JSONResponse(
+            status_code=200,
+            content={"message": "Template uploaded and loaded successfully"}
+        )
+    except Exception as e:
+        logger.error(f"Error uploading template: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 #============================ ENDPOINTS FOR EVIDENCE COLLECTION for Quantum DT ============================
 
 
@@ -753,5 +789,5 @@ async def health_check():
 # app = appmap.fastapi.Middleware(app).init_app()
 # app.add_middleware(AppMapMiddleware)
 
-# if __name__ == '__main__':
-#     uvicorn.run(app, port=8005, host='0.0.0.0')
+if __name__ == '__main__':
+    uvicorn.run(app, port=8001, host='0.0.0.0')

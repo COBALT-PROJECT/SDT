@@ -16,8 +16,8 @@ def get_local_ip():
         return "127.0.0.1"  # Fallback to localhost
 
 # Eclipse Ditto configuration
-Ditto_IP = os.getenv("DITTO_HOST", "ditto")
-Ditto_PORT = "80"
+Ditto_IP = os.getenv("DITTO_HOST", "localhost")
+Ditto_PORT = "8080"
 
 # Local MQTT broker configuration
 LOCAL_IP = get_local_ip()
@@ -35,4 +35,4 @@ OUTPUT_DIR = "/home/abdul/DigitalTwin/Cobalt/SDT/sdt_output"
 
 
 IDS_CONNECTOR_HOST = os.getenv("IDS_CONNECTOR_HOST", "localhost")
-IDS_CONNECTOR_PORT = os.getenv("IDS_CONNECTOR_PORT", "8080")
+IDS_CONNECTOR_PORT = os.getenv("IDS_CONNECTOR_PORT", "8004")

@@ -579,33 +579,24 @@ class EvidenceProvider():
         return None
     
     def _load_usecase_templates(self):
-        """Load use case-based template files from the templates directory."""
+        """Load template file from SDT/templates/template.json."""
         try:
             current_dir = os.path.dirname(os.path.abspath(__file__))
-            template_path = os.path.join(current_dir, "..", self.template_dir)
+            template_path = os.path.join(current_dir, "..", self.template_dir, "template.json")
             
             if not os.path.exists(template_path):
-                logger.warning(f"Template directory not found: {template_path}")
+                logger.warning(f"Template file not found: {template_path}")
                 return
             
-            # Look for use case directories (e.g., "AI usecase")
-            for item in os.listdir(template_path):
-                item_path = os.path.join(template_path, item)
-                if os.path.isdir(item_path) and "usecase" in item.lower():
-                    template_file = os.path.join(item_path, "template.json")
-                    if os.path.exists(template_file):
-                        try:
-                            with open(template_file, 'r') as f:
-                                usecase_data = json.load(f)
-                            
-                            # Store template by use case name
-                            usecase_name = usecase_data.get("config_name", item)
-                            self.usecase_templates[usecase_name] = usecase_data
-                            logger.info(f"Loaded template for use case: {usecase_name}")
-                        except Exception as e:
-                            logger.error(f"Error loading template {template_file}: {e}")
+            with open(template_path, 'r') as f:
+                template_data = json.load(f)
+            
+            # Assuming template_data is a single template dict
+            usecase_name = template_data.get("config_name", "default")
+            self.usecase_templates[usecase_name] = template_data
+            logger.info(f"Loaded template: {usecase_name}")
         except Exception as e:
-            logger.error(f"Error loading use case templates: {e}")
+            logger.error(f"Error loading template: {e}")
     
     def get_usecase_template(self, usecase: str, level: str):
         """
@@ -840,7 +831,31 @@ class EvidenceProvider():
         import zipfile
         import tempfile
         
-        # Get repository path from thing attributes
+        # Check if this is a FILE type with an existing file
+        category = thing.get("attributes", {}).get("category")
+        file_path = thing.get("attributes", {}).get("file_path")
+        filename = thing.get("attributes", {}).get("filename", "")
+        
+        # If it's a FILE type with an existing file, return it directly
+        if category == "FILE" and file_path and os.path.exists(file_path):
+            logger.info(f"FILE type detected with existing file: {file_path}")
+            # Check if it's already a zip file
+            if filename.endswith('.zip') or file_path.endswith('.zip'):
+                logger.info(f"Returning existing ZIP file: {file_path}")
+                return {"zip_path": file_path, "files_count": 1}
+            else:
+                # For non-zip files, create a zip containing the single file
+                temp_dir = tempfile.mkdtemp()
+                thing_id = thing.get("thingId", "unknown").replace(":", "_")
+                zip_path = os.path.join(temp_dir, f"{thing_id}.zip")
+                
+                with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
+                    zipf.write(file_path, filename)
+                
+                logger.info(f"Created ZIP with single file at: {zip_path}")
+                return {"zip_path": zip_path, "files_count": 1}
+        
+        # Get repository path from thing attributes (for GitHub/repo-based things)
         repo_path = thing.get("attributes", {}).get("github")
         if not repo_path or not os.path.exists(repo_path):
             logger.error(f"Repository path not found or doesn't exist: {repo_path}")
