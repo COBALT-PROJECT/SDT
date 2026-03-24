@@ -1,16 +1,85 @@
 openapi: 3.0.3
 info:
   title: SDT Service Interface
-  version: v0.3.0
+  version: v0.2.7
   description: |
-    REST API for Security Digital Twin (SDT) Service. Provides endpoints for managing Digital Twin instances, evidence collection, synchronization, and health checks.
+    REST API for Security Digital Twin (SDT) Service. Provides endpoints for managing Digital Twin instances, evidence collection, synchronization, authentication with Bearer tokens, and health checks.
 servers:
   - url: http://localhost:8000
 paths:
+  # ================== AUTHENTICATION ENDPOINTS ==================
+  /auth/token:
+    post:
+      summary: Receive OAuth2 Bearer token from SDT-Manager
+      description: Store OAuth2 credentials received from SDT-Manager for authenticated communication with IDS-Connector
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                sdt_id:
+                  type: string
+                  description: SDT unique identifier
+                access_token:
+                  type: string
+                  description: OAuth2 access token
+                client_id:
+                  type: string
+                  description: OAuth2 client identifier
+                client_secret:
+                  type: string
+                  description: OAuth2 client secret
+                components:
+                  type: object
+                  description: Component references
+              required:
+                - sdt_id
+                - access_token
+                - client_id
+      responses:
+        '200':
+          description: Bearer token stored successfully
+          content:
+            application/json:
+              schema:
+                type: object
+        '400':
+          description: Missing or invalid required fields
+          content:
+            application/json:
+              schema:
+                type: object
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+  /auth/token/status:
+    get:
+      summary: Check current Bearer token status
+      description: Returns token availability status without revealing secrets
+      tags:
+        - Authentication
+      responses:
+        '200':
+          description: Token status
+          content:
+            application/json:
+              schema:
+                type: object
+
+  # ================== CORE OPERATIONS (CRUD) ==================
   /api/SDT/create/:
     post:
       summary: Create a new SDT artifact in Ditto
-      description: Create a Digital Twin with optional genesis thing management.
+      description: Create a Digital Twin with optional parent thing management.
+      tags:
+        - Core Operations
       parameters:
         - name: toeid
           in: query
@@ -26,13 +95,13 @@ paths:
             type: string
             default: BOMS
           description: Type of payload (AI, QDT, BOMS)
-        - name: create_genesis
+        - name: create_parent
           in: query
           required: false
           schema:
             type: boolean
             default: true
-          description: Create/update genesis thing
+          description: Create/update parent thing
       requestBody:
         required: true
         content:
@@ -55,6 +124,8 @@ paths:
   /api/SDT/read/:
     get:
       summary: Read an item from the Digital Twin model
+      tags:
+        - Core Operations
       parameters:
         - name: toeid
           in: query
@@ -83,6 +154,8 @@ paths:
   /api/SDT/update/:
     put:
       summary: Update an item in the Digital Twin model
+      tags:
+        - Core Operations
       parameters:
         - name: toeid
           in: query
@@ -117,6 +190,8 @@ paths:
   /api/SDT/delete/:
     delete:
       summary: Delete an item from the Digital Twin model
+      tags:
+        - Core Operations
       parameters:
         - name: toeid
           in: query
@@ -142,9 +217,13 @@ paths:
             application/json:
               schema:
                 type: object
+
+  # ================== CONNECTION MANAGEMENT ==================
   /api/SDT/connection/:
     post:
       summary: Establish a connection with the Digital Twin
+      tags:
+        - Connection Management
       requestBody:
         required: false
         content:
@@ -158,83 +237,13 @@ paths:
             application/json:
               schema:
                 type: object
-  /api/SDT/sync/github:
-    get:
-      summary: Sync data from GitHub repository to Ditto
-      parameters:
-        - name: github_url
-          in: query
-          required: true
-          schema:
-            type: string
-        - name: toeid
-          in: query
-          required: false
-          schema:
-            type: string
-            default: "00000000-0000-0000-0000-000000000000"
-        - name: category
-          in: query
-          required: false
-          schema:
-            type: string
-            default: AI
-      responses:
-        '200':
-          description: Sync results
-          content:
-            application/json:
-              schema:
-                type: object
-        '500':
-          description: Error syncing GitHub repository
-          content:
-            application/json:
-              schema:
-                type: object
-  /api/SDT/sync/ids:
-    get:
-      summary: Sync artifacts from IDS connector
-      parameters:
-        - name: data_path
-          in: query
-          required: false
-          schema:
-            type: string
-            default: all
-        - name: toeid
-          in: query
-          required: false
-          schema:
-            type: string
-            default: "00000000-0000-0000-0000-000000000000"
-        - name: ids_connector_url
-          in: query
-          required: false
-          schema:
-            type: string
-      responses:
-        '200':
-          description: Sync results
-          content:
-            application/json:
-              schema:
-                type: object
-        '400':
-          description: Not found or bad request
-          content:
-            application/json:
-              schema:
-                type: object
-        '500':
-          description: Error in IDS sync
-          content:
-            application/json:
-              schema:
-                type: object
+
+  # ================== EVIDENCE MANAGEMENT ==================
   /api/SDT/evidence/:
     get:
       summary: Flexible endpoint to retrieve evidence from a Digital Twin
+      tags:
+        - Evidence Management
       parameters:
         - name: toeid
           in: query
@@ -307,9 +316,13 @@ paths:
             application/json:
               schema:
                 type: object
-  /api/SDT/genesis/create:
+
+  # ================== PARENT THING MANAGEMENT ==================
+  /api/SDT/parent/create:
     post:
-      summary: Explicitly create a genesis thing for a TOE ID
+      summary: Explicitly create a parent thing for a TOE ID
+      tags:
+        - Parent Thing Management
       parameters:
         - name: toeid
           in: query
@@ -324,26 +337,28 @@ paths:
               type: object
       responses:
         '201':
-          description: Genesis thing created
+          description: Parent thing created
           content:
             application/json:
               schema:
                 type: object
         '200':
-          description: Genesis thing already exists
+          description: Parent thing already exists
           content:
             application/json:
               schema:
                 type: object
         '500':
-          description: Error creating genesis thing
+          description: Error creating parent thing
           content:
             application/json:
               schema:
                 type: object
-  /api/SDT/genesis/read:
+  /api/SDT/parent/read:
     get:
-      summary: Get the genesis thing for a TOE ID
+      summary: Get the parent thing for a TOE ID
+      tags:
+        - Parent Thing Management
       parameters:
         - name: toeid
           in: query
@@ -352,26 +367,28 @@ paths:
             type: string
       responses:
         '200':
-          description: Genesis thing data
+          description: Parent thing data
           content:
             application/json:
               schema:
                 type: object
         '404':
-          description: Genesis thing not found
+          description: Parent thing not found
           content:
             application/json:
               schema:
                 type: object
         '500':
-          description: Error reading genesis thing
+          description: Error reading parent thing
           content:
             application/json:
               schema:
                 type: object
-  /api/SDT/genesis/children:
+  /api/SDT/parent/children:
     get:
-      summary: List all child things under a genesis thing
+      summary: List all child things under a parent thing
+      tags:
+        - Parent Thing Management
       parameters:
         - name: toeid
           in: query
@@ -391,9 +408,123 @@ paths:
             application/json:
               schema:
                 type: object
+
+  # ================== DATA SYNCHRONIZATION ==================
+  /api/SDT/sync/github:
+    get:
+      summary: Sync data from GitHub repository to Ditto
+      tags:
+        - Data Synchronization
+      parameters:
+        - name: github_url
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: toeid
+          in: query
+          required: false
+          schema:
+            type: string
+            default: "00000000-0000-0000-0000-000000000000"
+        - name: category
+          in: query
+          required: false
+          schema:
+            type: string
+            default: AI
+      responses:
+        '200':
+          description: Sync results
+          content:
+            application/json:
+              schema:
+                type: object
+        '500':
+          description: Error syncing GitHub repository
+          content:
+            application/json:
+              schema:
+                type: object
+  /api/SDT/sync/ids:
+    get:
+      summary: Sync artifacts from IDS connector
+      tags:
+        - Data Synchronization
+      parameters:
+        - name: data_path
+          in: query
+          required: false
+          schema:
+            type: string
+            default: all
+        - name: toeid
+          in: query
+          required: false
+          schema:
+            type: string
+            default: "00000000-0000-0000-0000-000000000000"
+        - name: ids_connector_url
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Sync results
+          content:
+            application/json:
+              schema:
+                type: object
+        '400':
+          description: Not found or bad request
+          content:
+            application/json:
+              schema:
+                type: object
+        '500':
+          description: Error in IDS sync
+          content:
+            application/json:
+              schema:
+                type: object
+
+  # ================== TEMPLATES MANAGEMENT ==================
+  /api/SDT/upload-template:
+    post:
+      summary: Upload a new template.json file
+      tags:
+        - Templates Management
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: Template uploaded and loaded successfully
+          content:
+            application/json:
+              schema:
+                type: object
+        '500':
+          description: Error uploading template
+          content:
+            application/json:
+              schema:
+                type: object
+
+  # ================== HEALTH & STATUS ==================
   /api/SDT/health:
     get:
       summary: Check health status of the service and container
+      tags:
+        - Health & Status
       responses:
         '200':
           description: Health status

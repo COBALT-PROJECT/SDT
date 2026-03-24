@@ -69,6 +69,45 @@ class Controller():
         # Create instances
         self.trs = Translator()
         self.ep = EvidenceProvider()
+        
+        # ==================== Bearer Token Management ====================
+        # Reference to token store from sdt_interface-2.py
+        self.token_store = None
+
+# =======================Bearer Token Methods========================
+
+    def set_token_store(self, token_store_dict):
+        """
+        Set reference to the token store from sdt_interface-2.py.
+        
+        Args:
+            token_store_dict: Dictionary containing OAuth2 token from SDT-Manager
+        """
+        self.token_store = token_store_dict
+        if token_store_dict and token_store_dict.get("access_token"):
+            logger.info(f"Token store updated for SDT {token_store_dict.get('sdt_id')}")
+    
+    def get_auth_headers(self):
+        """
+        Get Authorization header with Bearer token for IDS-Connector requests.
+        
+        Returns:
+            dict: Headers dict with Bearer token, or empty dict if no token available
+        """
+        if self.token_store and self.token_store.get("access_token"):
+            token = self.token_store.get("access_token")
+            return {"Authorization": f"Bearer {token}"}
+        
+        return {}
+    
+    def has_bearer_token(self):
+        """
+        Check if Bearer token is available for IDS-Connector authentication.
+        
+        Returns:
+            bool: True if token is available, False otherwise
+        """
+        return bool(self.token_store and self.token_store.get("access_token"))
 
 # =======================Main Methods========================
 
@@ -141,15 +180,15 @@ class Controller():
     #         print(e)
     #     return None
 
-    def create_in_ditto(self, payload, toe_id, payload_type, create_genesis: bool = True):
+    def create_in_ditto(self, payload, toe_id, payload_type, create_parent: bool = True):
         """
-        Creates a thing in Ditto and optionally updates the genesis thing.
+        Creates a thing in Ditto and optionally updates the parent thing.
         
         Args:
             payload: Thing payload
             toe_id: Target of Evaluation ID
             payload_type: Type of payload
-            create_genesis: Whether to create/update genesis thing (default: True)
+            create_parent: Whether to create/update parent thing (default: True)
         """
 
         # Check if thing already exists using pattern-based search
@@ -180,9 +219,9 @@ class Controller():
                 update_result = self.update_item(toe_id, payload_type, payload_json)
                 
                 if update_result.get("success"):
-                    # Update genesis thing
-                    if create_genesis:
-                        self.update_genesis_thing(toe_id, existing_thing_id, payload_type, operation="update")
+                    # Update parent thing
+                    if create_parent:
+                        self.update_parent_thing(toe_id, existing_thing_id, payload_type, operation="update")
                     
                     return {
                         "success": True,
@@ -249,15 +288,15 @@ class Controller():
                 "action": "created"
             }
             
-            # Create/Update genesis thing
-            if create_genesis and result["success"]:
-                # Ensure genesis thing exists
-                genesis_result = self.create_genesis_thing(toe_id)
-                
-                # Add child thing to genesis
-                self.update_genesis_thing(toe_id, thing_id, payload_type, operation="add")
-                
-                result["genesis_thing_id"] = self.get_genesis_thing_id(toe_id)
+# Create/Update parent thing
+            if create_parent and result["success"]:
+                # Ensure parent thing exists
+                parent_result = self.create_parent_thing(toe_id)
+
+                # Add child thing to parent
+                self.update_parent_thing(toe_id, thing_id, payload_type, operation="add")
+
+                result["parent_thing_id"] = self.get_parent_thing_id(toe_id)
             
             return result
             
@@ -543,14 +582,14 @@ class Controller():
             logger.error(f"Error searching for file by name: {e}")
             return None
 
-    def delete_item(self, toe_id, level, update_genesis: bool = True):
+    def delete_item(self, toe_id, level, update_parent: bool = True):
         """
-        Deletes a thing and updates the genesis thing.
+        Deletes a thing and updates the parent thing.
         
         Args:
             toe_id: Target of Evaluation ID
             level: Thing type/level
-            update_genesis: Whether to update genesis thing
+            update_parent: Whether to update parent thing
         """
 
         # First search for the existing thing ID
@@ -576,9 +615,9 @@ class Controller():
                 if verification is None:
                     logger.info(f"Thing with ID {item_id} was successfully deleted")
                     
-                    # Update genesis thing
-                    if update_genesis:
-                        self.update_genesis_thing(toe_id, item_id, level, operation="delete")
+                    # Update parent thing
+                    if update_parent:
+                        self.update_parent_thing(toe_id, item_id, level, operation="delete")
                     
                     return {"success": True, "status_code": r.status_code, "message": "Thing deleted successfully"}
                 else:
@@ -643,8 +682,8 @@ class Controller():
             response_data = r.json() if r.text else {}
             logger.info(f"Ditto update response status: {r.status_code}")
             
-            # Step 7: Update genesis thing
-            self.update_genesis_thing(toe_id, item_id, category, operation="update")
+            # Step 7: Update parent thing
+            self.update_parent_thing(toe_id, item_id, category, operation="update")
             
             return {
                 "success": 200 <= r.status_code < 300,
@@ -970,41 +1009,41 @@ class Controller():
         logger.info("Items appear identical (basic comparison)")
         return True
 
-    # ======================= Genesis Thing Methods =======================
+    # ======================= Parent Thing Methods =======================
 
-    def create_genesis_thing(self, toe_id: str, metadata: dict = None):
+    def create_parent_thing(self, toe_id: str, metadata: dict = None):
         """
-        Creates a genesis (parent) thing for a TOE ID that tracks all related things.
+        Creates a parent thing for a TOE ID that tracks all related things.
         
         Args:
             toe_id (str): Target of Evaluation ID
             metadata (dict): Optional metadata about the TOE
             
         Returns:
-            dict: Result of genesis thing creation
+            dict: Result of parent thing creation
         """
-        logger.info(f"Creating genesis thing for TOE ID: {toe_id}")
+        logger.info(f"Creating parent thing for TOE ID: {toe_id}")
         
-        # Check if genesis thing already exists
-        genesis_id = self.get_genesis_thing_id(toe_id)
-        existing_genesis = self.read_item_by_id(genesis_id)
+        # Check if parent thing already exists
+        parent_id = self.get_parent_thing_id(toe_id)
+        existing_parent = self.read_item_by_id(parent_id)
         
-        if existing_genesis:
-            logger.info(f"Genesis thing already exists: {genesis_id}")
+        if existing_parent:
+            logger.info(f"Parent thing already exists: {parent_id}")
             return {
                 "success": True,
-                "thing_id": genesis_id,
-                "message": "Genesis thing already exists",
+                "thing_id": parent_id,
+                "message": "Parent thing already exists",
                 "action": "exists"
             }
         
-        # Create genesis thing payload
-        genesis_payload = {
-            "thingId": genesis_id,
+        # Create parent thing payload
+        parent_payload = {
+            "thingId": parent_id,
             "attributes": {
                 "toe_id": toe_id,
-                "type": "genesis",
-                "description": metadata.get("description", f"Genesis thing for TOE {toe_id}") if metadata else f"Genesis thing for TOE {toe_id}",
+                "type": "parent",
+                "description": metadata.get("description", f"Parent thing for TOE {toe_id}") if metadata else f"Parent thing for TOE {toe_id}",
                 "created_at": datetime.now().isoformat(),
                 "owner": metadata.get("owner", "unknown") if metadata else "unknown",
                 "project": metadata.get("project", "unknown") if metadata else "unknown",
@@ -1026,46 +1065,46 @@ class Controller():
         
         # Create policy and attach
         policy_response, policy_name = self.create_policy()
-        genesis_payload["policyId"] = policy_name
+        parent_payload["policyId"] = policy_name
         
-        # Create the genesis thing in Ditto
-        url = f'http://{Ditto_IP}:{Ditto_PORT}/api/2/things/{genesis_id}'
+        # Create the parent thing in Ditto
+        url = f'http://{Ditto_IP}:{Ditto_PORT}/api/2/things/{parent_id}'
         
         try:
             session = requests.Session()
             session.auth = ("ditto", "ditto")
-            r = session.put(url, json=genesis_payload, headers={'Content-Type': 'application/json'})
+            r = session.put(url, json=parent_payload, headers={'Content-Type': 'application/json'})
             
             response_data = r.json() if r.text else {}
-            logger.info(f"Genesis thing created with status: {r.status_code}")
+            logger.info(f"Parent thing created with status: {r.status_code}")
             
             return {
                 "success": 200 <= r.status_code < 300,
                 "status_code": r.status_code,
-                "thing_id": genesis_id,
+                "thing_id": parent_id,
                 "response": response_data,
                 "action": "created"
             }
         except Exception as e:
-            logger.error(f"Error creating genesis thing: {e}")
+            logger.error(f"Error creating parent thing: {e}")
             return {"success": False, "error": str(e)}
 
-    def get_genesis_thing_id(self, toe_id: str):
+    def get_parent_thing_id(self, toe_id: str):
         """
-        Generates the genesis thing ID for a TOE ID.
+        Generates the parent thing ID for a TOE ID.
         
         Args:
             toe_id (str): Target of Evaluation ID
             
         Returns:
-            str: Genesis thing ID
+            str: Parent thing ID
         """
         namespace = "cobalt.sdt"
-        return f"{namespace}:genesis-{toe_id}"
+        return f"{namespace}:parent-{toe_id}"
 
-    def update_genesis_thing(self, toe_id: str, child_thing_id: str, payload_type: str, operation: str = "add"):
+    def update_parent_thing(self, toe_id: str, child_thing_id: str, payload_type: str, operation: str = "add"):
         """
-        Updates the genesis thing when child things are added/updated/deleted.
+        Updates the parent thing when child things are added/updated/deleted.
         
         Args:
             toe_id (str): Target of Evaluation ID
@@ -1074,20 +1113,20 @@ class Controller():
             operation (str): Operation type - "add", "update", or "delete"
             
         Returns:
-            dict: Result of genesis thing update
+            dict: Result of parent thing update
         """
-        logger.info(f"Updating genesis thing for TOE {toe_id}, operation: {operation}")
+        logger.info(f"Updating parent thing for TOE {toe_id}, operation: {operation}")
         
-        genesis_id = self.get_genesis_thing_id(toe_id)
-        genesis_thing = self.read_item_by_id(genesis_id)
+        parent_id = self.get_parent_thing_id(toe_id)
+        parent_thing = self.read_item_by_id(parent_id)
         
-        if not genesis_thing:
-            logger.error(f"Genesis thing not found: {genesis_id}")
-            return {"success": False, "error": "Genesis thing not found"}
+        if not parent_thing:
+            logger.error(f"Parent thing not found: {parent_id}")
+            return {"success": False, "error": "Parent thing not found"}
         
         # Get current child things
-        child_things = genesis_thing.get("features", {}).get("child_things", {}).get("properties", {})
-        statistics = genesis_thing.get("features", {}).get("statistics", {}).get("properties", {})
+        child_things = parent_thing.get("features", {}).get("child_things", {}).get("properties", {})
+        statistics = parent_thing.get("features", {}).get("statistics", {}).get("properties", {})
         things_by_type = statistics.get("things_by_type", {})
         
         # Perform operation
@@ -1125,52 +1164,52 @@ class Controller():
         statistics["things_by_type"] = things_by_type
         statistics["last_updated"] = datetime.now().isoformat()
         
-        # Update genesis thing
-        genesis_thing["features"]["child_things"]["properties"] = child_things
-        genesis_thing["features"]["statistics"]["properties"] = statistics
+        # Update parent thing
+        parent_thing["features"]["child_things"]["properties"] = child_things
+        parent_thing["features"]["statistics"]["properties"] = statistics
         
         # Send update to Ditto
-        url = f'http://{Ditto_IP}:{Ditto_PORT}/api/2/things/{genesis_id}'
+        url = f'http://{Ditto_IP}:{Ditto_PORT}/api/2/things/{parent_id}'
         try:
             session = requests.Session()
             session.auth = ("ditto", "ditto")
-            r = session.put(url, json=genesis_thing, headers={'Content-Type': 'application/json'})
+            r = session.put(url, json=parent_thing, headers={'Content-Type': 'application/json'})
             
             response_data = r.json() if r.text else {}
-            logger.info(f"Genesis thing updated with status: {r.status_code}")
+            logger.info(f"Parent thing updated with status: {r.status_code}")
             
             return {
                 "success": 200 <= r.status_code < 300,
                 "status_code": r.status_code,
-                "thing_id": genesis_id,
+                "thing_id": parent_id,
                 "response": response_data
             }
         except Exception as e:
-            logger.error(f"Error updating genesis thing: {e}")
+            logger.error(f"Error updating parent thing: {e}")
             return {"success": False, "error": str(e)}
 
-    def get_genesis_thing(self, toe_id: str):
+    def get_parent_thing(self, toe_id: str):
         """
-        Retrieves the genesis thing for a TOE ID.
+        Retrieves the parent thing for a TOE ID.
         
         Args:
-            toe_id (str): Target of Evaluation ID (can be plain UUID or full genesis thing ID)
+            toe_id (str): Target of Evaluation ID (can be plain UUID or full parent thing ID)
             
         Returns:
-            dict: Genesis thing or None
+            dict: Parent thing or None
         """
-        # If toe_id already contains the genesis prefix, use it directly
-        if toe_id.startswith("cobalt.sdt:genesis-"):
-            genesis_id = toe_id
+        # If toe_id already contains the parent prefix, use it directly
+        if toe_id.startswith("cobalt.sdt:parent-"):
+            parent_id = toe_id
         else:
-            # Otherwise, construct the genesis ID
-            genesis_id = self.get_genesis_thing_id(toe_id)
+            # Otherwise, construct the parent ID
+            parent_id = self.get_parent_thing_id(toe_id)
         
-        return self.read_item_by_id(genesis_id)
+        return self.read_item_by_id(parent_id)
 
     def list_child_things(self, toe_id: str):
         """
-        Lists all child things under a genesis thing.
+        Lists all child things under a parent thing.
         
         Args:
             toe_id (str): Target of Evaluation ID
@@ -1178,18 +1217,18 @@ class Controller():
         Returns:
             dict: List of child things
         """
-        genesis_thing = self.get_genesis_thing(toe_id)
+        parent_thing = self.get_parent_thing(toe_id)
         
-        if not genesis_thing:
-            return {"success": False, "error": "Genesis thing not found"}
+        if not parent_thing:
+            return {"success": False, "error": "Parent thing not found"}
         
-        child_things = genesis_thing.get("features", {}).get("child_things", {}).get("properties", {})
-        statistics = genesis_thing.get("features", {}).get("statistics", {}).get("properties", {})
+        child_things = parent_thing.get("features", {}).get("child_things", {}).get("properties", {})
+        statistics = parent_thing.get("features", {}).get("statistics", {}).get("properties", {})
         
         return {
             "success": True,
             "toe_id": toe_id,
-            "genesis_thing_id": self.get_genesis_thing_id(toe_id),
+            "parent_thing_id": self.get_parent_thing_id(toe_id),
             "total_things": statistics.get("total_things", 0),
             "things_by_type": statistics.get("things_by_type", {}),
             "child_things": child_things,
@@ -1878,11 +1917,9 @@ class Controller():
     #         logger.error(f"Error processing webhook: {e}")
     #         raise Exception(f"Webhook processing failed: {str(e)}")
 
-    # NEW IDS CONNECTOR METHODS - Based on IDSconnector.yml specification
-    
     def sync_ids_connector(self, data_path: str, toe_id: str, ids_connector_url: str = "http://localhost:8004"):
         """
-        Sync data from IDS connector
+        Sync data from IDS connector using OAuth2 Bearer token authentication
         
         Args:
             data_path: Path to data in IDS connector ('all' or specific resource name)
@@ -1903,8 +1940,23 @@ class Controller():
                 "data_type": "json"  # Default to json for now
             }
             
-            logger.info(f"Calling IDS connector: {url} with params: {params}")
-            response = requests.get(url, params=params, timeout=30)
+            # Get Bearer token authorization headers
+            auth_headers = self.get_auth_headers()
+            
+            if not auth_headers:
+                logger.warning("No Bearer token available — IDS-Connector authentication may fail")
+                logger.info("Ensure SDT-Manager has distributed token via POST /auth/token")
+            
+            # Prepare headers for IDS-Connector request
+            headers = {
+                "Content-Type": "application/json",
+                **auth_headers  # Include Bearer token if available
+            }
+            
+            logger.info(f"Calling IDS connector: {url} with Bearer token auth")
+            logger.debug(f"Authorization: {headers.get('Authorization', 'None')[:30] if headers.get('Authorization') else 'None'}")
+            
+            response = requests.get(url, params=params, headers=headers, timeout=30)
             response.raise_for_status()
             
             ids_response = response.json()
@@ -1916,7 +1968,7 @@ class Controller():
             
             logger.info(f"Processed {len(processed_things)} things from IDS connector")
             
-            # Create things in Ditto and update genesis
+            # Create things in Ditto and update parent
             results = []
             for thing_json in processed_things:
                 thing = json.loads(thing_json)
@@ -1947,7 +1999,7 @@ class Controller():
                                 update_result = self.update_item(toe_id, category, thing)
                                 
                                 if update_result.get("success"):
-                                    self.update_genesis_thing(toe_id, existing_thing_id, category, operation="update")
+                                    self.update_parent_thing(toe_id, existing_thing_id, category, operation="update")
                                 
                                 results.append({
                                     "category": category,
@@ -1971,7 +2023,7 @@ class Controller():
                             # Create policy
                             self.create_policy()
                             
-                            # Create thing in Ditto directly
+                            # Create thing in Ditto directly (uses basic auth: ditto:ditto)
                             url = f'http://{Ditto_IP}:{Ditto_PORT}/api/2/things/{ctrl_id}'
                             
                             session = requests.Session()
@@ -1982,9 +2034,9 @@ class Controller():
                             logger.info(f"Ditto response status: {r.status_code}")
                             
                             if r.status_code in [201, 204]:
-                                # Update genesis thing
-                                genesis_result = self.create_genesis_thing(toe_id)
-                                self.update_genesis_thing(toe_id, ctrl_id, category, operation="add")
+                                # Update parent thing
+                                parent_result = self.create_parent_thing(toe_id)
+                                self.update_parent_thing(toe_id, ctrl_id, category, operation="add")
                                 
                                 results.append({
                                     "category": category,
@@ -2006,7 +2058,7 @@ class Controller():
                                 continue
                 
                 # For non-FILE types, use standard create_in_ditto logic
-                result = self.create_in_ditto(thing_json, toe_id, category, create_genesis=True)
+                result = self.create_in_ditto(thing_json, toe_id, category, create_parent=True)
                 
                 results.append({
                     "category": category,
@@ -2016,8 +2068,8 @@ class Controller():
                     "action": result.get("action")
                 })
             
-            # Update genesis thing with IDS sync metadata
-            self._update_genesis_with_ids_sync(toe_id, data_path, len(processed_things))
+            # Update parent thing with IDS sync metadata
+            self._update_parent_with_ids_sync(toe_id, data_path, len(processed_things))
             
             return {
                 "success": True,
@@ -2027,7 +2079,24 @@ class Controller():
             }
             
         except requests.exceptions.HTTPError as e:
-            if e.response.status_code == 404:
+            if e.response.status_code == 401:
+                logger.error(f"Unauthorized — Bearer token invalid or expired for IDS connector")
+                logger.error(f"Please ensure SDT-Manager has distributed a valid token via POST /auth/token")
+                return {
+                    "success": False,
+                    "error": "Unauthorized — Invalid or expired Bearer token",
+                    "detail": "IDS-Connector rejected authentication. Make sure SDT-Manager has delivered a valid token.",
+                    "status_code": 401
+                }
+            elif e.response.status_code == 403:
+                logger.error(f"Forbidden — Bearer token lacks required permissions for IDS connector")
+                return {
+                    "success": False,
+                    "error": "Forbidden — Bearer token lacks required permissions",
+                    "detail": e.response.json() if e.response.text else str(e),
+                    "status_code": 403
+                }
+            elif e.response.status_code == 404:
                 logger.error(f"Resource not found in IDS connector: {data_path}")
                 return {
                     "success": False,
@@ -2035,7 +2104,12 @@ class Controller():
                     "detail": e.response.json() if e.response.text else str(e)
                 }
             else:
-                raise
+                logger.error(f"IDS connector HTTP error {e.response.status_code}: {e}")
+                return {
+                    "success": False,
+                    "error": f"IDS connector error: HTTP {e.response.status_code}",
+                    "detail": e.response.json() if e.response.text else str(e)
+                }
         except Exception as e:
             logger.error(f"Error syncing from IDS connector: {e}")
 
@@ -2045,35 +2119,35 @@ class Controller():
                 "error": str(e)
             }
 
-    def _update_genesis_with_ids_sync(self, toe_id: str, data_path: str, artifact_count: int):
+    def _update_parent_with_ids_sync(self, toe_id: str, data_path: str, artifact_count: int):
         """
-        Update genesis thing with IDS sync metadata
+        Update parent thing with IDS sync metadata
         """
         
         
         try:
-            genesis_id = self.get_genesis_thing_id(toe_id)
-            genesis_thing = self.read_item_by_id(genesis_id)
+            parent_id = self.get_parent_thing_id(toe_id)
+            parent_thing = self.read_item_by_id(parent_id)
             
-            if not genesis_thing:
+            if not parent_thing:
                 return
             
             # Add IDS sync history
-            if "ids_sync_history" not in genesis_thing.get("features", {}):
-                genesis_thing["features"]["ids_sync_history"] = {"properties": {}}
+            if "ids_sync_history" not in parent_thing.get("features", {}):
+                parent_thing["features"]["ids_sync_history"] = {"properties": {}}
             
             sync_id = datetime.now().strftime("%Y%m%d_%H%M%S")
-            genesis_thing["features"]["ids_sync_history"]["properties"][sync_id] = {
+            parent_thing["features"]["ids_sync_history"]["properties"][sync_id] = {
                 "data_path": data_path,
                 "artifact_count": artifact_count,
                 "timestamp": datetime.now().isoformat()
             }
             
-            # Update genesis
-            url = f'http://{Ditto_IP}:{Ditto_PORT}/api/2/things/{genesis_id}'
+            # Update parent
+            url = f'http://{Ditto_IP}:{Ditto_PORT}/api/2/things/{parent_id}'
             session = requests.Session()
             session.auth = ("ditto", "ditto")
-            session.put(url, json=genesis_thing, headers={'Content-Type': 'application/json'})
+            session.put(url, json=parent_thing, headers={'Content-Type': 'application/json'})
             logger.info(f"Updated genesis thing with IDS sync metadata")
             
         except Exception as e:
@@ -2084,7 +2158,7 @@ class Controller():
 
     def sync_github_repository(self, github_url: str, toe_id: str, category: str):
         """
-        Sync GitHub repository to Ditto instance and update genesis thing
+        Sync GitHub repository to Ditto instance and update parent thing
         
         Args:
             github_url: The URL of the GitHub repository to clone
@@ -2128,12 +2202,12 @@ class Controller():
             else:
                 # Create new thing in Ditto
                 logger.info(f"Creating new repository thing in Ditto")
-                create_result = self.create_in_ditto(repo_thing_json, toe_id, category, create_genesis=True)
+                create_result = self.create_in_ditto(repo_thing_json, toe_id, category, create_parent=True)
                 action = "created"
                 result_thing_id = create_result.get("thing_id")
             
-            # Update genesis thing with GitHub sync metadata
-            self._update_genesis_with_github_sync(toe_id, github_url, repo_name, category)
+            # Update parent thing with GitHub sync metadata
+            self._update_parent_with_github_sync(toe_id, github_url, repo_name, category)
             
             return {
                 "success": True,
@@ -2141,7 +2215,7 @@ class Controller():
                 "repository_name": repo_name,
                 "thing_id": result_thing_id,
                 "action": action,
-                "genesis_updated": True
+                "parent_updated": True
             }
             
         except Exception as e:
@@ -2153,42 +2227,42 @@ class Controller():
                 "error": f"Failed to sync GitHub repository: {str(e)}"
             }
 
-    def _update_genesis_with_github_sync(self, toe_id: str, github_url: str, repo_name: str, category: str):
+    def _update_parent_with_github_sync(self, toe_id: str, github_url: str, repo_name: str, category: str):
         """
-        Update genesis thing with GitHub sync metadata
+        Update parent thing with GitHub sync metadata
         """
         
         
         try:
-            genesis_id = self.get_genesis_thing_id(toe_id)
-            genesis_thing = self.read_item_by_id(genesis_id)
+            parent_id = self.get_parent_thing_id(toe_id)
+            parent_thing = self.read_item_by_id(parent_id)
             
-            if not genesis_thing:
-                logger.warning(f"Genesis thing not found for TOE: {toe_id}")
+            if not parent_thing:
+                logger.warning(f"Parent thing not found for TOE: {toe_id}")
                 return
             
             # Add GitHub sync history feature if it doesn't exist
-            if "github_sync_history" not in genesis_thing.get("features", {}):
-                genesis_thing["features"]["github_sync_history"] = {"properties": {}}
+            if "github_sync_history" not in parent_thing.get("features", {}):
+                parent_thing["features"]["github_sync_history"] = {"properties": {}}
             
             # Create unique sync ID with timestamp
             sync_id = datetime.now().strftime("%Y%m%d_%H%M%S")
-            genesis_thing["features"]["github_sync_history"]["properties"][sync_id] = {
+            parent_thing["features"]["github_sync_history"]["properties"][sync_id] = {
                 "github_url": github_url,
                 "repository_name": repo_name,
                 "category": category,
                 "timestamp": datetime.now().isoformat()
             }
             
-            # Update genesis thing
-            url = f'http://{Ditto_IP}:{Ditto_PORT}/api/2/things/{genesis_id}'
+            # Update parent thing
+            url = f'http://{Ditto_IP}:{Ditto_PORT}/api/2/things/{parent_id}'
             session = requests.Session()
             session.auth = ("ditto", "ditto")
-            session.put(url, json=genesis_thing, headers={'Content-Type': 'application/json'})
-            logger.info(f"Updated genesis thing with GitHub sync metadata for repo: {repo_name}")
+            session.put(url, json=parent_thing, headers={'Content-Type': 'application/json'})
+            logger.info(f"Updated parent thing with GitHub sync metadata for repo: {repo_name}")
             
         except Exception as e:
-            logger.error(f"Error updating genesis with GitHub sync: {e}")
+            logger.error(f"Error updating parent with GitHub sync: {e}")
     
     def get_evidence_flexible(self, toe_id: str, category: str = None, 
                               evidence_type: str = "thing", files: list = None,
@@ -2230,12 +2304,12 @@ class Controller():
             # Extract thing IDs from child_things dictionary
             thing_ids = list(child_things_dict.keys())
             
-            logger.info(f"Found {len(thing_ids)} things in genesis for TOE {toe_id}")
+            logger.info(f"Found {len(thing_ids)} things in parent for TOE {toe_id}")
             
             if not thing_ids:
-                logger.warning(f"No child things found in genesis for TOE: {toe_id}")
+                logger.warning(f"No child things found in parent for TOE: {toe_id}")
                 return {
-                    "error": "No things found in genesis",
+                    "error": "No things found in parent",
                     "toe_id": toe_id,
                     "hint": "Create things first using /api/SDT/create or /api/SDT/sync/github"
                 }
@@ -2259,7 +2333,7 @@ class Controller():
                 thing_ids = filtered_ids
             
             # Filter by filename if specified (for FILE category)
-            if filename and category == "FILE":
+            if filename and category == "AI":
                 filename_filtered = []
                 for thing_id in thing_ids:
                     thing = self.read_item_by_id(thing_id)
@@ -2267,9 +2341,9 @@ class Controller():
                         filename_filtered.append(thing_id)
                 
                 if not filename_filtered:
-                    logger.warning(f"No FILE found with filename: {filename}")
+                    logger.warning(f"No AI Artifacts found with filename: {filename}")
                     return {
-                        "error": f"No FILE found with filename: {filename}",
+                        "error": f"No AI Artifacts found with filename: {filename}",
                         "toe_id": toe_id,
                         "hint": "Check available filenames using format=json"
                     }

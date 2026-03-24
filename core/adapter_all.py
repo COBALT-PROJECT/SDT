@@ -12,8 +12,8 @@ from cyclonedx.validation import make_schemabased_validator
 from cyclonedx.validation.json import JsonValidator, JsonStrictValidator
 
 
-SDT_INTERFACE_HOST = "localhost"
-SDT_INTERFACE_PORT = "8005"
+# SDT_INTERFACE_HOST = "localhost"
+# SDT_INTERFACE_PORT = "8005"
 
 
 

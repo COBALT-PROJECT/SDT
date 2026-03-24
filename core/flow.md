@@ -20,21 +20,21 @@ The endpoint synchronizes data from the IDS (International Data Space) connector
      - `Controller` class (main class):
        - **Initialization**: Creates instances of `Translator` (`self.trs`) and `EvidenceProvider` (`self.ep`).
      - `sync_ids_connector(data_path, toe_id, ids_connector_url)` (method, around lines ~700-800 in the attachment):
-       - **Purpose**: Core sync logic. Makes an HTTP GET request to the IDS consumer to fetch data, processes the response via the translator, creates Ditto things, and updates the genesis thing (a parent thing tracking all child things for the TOE ID).
+       - **Purpose**: Core sync logic. Makes an HTTP GET request to the IDS consumer to fetch data, processes the response via the translator, creates Ditto things, and updates the parent thing (a parent thing tracking all child things for the TOE ID).
        - **Key Steps**:
          - Constructs the consumer URL: `{ids_connector_url}/api/IDSconnector/get_data_request?toe_id={toe_id}&data_type=json&data_path={data_path}`.
          - Sends the GET request using `requests.Session()` with auth (`ditto:ditto` for Ditto, but here it's to the consumer).
          - Parses the JSON response (expects `{"data_type": "json", "data": "<JSON string>"}`).
          - Calls `self.trs.process_ids_response(ids_response, toe_id)` to process the data and get a list of Ditto things (as JSON strings).
-         - For each processed thing: Creates it in Ditto via `self.create_in_ditto(payload, toe_id, "IDS_EVIDENCE")`, attaches a policy, and updates the genesis thing via `self.update_genesis_thing(toe_id, thing_id, "IDS_EVIDENCE")`.
+         - For each processed thing: Creates it in Ditto via `self.create_in_ditto(payload, toe_id, "IDS_EVIDENCE")`, attaches a policy, and updates the parent thing via `self.update_parent_thing(toe_id, thing_id, "IDS_EVIDENCE")`.
          - Returns a result dict with success status, message, and list of created things.
-       - **Data Flow**: Receives params from interface → Queries IDS consumer → Passes response to translator → Creates Ditto things → Updates genesis → Returns results.
-     - `create_in_ditto(payload, toe_id, payload_type, create_genesis=True)` (method):
-       - **Purpose**: Creates a thing in Ditto, generates a unique ID (e.g., `cobalt.sdt:toe-{toe_id}-IDS_EVIDENCE-{timestamp}-{hash}`), attaches a policy, and optionally updates the genesis thing.
-       - **Key Steps**: Uses Ditto API (`/api/2/things`) to POST the thing, then calls `update_genesis_thing` if `create_genesis=True`.
-     - `update_genesis_thing(toe_id, child_thing_id, payload_type, operation="add")` (method):
-       - **Purpose**: Updates the genesis thing (e.g., `cobalt.sdt:genesis-{toe_id}`) to track child things.
-       - **Key Steps**: Retrieves the genesis thing, adds/removes the child thing ID, updates statistics (e.g., total things by type), and PUTs back to Ditto.
+       - **Data Flow**: Receives params from interface → Queries IDS consumer → Passes response to translator → Creates Ditto things → Updates parent → Returns results.
+     - `create_in_ditto(payload, toe_id, payload_type, create_parent=True)` (method):
+       - **Purpose**: Creates a thing in Ditto, generates a unique ID (e.g., `cobalt.sdt:toe-{toe_id}-IDS_EVIDENCE-{timestamp}-{hash}`), attaches a policy, and optionally updates the parent thing.
+       - **Key Steps**: Uses Ditto API (`/api/2/things`) to POST the thing, then calls `update_parent_thing` if `create_parent=True`.
+     - `update_parent_thing(toe_id, child_thing_id, payload_type, operation="add")` (method):
+       - **Purpose**: Updates the parent thing (e.g., `cobalt.sdt:parent-{toe_id}`) to track child things.
+       - **Key Steps**: Retrieves the parent thing, adds/removes the child thing ID, updates statistics (e.g., total things by type), and PUTs back to Ditto.
 
 ### 3. **Translator Layer: translator.py (Data Processing)**
    - **File Purpose**: Contains the `Translator` class, which processes IDS responses, extracts files, detects artifact types, and creates Ditto things. It uses helper classes like `file_extractor` and `DTModelAdapter`.
@@ -108,6 +108,6 @@ The endpoint synchronizes data from the IDS (International Data Space) connector
 4. **ids_consumer_interface.py**: Returns resource JSON with embedded file data.
 5. **controller.py**: Passes response to `translator.process_ids_response`.
 6. **translator.py**: Parses response, extracts files via unified_file_extractor.py, detects/transforms structured data via adapter_all.py, saves files to evidence, and creates thing payloads.
-7. **controller.py**: Creates things in Ditto, updates genesis, and returns success.
+7. **controller.py**: Creates things in Ditto, updates parent, and returns success.
 
 This flow ensures files are extracted in their original form (e.g., .zip as ZIP, not text), structured data is transformed, and everything is persisted as Ditto things for traceability. If issues occur (e.g., file not saving), check logs for errors in extraction or Ditto auth.

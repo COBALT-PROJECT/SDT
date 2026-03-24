@@ -251,394 +251,394 @@ class Translator():
 
 
 #===================DEMO METHODS======================
-    def fetch_push_save_repo(self,toeid: str, category:str,  repo_url, local_dir='evidence'):
-        """
-        Clones a GitHub repository and saves it in the local directory.
-        Generates a file tree with hashes for each file.
-        Overwrites repository if it already exists.
-        Includes Git modification times for each file.
+    # def fetch_push_save_repo(self,toeid: str, category:str,  repo_url, local_dir='evidence'):
+    #     """
+    #     Clones a GitHub repository and saves it in the local directory.
+    #     Generates a file tree with hashes for each file.
+    #     Overwrites repository if it already exists.
+    #     Includes Git modification times for each file.
 
-        Args:
-            repo_url (str): The URL of the GitHub repository.
-            local_dir (str): The local directory to save the repo. Default is 'evidence'.
+    #     Args:
+    #         repo_url (str): The URL of the GitHub repository.
+    #         local_dir (str): The local directory to save the repo. Default is 'evidence'.
 
-        Returns:
-            dict: Transformed thing object with repository metadata and file tree
-        """
-        try:
-            # Extract repo name from URL
-            repo_name = repo_url.split('/')[-1]
-            if repo_name.endswith('.git'):
-                repo_name = repo_name[:-4]
+    #     Returns:
+    #         dict: Transformed thing object with repository metadata and file tree
+    #     """
+    #     try:
+    #         # Extract repo name from URL
+    #         repo_name = repo_url.split('/')[-1]
+    #         if repo_name.endswith('.git'):
+    #             repo_name = repo_name[:-4]
 
-            # Use current working directory for local storage
-            current_dir = os.getcwd()
-            save_dir = os.path.join(current_dir, local_dir)
-            repo_path = os.path.join(save_dir, repo_name)
+    #         # Use current working directory for local storage
+    #         current_dir = os.getcwd()
+    #         save_dir = os.path.join(current_dir, local_dir)
+    #         repo_path = os.path.join(save_dir, repo_name)
 
-            # Create directory if it doesn't exist
-            os.makedirs(save_dir, exist_ok=True)
+    #         # Create directory if it doesn't exist
+    #         os.makedirs(save_dir, exist_ok=True)
 
-            # Remove existing repository if it exists
-            if os.path.exists(repo_path):
-                print(f"Repository already exists at {repo_path}. Removing...")
-                shutil.rmtree(repo_path)
+    #         # Remove existing repository if it exists
+    #         if os.path.exists(repo_path):
+    #             print(f"Repository already exists at {repo_path}. Removing...")
+    #             shutil.rmtree(repo_path)
 
-            # Clone the repository
-            print(f"Cloning repository {repo_url} to {repo_path}...")
-            # Check if repo already exists and is a git repository
-            if os.path.exists(os.path.join(repo_path, '.git')):
-                print(f"Repository already exists at {repo_path}. Syncing...")
-                repository = git.Repo(repo_path)
-                origin = repository.remotes.origin
-                origin.pull()
-            else:
-                # If path exists but is not a git repo, remove it
-                if os.path.exists(repo_path):
-                    print(f"Path exists but is not a git repository. Removing...")
-                    shutil.rmtree(repo_path)
+    #         # Clone the repository
+    #         print(f"Cloning repository {repo_url} to {repo_path}...")
+    #         # Check if repo already exists and is a git repository
+    #         if os.path.exists(os.path.join(repo_path, '.git')):
+    #             print(f"Repository already exists at {repo_path}. Syncing...")
+    #             repository = git.Repo(repo_path)
+    #             origin = repository.remotes.origin
+    #             origin.pull()
+    #         else:
+    #             # If path exists but is not a git repo, remove it
+    #             if os.path.exists(repo_path):
+    #                 print(f"Path exists but is not a git repository. Removing...")
+    #                 shutil.rmtree(repo_path)
 
-                # Clone the repository
-                print(f"Cloning repository {repo_url} to {repo_path}...")
-                repository = git.Repo.clone_from(repo_url, repo_path)
+    #             # Clone the repository
+    #             print(f"Cloning repository {repo_url} to {repo_path}...")
+    #             repository = git.Repo.clone_from(repo_url, repo_path)
 
-            # Generate file tree with hashes and modification times
-            thing =self.generate_things_for_repo(toeid, category, repo_path, repository)
+    #         # Generate file tree with hashes and modification times
+    #         thing =self.generate_things_for_repo(toeid, category, repo_path, repository)
 
-            file_tree = self._generate_file_tree_with_hashes_and_times(repo_path, repository)
+    #         file_tree = self._generate_file_tree_with_hashes_and_times(repo_path, repository)
 
-            # # Create transformed thing object
-            # payload = {
-            #     "thingId": "toe.ai.repo:b10359fb-7d9e-4bf2-b83b-8b0244a0dd4e",
-            #     "policyId": "cobalt:policy",
-            #     "attributes": {
-            #         "TOE": "cobalt:TOE",
-            #         "repo_name": repo_name,
-            #         "github": repo_url,
-            #         "source": "Repository",
-            #         "clone_timestamp": self._get_current_timestamp()
-            #     },
-            #     "features": {
-            #         "repository": {
-            #             "properties": {
-            #                 "github": repo_url,
-            #                 "local_path": repo_path,
-            #                 "last_commit": self._get_last_commit_info(repository)
-            #             }
-            #         },
-            #         "Repository_file_tree": {
-            #             "properties": file_tree
-            #         }
-            #     }
-            # }
-            # payload = json.dumps(payload)
-            # ctrl.create_in_ditto(payload)
-            return thing
+    #         # # Create transformed thing object
+    #         # payload = {
+    #         #     "thingId": "toe.ai.repo:b10359fb-7d9e-4bf2-b83b-8b0244a0dd4e",
+    #         #     "policyId": "cobalt:policy",
+    #         #     "attributes": {
+    #         #         "TOE": "cobalt:TOE",
+    #         #         "repo_name": repo_name,
+    #         #         "github": repo_url,
+    #         #         "source": "Repository",
+    #         #         "clone_timestamp": self._get_current_timestamp()
+    #         #     },
+    #         #     "features": {
+    #         #         "repository": {
+    #         #             "properties": {
+    #         #                 "github": repo_url,
+    #         #                 "local_path": repo_path,
+    #         #                 "last_commit": self._get_last_commit_info(repository)
+    #         #             }
+    #         #         },
+    #         #         "Repository_file_tree": {
+    #         #             "properties": file_tree
+    #         #         }
+    #         #     }
+    #         # }
+    #         # payload = json.dumps(payload)
+    #         # ctrl.create_in_ditto(payload)
+    #         return thing
 
-        except Exception as e:
-            raise Exception(f"Failed to clone repository: {str(e)}")
+    #     except Exception as e:
+    #         raise Exception(f"Failed to clone repository: {str(e)}")
 
-    def generate_things_for_repo(self, toeid, category, repo_path, repository):
-        """
-        Generates a file tree with hashes and modification times for each file in the repository.
+    # def generate_things_for_repo(self, toeid, category, repo_path, repository):
+    #     """
+    #     Generates a file tree with hashes and modification times for each file in the repository.
 
-        Args:
-            repo_path (str): Path to the local repository.
-            repository (git.Repo): Git repository object.
+    #     Args:
+    #         repo_path (str): Path to the local repository.
+    #         repository (git.Repo): Git repository object.
 
-        Returns:
-            dict: A dictionary representing the file tree with hashes and modification times.
-        """
-        file_info = []
+    #     Returns:
+    #         dict: A dictionary representing the file tree with hashes and modification times.
+    #     """
+    #     file_info = []
 
-        # Generate file tree with hashes and modification times
-        file_tree = self._generate_file_tree_with_hashes_and_times(repo_path, repository)
-        file_tree_object = {}
-        for index, file_item in enumerate(file_tree):
-            file_tree_object[str(index)] = file_item
-        print("**************************************************************")
-        # Create transformed thing object
-        payload = {
-            "attributes": {
-                "toe_id": toeid,
-                "category": category,
-                "repo_name": os.path.basename(repo_path),
-                "github": repo_path,
-                "sourceType": "Repository",
-                "clone_timestamp": self._get_current_timestamp()
-            },
-            "features": {
-                "repository": {
-                    "properties": {
-                        "github": repo_path,
-                        "local_path": repo_path,
-                        "last_commit": self._get_last_commit_info(repository)
-                    }
-                },
-                "Repository_file_tree": {
-                    "properties": file_tree_object
-                }
-            }
-        }
+    #     # Generate file tree with hashes and modification times
+    #     file_tree = self._generate_file_tree_with_hashes_and_times(repo_path, repository)
+    #     file_tree_object = {}
+    #     for index, file_item in enumerate(file_tree):
+    #         file_tree_object[str(index)] = file_item
+    #     print("**************************************************************")
+    #     # Create transformed thing object
+    #     payload = {
+    #         "attributes": {
+    #             "toe_id": toeid,
+    #             "category": category,
+    #             "repo_name": os.path.basename(repo_path),
+    #             "github": repo_path,
+    #             "sourceType": "Repository",
+    #             "clone_timestamp": self._get_current_timestamp()
+    #         },
+    #         "features": {
+    #             "repository": {
+    #                 "properties": {
+    #                     "github": repo_path,
+    #                     "local_path": repo_path,
+    #                     "last_commit": self._get_last_commit_info(repository)
+    #                 }
+    #             },
+    #             "Repository_file_tree": {
+    #                 "properties": file_tree_object
+    #             }
+    #         }
+    #     }
 
-        return json.dumps(payload)
-
-
+    #     return json.dumps(payload)
 
 
-    def generate_things_for_repo_files(self, repo_path, repository):
-        """
-        Generates a file tree with hashes and modification times for each file in the repository.
 
-        Args:
-            repo_path (str): Path to the local repository.
-            repository (git.Repo): Git repository object.
 
-        Returns:
-            dict: A dictionary representing the file tree with hashes and modification times.
-        """
-        file_info = []
+    # def generate_things_for_repo_files(self, repo_path, repository):
+    #     """
+    #     Generates a file tree with hashes and modification times for each file in the repository.
 
-        for root, dirs, files in os.walk(repo_path):
-            # Skip .git directory
-            if '.git' in dirs:
-                dirs.remove('.git')
+    #     Args:
+    #         repo_path (str): Path to the local repository.
+    #         repository (git.Repo): Git repository object.
 
-            for file in files:
-                file_path = os.path.join(root, file)
-                file_extension = os.path.splitext(file)[1]
+    #     Returns:
+    #         dict: A dictionary representing the file tree with hashes and modification times.
+    #     """
+    #     file_info = []
 
-                try:
-                    # Get file hash
-                    file_hash = self.get_file_hash(file_path)
+    #     for root, dirs, files in os.walk(repo_path):
+    #         # Skip .git directory
+    #         if '.git' in dirs:
+    #             dirs.remove('.git')
 
-                    # Get last modification time from git
-                    mod_time = self._get_git_modification_time(repository, os.path.relpath(file_path, repo_path))
+    #         for file in files:
+    #             file_path = os.path.join(root, file)
+    #             file_extension = os.path.splitext(file)[1]
 
-                    # Store file info as dictionary with extension, path, hash, and modification time
-                    file_info = {
-                        "extension": file_extension,
-                        "path": file_path,
-                        "hash": file_hash,
-                        "last_modified": mod_time
-                    }
-                except Exception as e:
-                    file_info = {
-                        "extension": file_extension,
-                        "path": file_path,
-                        "error": f"Error processing file: {str(e)}"
-                    }
+    #             try:
+    #                 # Get file hash
+    #                 file_hash = self.get_file_hash(file_path)
 
-                # Create transformed thing object
-                payload = {
-                    # "thingId": "toe.ai" + file_extension + ":b10359fb-7d9e-4bf2-b83b-8b0244a0dd4e",
-                    # "policyId": "cobalt:policy",
-                    "attributes": {
-                        "repo_name": os.path.basename(repo_path),
-                        "repo_path": repo_path
-                    },
-                    "features": {
-                        "file_info": {
-                            "properties": file_info
-                        }
-                    }
-                }
-                print("3333333333333333333333333")
-                print(payload)
-                # Send payload to Ditto
-                # ctrl.create_in_ditto(json.dumps(payload))
-                print("File info sent to Controller.")
+    #                 # Get last modification time from git
+    #                 mod_time = self._get_git_modification_time(repository, os.path.relpath(file_path, repo_path))
 
-        return json.dumps(payload)
+    #                 # Store file info as dictionary with extension, path, hash, and modification time
+    #                 file_info = {
+    #                     "extension": file_extension,
+    #                     "path": file_path,
+    #                     "hash": file_hash,
+    #                     "last_modified": mod_time
+    #                 }
+    #             except Exception as e:
+    #                 file_info = {
+    #                     "extension": file_extension,
+    #                     "path": file_path,
+    #                     "error": f"Error processing file: {str(e)}"
+    #                 }
 
-    def _generate_file_tree_with_hashes_and_times(self, repo_path, repository):
-        """
-        Generates a file list with hashes, modification times, and paths for each file in the repository.
+    #             # Create transformed thing object
+    #             payload = {
+    #                 # "thingId": "toe.ai" + file_extension + ":b10359fb-7d9e-4bf2-b83b-8b0244a0dd4e",
+    #                 # "policyId": "cobalt:policy",
+    #                 "attributes": {
+    #                     "repo_name": os.path.basename(repo_path),
+    #                     "repo_path": repo_path
+    #                 },
+    #                 "features": {
+    #                     "file_info": {
+    #                         "properties": file_info
+    #                     }
+    #                 }
+    #             }
+    #             print("3333333333333333333333333")
+    #             print(payload)
+    #             # Send payload to Ditto
+    #             # ctrl.create_in_ditto(json.dumps(payload))
+    #             print("File info sent to Controller.")
 
-        Args:
-            repo_path (str): Path to the local repository.
-            repository (git.Repo): Git repository object.
+    #     return json.dumps(payload)
 
-        Returns:
-            list: A list of dictionaries containing file information (name, path, hash, and modification time).
-        """
-        file_list = []
+    # def _generate_file_tree_with_hashes_and_times(self, repo_path, repository):
+    #     """
+    #     Generates a file list with hashes, modification times, and paths for each file in the repository.
 
-        for root, dirs, files in os.walk(repo_path):
-            # Skip .git directory
-            if '.git' in dirs:
-                dirs.remove('.git')
+    #     Args:
+    #         repo_path (str): Path to the local repository.
+    #         repository (git.Repo): Git repository object.
 
-            for file in files:
-                file_path = os.path.join(root, file)
-                rel_file_path = os.path.relpath(file_path, repo_path)
+    #     Returns:
+    #         list: A list of dictionaries containing file information (name, path, hash, and modification time).
+    #     """
+    #     file_list = []
 
-                try:
-                    # Get file hash
-                    file_hash = self.get_file_hash(file_path)
+    #     for root, dirs, files in os.walk(repo_path):
+    #         # Skip .git directory
+    #         if '.git' in dirs:
+    #             dirs.remove('.git')
 
-                    # Get last modification time from git
-                    mod_time = self._get_git_modification_time(repository, rel_file_path)
+    #         for file in files:
+    #             file_path = os.path.join(root, file)
+    #             rel_file_path = os.path.relpath(file_path, repo_path)
 
-                    # Add file info to the list with the full path
-                    file_list.append({
-                        "name": file,  # Add the name of the file
-                        "path": file_path,  # Use full path instead of relative path
-                        "hash": file_hash,
-                        "last_modified": mod_time
-                    })
-                except Exception as e:
-                    file_list.append({
-                        "name": file,  # Add the name of the file
-                        "path": file_path,  # Use full path instead of relative path
-                        "error": f"Error processing file: {str(e)}"
-                    })
+    #             try:
+    #                 # Get file hash
+    #                 file_hash = self.get_file_hash(file_path)
 
-        return file_list
+    #                 # Get last modification time from git
+    #                 mod_time = self._get_git_modification_time(repository, rel_file_path)
 
-    def _get_git_modification_time(self, repository, file_path):
-        """
-        Gets the last modification time of a file from git history.
+    #                 # Add file info to the list with the full path
+    #                 file_list.append({
+    #                     "name": file,  # Add the name of the file
+    #                     "path": file_path,  # Use full path instead of relative path
+    #                     "hash": file_hash,
+    #                     "last_modified": mod_time
+    #                 })
+    #             except Exception as e:
+    #                 file_list.append({
+    #                     "name": file,  # Add the name of the file
+    #                     "path": file_path,  # Use full path instead of relative path
+    #                     "error": f"Error processing file: {str(e)}"
+    #                 })
 
-        Args:
-            repository (git.Repo): Git repository object.
-            file_path (str): Relative path to the file from repository root.
+    #     return file_list
 
-        Returns:
-            str: ISO formatted timestamp of last modification.
-        """
-        try:
-            # Get the last commit that modified the file
-            logs = repository.git.log('-1', '--format=%aI', '--', file_path)
-            if logs:
-                return logs.strip()
-            else:
-                # If no git history for the file, return current time
-                return datetime.now().isoformat()
-        except Exception as e:
-            return f"Error getting modification time: {str(e)}"
+    # def _get_git_modification_time(self, repository, file_path):
+    #     """
+    #     Gets the last modification time of a file from git history.
 
-    def _get_last_commit_info(self, repository):
-        """
-        Gets information about the last commit in the repository.
+    #     Args:
+    #         repository (git.Repo): Git repository object.
+    #         file_path (str): Relative path to the file from repository root.
 
-        Args:
-            repository (git.Repo): Git repository object.
+    #     Returns:
+    #         str: ISO formatted timestamp of last modification.
+    #     """
+    #     try:
+    #         # Get the last commit that modified the file
+    #         logs = repository.git.log('-1', '--format=%aI', '--', file_path)
+    #         if logs:
+    #             return logs.strip()
+    #         else:
+    #             # If no git history for the file, return current time
+    #             return datetime.now().isoformat()
+    #     except Exception as e:
+    #         return f"Error getting modification time: {str(e)}"
 
-        Returns:
-            dict: Information about the last commit.
-        """
-        try:
-            commit = repository.head.commit
-            return {
-                "hash": commit.hexsha,
-                "author": f"{commit.author.name} <{commit.author.email}>",
-                "date": commit.committed_datetime.isoformat(),
-                "message": commit.message.strip()
-            }
-        except Exception as e:
-            return {"error": f"Error getting commit info: {str(e)}"}
+    # def _get_last_commit_info(self, repository):
+    #     """
+    #     Gets information about the last commit in the repository.
 
-    def _get_current_timestamp(self):
-        """
-        Gets the current timestamp in ISO format.
+    #     Args:
+    #         repository (git.Repo): Git repository object.
 
-        Returns:
-            str: Current timestamp in ISO format.
-        """
-        return datetime.now().isoformat()
+    #     Returns:
+    #         dict: Information about the last commit.
+    #     """
+    #     try:
+    #         commit = repository.head.commit
+    #         return {
+    #             "hash": commit.hexsha,
+    #             "author": f"{commit.author.name} <{commit.author.email}>",
+    #             "date": commit.committed_datetime.isoformat(),
+    #             "message": commit.message.strip()
+    #         }
+    #     except Exception as e:
+    #         return {"error": f"Error getting commit info: {str(e)}"}
 
-    def fetch_push_save_file(self, github_url, local_dir='evidence'):
-        """
-        Fetches a file from GitHub and saves it in the local directory.
+    # def _get_current_timestamp(self):
+    #     """
+    #     Gets the current timestamp in ISO format.
 
-        Args:
-            github_url (str): The URL of the file on GitHub.
-            local_dir (str): The local directory to save the file. Default is 'evidence'.
+    #     Returns:
+    #         str: Current timestamp in ISO format.
+    #     """
+    #     return datetime.now().isoformat()
 
-        Returns:
-            dict: Transformed thing object with file metadata
-        """
-        try:
-            # Use a directory within the current working directory that you have permissions to
-            current_dir = os.getcwd()
-            file_name = github_url.split('/')[-1]
-            file_extension = os.path.splitext(file_name)[1]
+    # def fetch_push_save_file(self, github_url, local_dir='evidence'):
+    #     """
+    #     Fetches a file from GitHub and saves it in the local directory.
 
-            # Create directory if it doesn't exist
-            save_dir = os.path.join(current_dir, local_dir)
-            os.makedirs(save_dir, exist_ok=True)
+    #     Args:
+    #         github_url (str): The URL of the file on GitHub.
+    #         local_dir (str): The local directory to save the file. Default is 'evidence'.
 
-            # Set full file path
-            local_path = os.path.join(save_dir, file_name)
+    #     Returns:
+    #         dict: Transformed thing object with file metadata
+    #     """
+    #     try:
+    #         # Use a directory within the current working directory that you have permissions to
+    #         current_dir = os.getcwd()
+    #         file_name = github_url.split('/')[-1]
+    #         file_extension = os.path.splitext(file_name)[1]
 
-            # Convert GitHub blob URL to raw content URL
-            if "github.com" in github_url and "/blob/" in github_url:
-                raw_url = github_url.replace("github.com", "raw.githubusercontent.com").replace("/blob/", "/")
-            else:
-                raw_url = github_url
+    #         # Create directory if it doesn't exist
+    #         save_dir = os.path.join(current_dir, local_dir)
+    #         os.makedirs(save_dir, exist_ok=True)
 
-            # Download file
-            response = requests.get(raw_url)
-            response.raise_for_status()  # Raises error for bad status codes
+    #         # Set full file path
+    #         local_path = os.path.join(save_dir, file_name)
 
-            # Save file
-            with open(local_path, 'wb') as file:
-                file.write(response.content)
+    #         # Convert GitHub blob URL to raw content URL
+    #         if "github.com" in github_url and "/blob/" in github_url:
+    #             raw_url = github_url.replace("github.com", "raw.githubusercontent.com").replace("/blob/", "/")
+    #         else:
+    #             raw_url = github_url
 
-            # Get file hash
-            downloaded_file_hash = self.get_file_hash(local_path)
+    #         # Download file
+    #         response = requests.get(raw_url)
+    #         response.raise_for_status()  # Raises error for bad status codes
 
-            # Determine file type and component
-            file_types = {
-                '.h5': ("toe.ai.h5", "AI Model"),
-                '.ipynb': ("toe.ai.ipynb", "AI Notebook"),
-                '.json': ("toe.cloud.json", "Cloud")
-            }
-            ftype, component = file_types.get(file_extension, ("toe.unknown", "Unknown"))
+    #         # Save file
+    #         with open(local_path, 'wb') as file:
+    #             file.write(response.content)
 
-            # Create transformed thing object
-            return {
-                "thingId": ftype,
-                "policyId": "cobalt:policy",
-                "attributes": {
-                    "TOE": "cobalt:TOE",
-                    "file_name": file_name,
-                    "github": github_url,
-                    "source": component
-                },
-                "features": {
-                    "file": {
-                        "properties": {
-                            "github": github_url,
-                            "hash": downloaded_file_hash,
-                            "link": local_path
-                        }
-                    }
-                }
-            }
+    #         # Get file hash
+    #         downloaded_file_hash = self.get_file_hash(local_path)
 
-        except requests.RequestException as e:
-            raise Exception(f"Failed to fetch file: {str(e)}")
-        except IOError as e:
-            raise Exception(f"Failed to save file: {str(e)}")
+    #         # Determine file type and component
+    #         file_types = {
+    #             '.h5': ("toe.ai.h5", "AI Model"),
+    #             '.ipynb': ("toe.ai.ipynb", "AI Notebook"),
+    #             '.json': ("toe.cloud.json", "Cloud")
+    #         }
+    #         ftype, component = file_types.get(file_extension, ("toe.unknown", "Unknown"))
 
-    def get_file_hash(self, file_path, hash_algorithm='sha256'):
-        """
-        Computes the hash of a file.
+    #         # Create transformed thing object
+    #         return {
+    #             "thingId": ftype,
+    #             "policyId": "cobalt:policy",
+    #             "attributes": {
+    #                 "TOE": "cobalt:TOE",
+    #                 "file_name": file_name,
+    #                 "github": github_url,
+    #                 "source": component
+    #             },
+    #             "features": {
+    #                 "file": {
+    #                     "properties": {
+    #                         "github": github_url,
+    #                         "hash": downloaded_file_hash,
+    #                         "link": local_path
+    #                     }
+    #                 }
+    #             }
+    #         }
 
-        Args:
-            file_path (str): The path to the file.
-            hash_algorithm (str): The hash algorithm to use. Default is 'sha256'.
+    #     except requests.RequestException as e:
+    #         raise Exception(f"Failed to fetch file: {str(e)}")
+    #     except IOError as e:
+    #         raise Exception(f"Failed to save file: {str(e)}")
 
-        Returns:
-            str: The computed hash of the file.
-        """
-        hash_func = hashlib.new('sha256')
-        with open(file_path, 'rb') as f:
-            for chunk in iter(lambda: f.read(4096), b""):
-                hash_func.update(chunk)
-        return hash_func.hexdigest()
+    # def get_file_hash(self, file_path, hash_algorithm='sha256'):
+    #     """
+    #     Computes the hash of a file.
+
+    #     Args:
+    #         file_path (str): The path to the file.
+    #         hash_algorithm (str): The hash algorithm to use. Default is 'sha256'.
+
+    #     Returns:
+    #         str: The computed hash of the file.
+    #     """
+    #     hash_func = hashlib.new('sha256')
+    #     with open(file_path, 'rb') as f:
+    #         for chunk in iter(lambda: f.read(4096), b""):
+    #             hash_func.update(chunk)
+    #     return hash_func.hexdigest()
 
 #==========================IDS Connector File Processing Methods==========================
 
@@ -1459,14 +1459,14 @@ class Translator():
             filename = file_info.get("filename", "")
             
             # Determine category based on file extension or format
-            category = "FILE"
+            category = "AI" # Default category for extracted files
             if file_format:
                 if "zip" in file_format.lower():
-                    category = "ARCHIVE"
+                    category = "AI"
                 elif "ipynb" in file_format.lower():
-                    category = "NOTEBOOK"
+                    category = "AI"
                 elif "py" in file_format.lower():
-                    category = "SCRIPT"
+                    category = "AI"
             
             # Create Ditto thing
             thing = {

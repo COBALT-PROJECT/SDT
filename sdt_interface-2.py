@@ -14,16 +14,25 @@ import sys
 
 from fastapi import Request, FastAPI, UploadFile, File, HTTPException, Query
 from fastapi.responses import JSONResponse, FileResponse
-from typing import Optional
+from typing import Optional, Dict
 from contextlib import asynccontextmanager
+from datetime import datetime
 from core.controller import Controller
 from core.config import IDS_CONNECTOR_HOST, IDS_CONNECTOR_PORT
 import json
 import multiprocessing
 from multiprocessing import Process, Queue
 
-
-
+# ==================== SDT Bearer Token Storage ====================
+# In-memory token storage for SDT-Manager OAuth2 credentials
+sdt_token_store: Dict = {
+    "access_token": None,
+    "client_id": None,
+    "client_secret": None,
+    "sdt_id": None,
+    "components": {},
+    "timestamp": None
+}
 
 ctrl = Controller()
 
@@ -56,8 +65,10 @@ async def connection_startup(app: FastAPI):
 
 
 # Initialize FastAPI app
-app = FastAPI(title="SDT Service Interface", version="0.2.5", lifespan=connection_startup)
+app = FastAPI(title="SDT Service Interface", version="0.2.7", lifespan=connection_startup)
 
+# Pass token store to controller for use in authenticated requests
+ctrl.set_token_store(sdt_token_store)
 
 ctrl.run_ditto_listener()
 # # Create a queue for communication between processes
@@ -106,39 +117,152 @@ ctrl.run_ditto_listener()
 #         except:
 #             break
 #     return JSONResponse(content={"messages": messages})
-# # Root endpoint
+# ==================== ENDPOINTS BY FUNCTIONAL AREA ====================
+# Organization: Authentication > Core Operations > Connection > Evidence > Parent > Sync > Templates > Health
 
-# # Endpoint to create a new Security Digital Twin
+
+# ==================== 1. AUTHENTICATION ENDPOINTS ====================
+
+@app.post("/auth/token", tags=["Authentication"])
+async def receive_bearer_token(payload: Dict):
+    """
+    Receive OAuth2 Bearer token from SDT-Manager.
+    This endpoint stores the token for authenticated communication with IDS-Connector.
+    
+    Args:
+        payload: {
+            "sdt_id": "abc123def456",
+            "client_id": "oauth_client_xyz",
+            "client_secret": "secret_xyz",
+            "access_token": "eyJhbGc...",
+            "components": {
+                "sdt": "abc123def456",
+                "ids_connector": "conn789",
+                "watchtower": "wt012"
+            }
+        }
+    
+    Returns:
+        JSONResponse: Confirmation that token was stored
+    """
+    try:
+        global sdt_token_store
+        
+        # Validate required fields
+        required_fields = ["sdt_id", "access_token", "client_id"]
+        for field in required_fields:
+            if field not in payload:
+                logger.error(f"Missing required field in token payload: {field}")
+                raise ValueError(f"Missing required field: {field}")
+        
+        access_token = payload.get("access_token")
+        
+        if not access_token:
+            raise ValueError("access_token cannot be empty")
+        
+        # Store token in memory
+        sdt_token_store = {
+            "access_token": access_token,
+            "client_id": payload.get("client_id"),
+            "client_secret": payload.get("client_secret"),
+            "sdt_id": payload.get("sdt_id"),
+            "components": payload.get("components", {}),
+            "timestamp": datetime.now().isoformat()
+        }
+        
+        # Also update the controller's token store reference
+        ctrl.set_token_store(sdt_token_store)
+        
+        sdt_id = payload.get("sdt_id")
+        logger.info(f"Bearer token received and stored for SDT {sdt_id}")
+        logger.debug(f"Token timestamp: {sdt_token_store['timestamp']}")
+        
+        return JSONResponse(
+            status_code=200,
+            content={
+                "status": "ok",
+                "message": "Bearer token stored successfully",
+                "sdt_id": sdt_id,
+                "components": list(sdt_token_store.get("components", {}).keys()),
+                "timestamp": datetime.now().isoformat()
+            }
+        )
+    
+    except ValueError as e:
+        logger.error(f"Validation error storing Bearer token: {e}")
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        logger.error(f"Error storing Bearer token: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to store token: {str(e)}")
+
+
+@app.get("/auth/token/status", tags=["Authentication"])
+async def get_token_status():
+    """
+    Get current status of stored Bearer token (without revealing secrets).
+    
+    Returns:
+        JSONResponse: Token status with redacted secrets
+    """
+    token = sdt_token_store.get("access_token")
+    
+    if not token:
+        return JSONResponse(
+            status_code=200,
+            content={
+                "status": "unavailable",
+                "message": "No Bearer token currently stored",
+                "sdt_id": None,
+                "has_token": False
+            }
+        )
+    
+    return JSONResponse(
+        status_code=200,
+        content={
+            "status": "available",
+            "message": "Bearer token is stored and ready for IDS-Connector authentication",
+            "sdt_id": sdt_token_store.get("sdt_id"),
+            "client_id": sdt_token_store.get("client_id"),
+            "components": list(sdt_token_store.get("components", {}).keys()),
+            "has_token": True,
+            "token_stored_at": sdt_token_store.get("timestamp"),
+            "token_preview": f"{token[:20]}..." if len(token) > 20 else "***"
+        }
+    )
+
+
+# ==================== 2. CORE OPERATIONS (CRUD) ====================
 
 @app.post("/api/SDT/create/", status_code=201)
 async def create(
     request: Request, 
     toeid: str = Query(default="00000000-0000-0000-0000-000000000000", description="Target of Evaluation ID (UUID format: 00000000-0000-0000-0000-000000000000)"), 
     payload_type: str = Query(default="BOMS", description="Type of payload (AI or QDT)"),
-    create_genesis: bool = Query(default=True, description="Create/update genesis thing")
+    create_parent: bool = Query(default=True, description="Create/update parent thing")
 ):
     """
-    Endpoint to create a new SDT artifacts in Ditto with optional genesis thing management.
+    Endpoint to create a new SDT artifacts in Ditto with optional parent thing management.
 
     Args:
         request (Request): The request object containing the SDT data.
         toeid (str): Target of Evaluation ID
         payload_type (str): Type of payload (Resource.(AI or QDT or BOMS))
-        create_genesis (bool): Whether to create/update genesis thing
+        create_parent (bool): Whether to create/update parent thing
 
     Returns:
         JSONResponse: A JSON response containing the creation status and details.
     """
     try:
-        logger.info(f"Received request to create SDT artifact with ID: {toeid}, type: {payload_type}, genesis: {create_genesis}")
+        logger.info(f"Received request to create SDT artifact with ID: {toeid}, type: {payload_type}, parent: {create_parent}")
 
         # Parse the request JSON payload
         payload = await request.json()
         payload_str = json.dumps(payload)
         logger.info(f"Processing payload for SDT artifact creation, size: {len(payload_str)} bytes")
 
-        # Create the Digital Twin in Ditto (with genesis thing management)
-        result = ctrl.create_in_ditto(payload_str, toeid, payload_type, create_genesis=create_genesis)
+        # Create the Digital Twin in Ditto (with parent thing management)
+        result = ctrl.create_in_ditto(payload_str, toeid, payload_type, create_parent=create_parent)
         logger.info(f"SDT artifact created with result: {result}")
 
         return JSONResponse(
@@ -205,24 +329,125 @@ async def update_item(request: Request, toeid: str = Query(default="00000000-000
         logger.error(f"Error updating item: {e}")
         return JSONResponse(content={"error": str(e)}, status_code=500)
 
-@app.delete("/api/SDT/delete/")
-async def delete_item(toeid: str = Query(default="00000000-0000-0000-0000-000000000000", description="Target of Evaluation ID (UUID format: 00000000-0000-0000-0000-000000000000)"), category: str = Query(..., description="Level of evidence to retrieve")):
+
+
+# ==================== 3. CONNECTION MANAGEMENT ====================
+
+@app.post("/api/SDT/connection/")
+async def connection(request: Request):
     """
-    Endpoint to delete an item from the Digital Twin model.
+    Endpoint to establish a connection with the Digital Twin.
 
     Args:
-        item_id (str): The ID of the item to be deleted.
+        request (Request): The request object containing the connection data.
 
     Returns:
-        JSONResponse: A JSON response indicating success or an error message.
+        str: A confirmation message indicating the connection was established.
+    """
+    logger.info("Received request to establish a connection with the Digital Twin")
+
+    # # Parse the request JSON payload
+    # payload = await request.json()
+    # payload_str = json.dumps(payload)
+    # logger.info(f"Processing payload for connection establishment")
+
+    # Establish the connection with the Digital Twin
+    response = ctrl.connection_create()
+    logger.info("Connection successfully established with the Digital Twin")
+    print(response)
+    return response
+
+
+# ==================== 4. EVIDENCE MANAGEMENT ====================
+
+@app.get("/api/SDT/evidence/")
+async def get_evidence(
     """
     try:
-
-        response = ctrl.delete_item(toeid, category)
-        return JSONResponse(content={"message": "Item deleted successfully"})
+        global sdt_token_store
+        
+        # Validate required fields
+        required_fields = ["sdt_id", "access_token", "client_id"]
+        for field in required_fields:
+            if field not in payload:
+                logger.error(f"Missing required field in token payload: {field}")
+                raise ValueError(f"Missing required field: {field}")
+        
+        access_token = payload.get("access_token")
+        
+        if not access_token:
+            raise ValueError("access_token cannot be empty")
+        
+        # Store token in memory
+        sdt_token_store = {
+            "access_token": access_token,
+            "client_id": payload.get("client_id"),
+            "client_secret": payload.get("client_secret"),
+            "sdt_id": payload.get("sdt_id"),
+            "components": payload.get("components", {}),
+            "timestamp": datetime.now().isoformat()
+        }
+        
+        # Also update the controller's token store reference
+        ctrl.set_token_store(sdt_token_store)
+        
+        sdt_id = payload.get("sdt_id")
+        logger.info(f"Bearer token received and stored for SDT {sdt_id}")
+        logger.debug(f"Token timestamp: {sdt_token_store['timestamp']}")
+        
+        return JSONResponse(
+            status_code=200,
+            content={
+                "status": "ok",
+                "message": "Bearer token stored successfully",
+                "sdt_id": sdt_id,
+                "components": list(sdt_token_store.get("components", {}).keys()),
+                "timestamp": datetime.now().isoformat()
+            }
+        )
+    
+    except ValueError as e:
+        logger.error(f"Validation error storing Bearer token: {e}")
+        raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
-        logger.error(f"Error deleting item: {e}")
-        return JSONResponse(content={"error": str(e)}, status_code=500)
+        logger.error(f"Error storing Bearer token: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to store token: {str(e)}")
+
+
+@app.get("/auth/token/status", tags=["Authentication"])
+async def get_token_status():
+    """
+    Get current status of stored Bearer token (without revealing secrets).
+    
+    Returns:
+        JSONResponse: Token status with redacted secrets
+    """
+    token = sdt_token_store.get("access_token")
+    
+    if not token:
+        return JSONResponse(
+            status_code=200,
+            content={
+                "status": "unavailable",
+                "message": "No Bearer token currently stored",
+                "sdt_id": None,
+                "has_token": False
+            }
+        )
+    
+    return JSONResponse(
+        status_code=200,
+        content={
+            "status": "available",
+            "message": "Bearer token is stored and ready for IDS-Connector authentication",
+            "sdt_id": sdt_token_store.get("sdt_id"),
+            "client_id": sdt_token_store.get("client_id"),
+            "components": list(sdt_token_store.get("components", {}).keys()),
+            "has_token": True,
+            "token_stored_at": sdt_token_store.get("timestamp"),
+            "token_preview": f"{token[:20]}..." if len(token) > 20 else "***"
+        }
+    )
 
 
 @app.post("/api/SDT/connection/")
@@ -250,6 +475,7 @@ async def connection(request: Request):
     return response
 
 
+# ==================== 5. DATA SYNCHRONIZATION ====================
 
 #============================ ENDPOINTS for EVIDENCE COLLECTION and FETCHING through IDS Connector ============================
 
@@ -262,7 +488,7 @@ async def connection(request: Request):
 # ):
 #     """
 #     Sync data from GitHub repository to Ditto instance.
-#     Creates repository thing and updates genesis thing.
+#     Creates repository thing and updates parent thing.
     
 #     Args:
 #         github_url: The URL of the GitHub repository to clone
@@ -289,7 +515,7 @@ async def connection(request: Request):
 #                         "github_url": github_url,
 #                         "repository_name": result.get("repository_name"),
 #                         "thing_id": result.get("thing_id"),
-#                         "genesis_updated": result.get("genesis_updated", False),
+#                         "parent_updated": result.get("parent_updated", False),
 #                         "timestamp": time.time()
 #                     }
 #                 }
@@ -481,7 +707,7 @@ async def sync_from_ids_connector(
 @app.get("/api/SDT/evidence/")
 async def get_evidence(
     toeid: str = Query(default="00000000-0000-0000-0000-000000000000", description="Target of Evaluation ID (UUID format)"),
-    category: str = Query(None, description="Category to filter (AI, QDT, etc.)"),
+    category: str = Query(None, description="Category to filter (AI, QDT, IDS_Evidence, CLOUD etc.)"),
     evidence_type: str = Query(default="thing", description="Evidence type: thing|zip|files|specific|auto"),
     files: str = Query(None, description="Comma-separated list of files to retrieve (for files/specific type)"),
     include_patterns: str = Query(None, description="Comma-separated include patterns for ZIP (e.g., *.py,*.h5)"),
@@ -569,22 +795,22 @@ async def get_evidence(
         )
 
 
-#============================ GENESIS THING ENDPOINTS ============================
+#============================ PARENT THING ENDPOINTS ============================
 
-@app.post("/api/SDT/genesis/create")
-async def create_genesis(
+@app.post("/api/SDT/parent/create")
+async def create_parent(
     toeid: str = Query(..., description="Target of Evaluation ID"),
     request: Request = None
 ):
     """
-    Explicitly create a genesis thing for a TOE ID with optional metadata.
+    Explicitly create a parent thing for a TOE ID with optional metadata.
     
     Args:
         toeid: Target of Evaluation ID
         request: Optional request body with metadata
         
     Returns:
-        JSONResponse: Genesis thing creation result
+        JSONResponse: Parent thing creation result
     """
     try:
         metadata = {}
@@ -594,51 +820,51 @@ async def create_genesis(
             except:
                 pass
         
-        result = ctrl.create_genesis_thing(toeid, metadata)
+        result = ctrl.create_parent_thing(toeid, metadata)
         
         return JSONResponse(
             status_code=201 if result.get("action") == "created" else 200,
             content=result
         )
     except Exception as e:
-        logger.error(f"Error creating genesis thing: {e}")
+        logger.error(f"Error creating parent thing: {e}")
         return JSONResponse(
             status_code=500,
             content={"error": str(e)}
         )
 
-@app.get("/api/SDT/genesis/read")
-async def read_genesis(toeid: str = Query(..., description="Target of Evaluation ID")):
+@app.get("/api/SDT/parent/read")
+async def read_parent(toeid: str = Query(..., description="Target of Evaluation ID")):
     """
-    Get the genesis thing for a TOE ID.
+    Get the parent thing for a TOE ID.
     
     Args:
         toeid: Target of Evaluation ID
         
     Returns:
-        JSONResponse: Genesis thing data
+        JSONResponse: Parent thing data
     """
     try:
-        result = ctrl.get_genesis_thing(toeid)
+        result = ctrl.get_parent_thing(toeid)
         
         if result:
             return JSONResponse(content=result)
         else:
             return JSONResponse(
                 status_code=404,
-                content={"error": "Genesis thing not found"}
+                content={"error": "Parent thing not found"}
             )
     except Exception as e:
-        logger.error(f"Error reading genesis thing: {e}")
+        logger.error(f"Error reading parent thing: {e}")
         return JSONResponse(
             status_code=500,
             content={"error": str(e)}
         )
 
-@app.get("/api/SDT/genesis/children")
+@app.get("/api/SDT/parent/children")
 async def list_children(toeid: str = Query(..., description="Target of Evaluation ID")):
     """
-    List all child things under a genesis thing.
+    List all child things under a parent thing.
     
     Args:
         toeid: Target of Evaluation ID
@@ -656,6 +882,11 @@ async def list_children(toeid: str = Query(..., description="Target of Evaluatio
             content={"error": str(e)}
         )
 
+
+#=====================================================Connector APIS ENDS=================================================
+
+
+# ==================== 6. TEMPLATES MANAGEMENT ====================
 
 @app.post("/api/SDT/upload-template")
 async def upload_template(file: UploadFile = File(...)):
@@ -691,33 +922,7 @@ async def upload_template(file: UploadFile = File(...)):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-#============================ ENDPOINTS FOR EVIDENCE COLLECTION for Quantum DT ============================
-
-
-#============================ ENDPOINTS FOR EVIDENCE COLLECTION for Quantum DT ============================
-
-# @app.get("/api/SDT/fetch/file/")
-# async def fetch_file(github_url: str):
-#     """
-#     Fetch a file from a GitHub URL, save it locally, and return the local path.
-
-#     Args:
-#         github_url (str): The URL of the GitHub file to fetch.
-
-#     Returns:
-#         dict: A dictionary containing a message with the local path of the saved file.
-#     """
-#     try:
-#         local_path = await adp.fetch_push_save_file(github_url)
-#         return {"message": f"File saved at {local_path}"}
-#     except Exception as e:
-#         raise HTTPException(status_code=400, detail=str(e))
-
-
-# @app.get("/api/SDT/evidence/clouditor/")
-# def get_evidence(toeid: str = Query(...), category: str = Query(...)):
-#     result = ctrl.get_evidence(toeid, category)
-#     return result
+# ==================== 7. HEALTH & STATUS ====================
 
 @app.get("/api/SDT/health")
 async def health_check():

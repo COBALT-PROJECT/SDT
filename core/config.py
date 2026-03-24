@@ -17,7 +17,7 @@ def get_local_ip():
 
 # Eclipse Ditto configuration
 Ditto_IP = os.getenv("DITTO_HOST", "localhost")
-Ditto_PORT = "8080"
+Ditto_PORT = os.getenv("DITTO_PORT", "8080")
 
 # Local MQTT broker configuration
 LOCAL_IP = get_local_ip()
@@ -25,7 +25,7 @@ LOCAL_IP = get_local_ip()
 MQTT_BROKER_HOST = os.getenv("MQTT_BROKER_HOST", "localhost")  # Fixed typo
 # Clouditor configuration
 Clouditor_IP = os.getenv("CLOUDITOR_HOST")
-Clouditor_PORT = "8080"
+Clouditor_PORT = os.getenv("CLOUDITOR_PORT", "8080")
 
 #IDS Connector configuration
 
