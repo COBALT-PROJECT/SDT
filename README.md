@@ -22,17 +22,6 @@ The Security Digital Twin (SDT) Service v0.2.8 is a centralized middleware for i
 - **Smart Download**: Intelligent file packaging (single file, ZIP archive, or multiple files)
 - **Enhanced Security**: Global token verification with 401/403 error handling
 
-**New in v0.2.7:**
-- OAuth2 Bearer Token Authentication with SDT-Manager integration
-- Automatic token injection for IDS-Connector requests
-- Token status monitoring endpoints
-
-**New in v0.2.5:**
-- Template 3.0: Unified evidence combinations, flexible packaging, and transformation
-- Advanced authentication: Bearer, API Key, OAuth2
-- Custom mapping and variable substitution for evidence
-- Collector integration with auto-routing and notification
-
 
 ## Table of Contents
 
@@ -50,6 +39,8 @@ The Security Digital Twin (SDT) Service v0.2.8 is a centralized middleware for i
 
 ## Features
 
+- **Bearer Token Authentication**: Middleware-based token verification for all protected endpoints
+- **Split Evidence Endpoints**: Specialized endpoints for metadata, file discovery, downloads, and transformations
 - **Template 3.0 Evidence Combinations**: 22+ combinations for thing, files, zip, with flexible authentication and transformation
 - **CycloneDX, OSCAL, ARM Integration**: Validate and transform evidence from multiple formats
 - **Digital Twin Management**: Full CRUD for Eclipse Ditto instances
@@ -78,7 +69,7 @@ The Security Digital Twin (SDT) Service v0.2.8 is a centralized middleware for i
   pip install -r requirements.txt
 
 3. Run the service:
-  python SDT/sdt_service.py
+  python SDT/sdt_interface-3.py
 
 Or use Docker:
   docker build -t sdt-service .
@@ -90,12 +81,12 @@ Or use Docker:
 ### Authentication Endpoints
 
 - **Receive Bearer Token:**
-  POST /auth/token
+  POST /api/SDT/auth/token
   - Stores OAuth2 credentials received from SDT-Manager
   - Used for authenticated communication with IDS-Connector
   
 - **Check Token Status:**
-  GET /auth/token/status
+  GET /api/SDT/auth/token/status
   - Returns token availability and components (secrets redacted)
   - Useful for monitoring and debugging
 
@@ -151,32 +142,57 @@ Or use Docker:
 
 ### Additional Endpoints
 
-- **Collector Evidence Notification:**
+- **Upload Template:**
   POST /api/SDT/upload-template
+  
 - **Health Check:**
-  GET /api/SDT/health**
   GET /api/SDT/health
 
 ### Example: Create a Digital Twin from CycloneDX
+
 ```bash
-curl -X POST "http://127.0.0.1:8000/api/SDT/create/" \
+# First, receive and store token
+curl -X POST "http://localhost:8000/api/SDT/auth/token" \
   -H "Content-Type: application/json" \
   -d '{
-    "name": "example",
-    "payload": {
-      "bomFormat": "CycloneDX",
-      "specVersion": "1.4",
-      "serialNumber": "urn:uuid:3e671687-395b-41f5-a30f-a58921a69b79",
-      "version": 1,
-      "components": []
-    }
+    "sdt_id": "sdt-001",
+    "access_token": "eyJhbGc...",
+    "client_id": "oauth_client",
+    "client_secret": "secret"
+  }'
+
+# Then create Digital Twin with token
+curl -X POST "http://localhost:8000/api/SDT/create/?toe_id=001&category=BOMS" \
+  -H "Authorization: Bearer eyJhbGc..." \
+  -H "Content-Type: application/json" \
+  -d '{
+    "bomFormat": "CycloneDX",
+    "specVersion": "1.4",
+    "version": 1,
+    "components": []
   }'
 ```
 
-### Example: Fetch Evidence from GitHub
+### Example: Get Evidence with Token
+
 ```bash
-curl -X GET "http://127.0.0.1:8000/api/SDT/sync/github?github_url=https://github.com/username/repo.git&toeid=test-001&category=AI" \
-  -H "accept: application/json"
+curl -X GET "http://localhost:8000/api/SDT/evidence/thing?toe_id=001&category=QDT" \
+  -H "Authorization: Bearer eyJhbGc..."
+```
+
+### Example: List Files Before Download
+
+```bash
+curl -X GET "http://localhost:8000/api/SDT/evidence/list?toe_id=001" \
+  -H "Authorization: Bearer eyJhbGc..."
+```
+
+### Example: Download Evidence Files
+
+```bash
+curl -X GET "http://localhost:8000/api/SDT/evidence/download?toe_id=001&files=data.json" \
+  -H "Authorization: Bearer eyJhbGc..." \
+  -o evidence.zip
 ```
 
 ## Template 3.0 Evidence Combinations
@@ -212,47 +228,6 @@ Supports 22+ combinations for evidence packaging, authentication, and transforma
 ### BOM Analysis
 1. Create thing from CycloneDX BOM
 2. BOM Analyzer receives filtered thing JSON with API Key
-
-## Bearer Token Authentication
-
-The SDT component now supports OAuth2 Bearer token authentication for secure communication with IDS-Connector. Tokens are received from SDT-Manager and used automatically in all IDS-Connector API calls.
-
-### How It Works
-
-1. **SDT-Manager Distribution**: SDT-Manager registers SDT with Authentication Manager, obtains OAuth2 token
-2. **Token Reception**: SDT receives token via `POST /auth/token` endpoint
-3. **Token Storage**: Token stored in-memory for use in subsequent requests
-4. **Automatic Authentication**: All IDS-Connector calls automatically include Bearer token
-5. **Error Handling**: Enhanced error handling for authentication failures (401, 403)
-
-### Example: Receive Token from SDT-Manager
-
-```bash
-curl -X POST "http://localhost:8080/auth/token" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "sdt_id": "abc123def456",
-    "access_token": "eyJhbGc...",
-    "client_id": "oauth_client_xyz",
-    "client_secret": "secret_xyz",
-    "components": {"sdt": "abc123", "ids_connector": "conn789"}
-  }'
-```
-
-### Example: Check Token Status
-
-```bash
-curl "http://localhost:8080/auth/token/status"
-```
-
-### Example: Sync IDS with Bearer Token (Automatic)
-
-```bash
-curl "http://localhost:8080/api/SDT/sync/ids?data_path=all&toeid=test-123"
-# Bearer token is automatically included in the request
-```
-
-For detailed documentation, see [AUTHENTICATION_QUICK_START.md](AUTHENTICATION_QUICK_START.md)
 
 ## Request-Level Token Authentication Middleware (v0.2.8)
 
