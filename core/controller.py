@@ -44,17 +44,17 @@ class Controller():
             Initializes the Controller instance.
         create_policy(self):
             Creates a policy in Ditto.
-        create_in_ditto(self, payload, toe_id, level):
+        create_in_ditto(self, payload, toe_id, category):
             Creates a Stored representation in Ditto.
-        name_thiing_id(self, toe_id, level):
-            Converts a name to an ID by appending the level to the toe_id.
+        name_thiing_id(self, toe_id, category):
+            Converts a name to an ID by appending the category to the toe_id.
         unique_id(self):
             Generates a unique ID for the thing.
-        read_item(self, toe_id, level):
-            Reads an item from Ditto based on the provided ID and level.
-        delete_item(self, toe_id, level):
-            Deletes an item from Ditto based on the provided ID and level.
-        update_item(self, toe_id, level, payload):
+        read_item(self, toe_id, category):
+            Reads an item from Ditto based on the provided ID and category.
+        delete_item(self, toe_id, category):
+            Deletes an item from Ditto based on the provided ID and category.
+        update_item(self, toe_id, category, payload):
             Updates an item in Ditto based on the provided ID and payload.
         get_evidence(self, toe_id: str, level: str):
             Retrieves evidence data based on the provided Target of Evaluation ID and level.
@@ -180,21 +180,21 @@ class Controller():
     #         print(e)
     #     return None
 
-    def create_in_ditto(self, payload, toe_id, payload_type, create_parent: bool = True):
+    def create_in_ditto(self, payload, toe_id, category, create_parent: bool = True):
         """
         Creates a thing in Ditto and optionally updates the parent thing.
         
         Args:
             payload: Thing payload
             toe_id: Target of Evaluation ID
-            payload_type: Type of payload
+            category: Category/type of payload
             create_parent: Whether to create/update parent thing (default: True)
         """
 
         # Check if thing already exists using pattern-based search
-        existing_thing_id = self.search_item(toe_id, payload_type)
+        existing_thing_id = self.search_item(toe_id, category)
         if existing_thing_id is not None:
-            logger.warning(f"Thing with toe_id={toe_id} and type={payload_type} already exists: {existing_thing_id}")
+            logger.warning(f"Thing with toe_id={toe_id} and type={category} already exists: {existing_thing_id}")
             
             # Parse the new payload to compare with existing
             payload_json = json.loads(payload)
@@ -216,12 +216,12 @@ class Controller():
                 payload_json["thingId"] = existing_thing_id
                 
                 # Call update_item to update the existing thing
-                update_result = self.update_item(toe_id, payload_type, payload_json)
+                update_result = self.update_item(toe_id, category, payload_json)
                 
                 if update_result.get("success"):
                     # Update parent thing
                     if create_parent:
-                        self.update_parent_thing(toe_id, existing_thing_id, payload_type, operation="update")
+                        self.update_parent_thing(toe_id, existing_thing_id, category, operation="update")
                     
                     return {
                         "success": True,
@@ -239,7 +239,7 @@ class Controller():
                     }
 
         # Generate new unique ID only after confirming thing doesn't exist
-        ctrl_id = self.name_thiing_id(toe_id, payload_type)
+        ctrl_id = self.name_thiing_id(toe_id, category)
 
         payload_json = json.loads(payload)
         payload_json["thingId"] = ctrl_id
@@ -294,7 +294,7 @@ class Controller():
                 parent_result = self.create_parent_thing(toe_id)
 
                 # Add child thing to parent
-                self.update_parent_thing(toe_id, thing_id, payload_type, operation="add")
+                self.update_parent_thing(toe_id, thing_id, category, operation="add")
 
                 result["parent_thing_id"] = self.get_parent_thing_id(toe_id)
             
@@ -318,7 +318,7 @@ class Controller():
 
     #     return "tid_" + str(toe_id) + "." + str(payload_type) + ":" + self.unique_id()
 
-    def name_thiing_id(self, toe_id, payload_type):
+    def name_thiing_id(self, toe_id, category):
         """
         Convert a name to a Ditto-compatible ID following Eclipse Ditto naming rules.
 
@@ -327,7 +327,7 @@ class Controller():
 
         Args:
             toe_id (str): Target of Evaluation ID
-            payload_type (str): Type of payload (e.g., 'AI', 'QDT')
+            category (str): Category of payload (e.g., 'AI', 'QDT')
 
         Returns:
             str: A properly formatted Ditto Thing ID
@@ -335,9 +335,9 @@ class Controller():
         # Create a proper namespace (DNS-like format)
         namespace = "cobalt.sdt"
 
-        # Create a name using toe_id, payload_type, and a unique identifier
+        # Create a name using toe_id, category, and a unique identifier
         unique_suffix = self.unique_id()
-        name = f"toe-{toe_id}-{payload_type}-{unique_suffix}"
+        name = f"toe-{toe_id}-{category}-{unique_suffix}"
 
         # Return in namespace:name format
         return f"{namespace}:{name}"
@@ -582,21 +582,21 @@ class Controller():
             logger.error(f"Error searching for file by name: {e}")
             return None
 
-    def delete_item(self, toe_id, level, update_parent: bool = True):
+    def delete_item(self, toe_id, category, update_parent: bool = True):
         """
         Deletes a thing and updates the parent thing.
         
         Args:
             toe_id: Target of Evaluation ID
-            level: Thing type/level
+            category: Category/type of the thing
             update_parent: Whether to update parent thing
         """
 
         # First search for the existing thing ID
-        item_id = self.search_item(toe_id, level)
+        item_id = self.search_item(toe_id, category)
         
         if not item_id:
-            logger.error(f"Thing with toe_id {toe_id} and level {level} does not exist and cannot be deleted")
+            logger.error(f"Thing with toe_id {toe_id} and category {category} does not exist and cannot be deleted")
             return {"success": False, "error": "Thing does not exist"}
         
         logger.info(f"Attempting to delete thing with ID: {item_id}")
@@ -617,7 +617,7 @@ class Controller():
                     
                     # Update parent thing
                     if update_parent:
-                        self.update_parent_thing(toe_id, item_id, level, operation="delete")
+                        self.update_parent_thing(toe_id, item_id, category, operation="delete")
                     
                     return {"success": True, "status_code": r.status_code, "message": "Thing deleted successfully"}
                 else:
@@ -2148,10 +2148,10 @@ class Controller():
             session = requests.Session()
             session.auth = ("ditto", "ditto")
             session.put(url, json=parent_thing, headers={'Content-Type': 'application/json'})
-            logger.info(f"Updated genesis thing with IDS sync metadata")
+            logger.info(f"Updated parent thing with IDS sync metadata")
             
         except Exception as e:
-            logger.error(f"Error updating genesis with IDS sync: {e}")
+            logger.error(f"Error updating parent with IDS sync: {e}")
 
 
     # NEW GITHUB METHODS Similar to NEW IDS methods
@@ -2289,16 +2289,16 @@ class Controller():
         logger.info(f"Flexible evidence retrieval: toe_id={toe_id}, type={evidence_type}, format={format}")
         
         try:
-            # Get genesis thing
-            genesis_id = self.get_genesis_thing_id(toe_id)
-            genesis_thing = self.read_item_by_id(genesis_id)
+            # Get parent thing
+            parent_id = self.get_parent_thing_id(toe_id)
+            parent_thing = self.read_item_by_id(parent_id)
             
-            if not genesis_thing:
-                logger.error(f"Genesis thing not found for TOE: {toe_id}")
-                return {"error": "Genesis thing not found", "toe_id": toe_id}
+            if not parent_thing:
+                logger.error(f"Parent thing not found for TOE: {toe_id}")
+                return {"error": "Parent thing not found", "toe_id": toe_id}
             
             # Get thing IDs from correct feature structure
-            child_things_feature = genesis_thing.get("features", {}).get("child_things", {})
+            child_things_feature = parent_thing.get("features", {}).get("child_things", {})
             child_things_dict = child_things_feature.get("properties", {})
             
             # Extract thing IDs from child_things dictionary

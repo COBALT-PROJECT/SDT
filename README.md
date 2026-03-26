@@ -1,9 +1,9 @@
-# Security Digital Twin (SDT) Service v0.2.7
+# Security Digital Twin (SDT) Service v0.2.8
 
 
 ## Overview
 
-The Security Digital Twin (SDT) Service v0.2.5 is a centralized middleware for integrating, validating, and synchronizing security evidence from multiple sources (CycloneDX, OSCAL, ARM, Watchtower, Clouditor, GitHub, Quantum DT) into a Digital Twin platform (Eclipse Ditto). It now supports Template 3.0, advanced evidence packaging, flexible authentication, and custom transformation for automated security and compliance workflows.
+The Security Digital Twin (SDT) Service v0.2.8 is a centralized middleware for integrating, validating, and synchronizing security evidence from multiple sources (CycloneDX, OSCAL, ARM, Watchtower, Clouditor, GitHub, Quantum DT) into a Digital Twin platform (Eclipse Ditto). It now supports Template 3.0, advanced evidence packaging, flexible authentication, token-based request authentication, and custom transformation for automated security and compliance workflows.
 
 
 ## Architecture
@@ -14,6 +14,13 @@ The Security Digital Twin (SDT) Service v0.2.5 is a centralized middleware for i
 - **SDT-CONTROLLER**: Orchestrates evidence flow, manages Digital Twin lifecycle, and routes data to Ditto and collectors.
 - **SDT-EVIDENCE PROVIDER**: Prepares, transforms, and packages evidence for collectors (Watchtower, Clouditor, AIShield, SPECTRA, BOM Analyzer, Quantum DT, etc.) using Template 3.0.
 - **SDT-TRANSLATOR**: Synchronizes changes and ingests data models for Ditto via connectors (IDS, GitHub, Webhook, Quantum).
+
+**New in v0.2.8:**
+- **Token Authentication Middleware**: All endpoints (except auth/health) require Bearer token authentication
+- **Split Evidence Endpoints**: GET /evidence/thing, /evidence/list, /evidence/download, GET /evidence/transform
+- **File Discovery**: /evidence/list endpoint for discovering available files before download
+- **Smart Download**: Intelligent file packaging (single file, ZIP archive, or multiple files)
+- **Enhanced Security**: Global token verification with 401/403 error handling
 
 **New in v0.2.7:**
 - OAuth2 Bearer Token Authentication with SDT-Manager integration
@@ -101,11 +108,53 @@ Or use Docker:
 - **Sync Evidence from GitHub/IDS Connector:**
   GET /api/SDT/sync/github, GET /api/SDT/sync/ids
   - IDS sync now uses Bearer token for authentication
+
+### Evidence Endpoints (Split for Better UX)
+
+- **Get Thing Metadata:**
+  GET /api/SDT/evidence/thing
+  - Parameters: toe_id, category (optional), include_features (optional)
+  - Returns: Complete thing object with metadata
+  - Use Case: View thing details and attributes
+
+- **List Evidence Files:**
+  GET /api/SDT/evidence/list
+  - Parameters: toe_id, category (optional), pattern (optional glob), recursive (optional)
+  - Returns: File listing with metadata (name, size, type, timestamps)
+  - Use Case: Discover available files before downloading
+
+- **Download Evidence Files:**
+  GET /api/SDT/evidence/download
+  - Parameters: toe_id, files (optional, comma-separated), category (optional)
+  - Smart Logic: Single file (raw), multiple files or no files (ZIP archive)
+  - Returns: FileResponse (binary) or error JSON
+  - Use Case: Download specific file(s) with intelligent packaging
+
+- **Transform Evidence Data:**
+  GET /api/SDT/evidence/transform
+  - Parameters: toe_id, transform, category (optional), files (optional), target_format (optional)
+  - Returns: Transformed data (JSON, XML, etc.)
+  - Transform Types: qpu_clouditor, custom mappings
+  - Use Case: Apply data transformations for downstream processors
+
+### Parent Thing Management
+
+- **Create Parent Thing:**
+  POST /api/SDT/parent/create
+  - Aggregates child things for hierarchical organization
+  
+- **Read Parent Thing:**
+  GET /api/SDT/parent/read
+  
+- **List Child Things:**
+  GET /api/SDT/parent/children
+
+### Additional Endpoints
+
 - **Collector Evidence Notification:**
-  GET /api/SDT/evidence/
-- **Parent Thing Management:**
-  POST /api/SDT/parent/create, GET /api/SDT/parent/read
+  POST /api/SDT/upload-template
 - **Health Check:**
+  GET /api/SDT/health**
   GET /api/SDT/health
 
 ### Example: Create a Digital Twin from CycloneDX
@@ -204,6 +253,69 @@ curl "http://localhost:8080/api/SDT/sync/ids?data_path=all&toeid=test-123"
 ```
 
 For detailed documentation, see [AUTHENTICATION_QUICK_START.md](AUTHENTICATION_QUICK_START.md)
+
+## Request-Level Token Authentication Middleware (v0.2.8)
+
+All API endpoints (except authentication and health checks) now enforce Bearer token authentication via middleware. This provides global security without requiring token checks in individual endpoint handlers.
+
+### How It Works
+
+1. **Token Reception**: Client calls `POST /api/SDT/auth/token` to store OAuth2 token
+2. **Token Storage**: Token stored in-memory in `sdt_token_store`
+3. **Request Interception**: Middleware intercepts all incoming requests
+4. **Unprotected Endpoints**: Auth and health endpoints skip validation:
+   - `POST /api/SDT/auth/token` - Receive token
+   - `GET /api/SDT/auth/token/status` - Check token status
+   - `GET /api/SDT/health` - Health check
+5. **Protected Endpoints**: All other endpoints require valid Bearer token
+6. **Token Validation**: Extracts and validates token from `Authorization: Bearer {token}` header
+7. **Response**: Returns 401 if token missing, invalid, or expired
+
+### Required Request Header
+
+```
+Authorization: Bearer {access_token}
+```
+
+### Example: Call Protected Endpoint with Token
+
+```bash
+curl -X GET "http://localhost:8000/api/SDT/evidence/thing?toe_id=123&category=QDT" \
+  -H "Authorization: Bearer eyJhbGc..."
+```
+
+### Error Responses
+
+**401 Unauthorized - Missing Bearer Token:**
+```json
+{
+  "status": "error",
+  "message": "Missing or invalid Bearer token",
+  "timestamp": 1711353600.123
+}
+```
+
+**401 Unauthorized - Invalid Token:**
+```json
+{
+  "status": "error",
+  "message": "Invalid or expired token",
+  "timestamp": 1711353600.123
+}
+```
+
+## Changelog v0.2.8
+
+- **Request-Level Token Authentication Middleware**: All protected endpoints require Bearer token in Authorization header
+- **Global Security**: Token validation via middleware (no per-endpoint overhead)
+- **Split Evidence Endpoints**: Improved UX with specialized endpoints for different evidence operations
+  - GET /api/SDT/evidence/thing - Metadata retrieval
+  - GET /api/SDT/evidence/list - File discovery with pattern matching
+  - GET /api/SDT/evidence/download - Smart file download (raw or ZIP)
+  - GET /api/SDT/evidence/transform - Data transformation engine
+- **File Discovery**: New /evidence/list endpoint supports pattern matching and recursive file listing
+- **Smart Download**: Intelligent packaging logic (single file / multiple files / archive)
+- **Enhanced Status Codes**: 401 for auth failures, proper 404 for not found (no 200 errors)
 
 ## Changelog v0.2.7
 

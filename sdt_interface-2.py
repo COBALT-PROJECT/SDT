@@ -123,7 +123,7 @@ ctrl.run_ditto_listener()
 
 # ==================== 1. AUTHENTICATION ENDPOINTS ====================
 
-@app.post("/auth/token", tags=["Authentication"])
+@app.post("/api/SDT/auth/token", tags=["Authentication"])
 async def receive_bearer_token(payload: Dict):
     """
     Receive OAuth2 Bearer token from SDT-Manager.
@@ -196,7 +196,7 @@ async def receive_bearer_token(payload: Dict):
         raise HTTPException(status_code=500, detail=f"Failed to store token: {str(e)}")
 
 
-@app.get("/auth/token/status", tags=["Authentication"])
+@app.get("/api/SDT/auth/token/status", tags=["Authentication"])
 async def get_token_status():
     """
     Get current status of stored Bearer token (without revealing secrets).
@@ -234,11 +234,11 @@ async def get_token_status():
 
 # ==================== 2. CORE OPERATIONS (CRUD) ====================
 
-@app.post("/api/SDT/create/", status_code=201)
+@app.post("/api/SDT/create/", status_code=201, tags=["Core Operations"])
 async def create(
     request: Request, 
-    toeid: str = Query(default="00000000-0000-0000-0000-000000000000", description="Target of Evaluation ID (UUID format: 00000000-0000-0000-0000-000000000000)"), 
-    payload_type: str = Query(default="BOMS", description="Type of payload (AI or QDT)"),
+    toe_id: str = Query(default="00000000-0000-0000-0000-000000000000", description="Target of Evaluation ID (UUID format: 00000000-0000-0000-0000-000000000000)"), 
+    category: str = Query(default="BOMS", description="Category/type of payload (AI or QDT or BOMS)"),
     create_parent: bool = Query(default=True, description="Create/update parent thing")
 ):
     """
@@ -246,15 +246,15 @@ async def create(
 
     Args:
         request (Request): The request object containing the SDT data.
-        toeid (str): Target of Evaluation ID
-        payload_type (str): Type of payload (Resource.(AI or QDT or BOMS))
+        toe_id (str): Target of Evaluation ID
+        category (str): Category/type of payload (Resource.(AI or QDT or BOMS))
         create_parent (bool): Whether to create/update parent thing
 
     Returns:
         JSONResponse: A JSON response containing the creation status and details.
     """
     try:
-        logger.info(f"Received request to create SDT artifact with ID: {toeid}, type: {payload_type}, parent: {create_parent}")
+        logger.info(f"Received request to create SDT artifact with ID: {toe_id}, type: {category}, parent: {create_parent}")
 
         # Parse the request JSON payload
         payload = await request.json()
@@ -262,7 +262,7 @@ async def create(
         logger.info(f"Processing payload for SDT artifact creation, size: {len(payload_str)} bytes")
 
         # Create the Digital Twin in Ditto (with parent thing management)
-        result = ctrl.create_in_ditto(payload_str, toeid, payload_type, create_parent=create_parent)
+        result = ctrl.create_in_ditto(payload_str, toe_id, category, create_parent=create_parent)
         logger.info(f"SDT artifact created with result: {result}")
 
         return JSONResponse(
@@ -271,8 +271,8 @@ async def create(
                 "status": "success",
                 "message": "SDT artifact successfully created",
                 "data": {
-                    "toeId": toeid,
-                    "type": payload_type,
+                    "toeId": toe_id,
+                    "type": category,
                     "timestamp": time.time(),
                     "result": result
                 }
@@ -289,32 +289,59 @@ async def create(
             }
         )
 
-@app.get("/api/SDT/read/")
-async def read_item(toeid: str = Query(default="00000000-0000-0000-0000-000000000000", description="Target of Evaluation ID (UUID format: 00000000-0000-0000-0000-000000000000)"), category: str = Query(..., description="Level of evidence to retrieve")):
+@app.get("/api/SDT/read/", tags=["Core Operations"])
+async def read_item(toe_id: str = Query(default="00000000-0000-0000-0000-000000000000", description="Target of Evaluation ID (UUID format: 00000000-0000-0000-0000-000000000000)"), category: str = Query(..., description="Level of evidence to retrieve")):
     """
     Endpoint to read an item from the Digital Twin model.
 
     Args:
-        item_id (str): The ID of the item to be read.
+        toe_id (str): The ID of the item to be read.
+        category (str): Category/type of the item.
 
     Returns:
         JSONResponse: A JSON response containing the item data or an error message.
     """
     try:
-
-        response = ctrl.read_item(toeid, category)
-        return JSONResponse(content=response)
+        response = ctrl.read_item(toe_id, category)
+        
+        if response.get("error"):
+            return JSONResponse(
+                status_code=404,
+                content={
+                    "status": "error",
+                    "message": response.get("error", "Item not found"),
+                    "timestamp": time.time()
+                }
+            )
+        
+        return JSONResponse(
+            status_code=200,
+            content={
+                "status": "success",
+                "message": "Item retrieved successfully",
+                "data": response,
+                "timestamp": time.time()
+            }
+        )
     except Exception as e:
         logger.error(f"Error reading item: {e}")
-        return JSONResponse(content={"error": str(e)}, status_code=500)
+        return JSONResponse(
+            status_code=500,
+            content={
+                "status": "error",
+                "message": f"Failed to read item: {str(e)}",
+                "timestamp": time.time()
+            }
+        )
 
-@app.put("/api/SDT/update/")
-async def update_item(request: Request, toeid: str = Query(default="00000000-0000-0000-0000-000000000000", description="Target of Evaluation ID (UUID format: 00000000-0000-0000-0000-000000000000)"), category: str = Query(..., description="Level of evidence to retrieve")):
+@app.put("/api/SDT/update/", tags=["Core Operations"])
+async def update_item(request: Request, toe_id: str = Query(default="00000000-0000-0000-0000-000000000000", description="Target of Evaluation ID (UUID format: 00000000-0000-0000-0000-000000000000)"), category: str = Query(..., description="Level of evidence to retrieve")):
     """
     Endpoint to update an item in the Digital Twin model.
 
     Args:
-        item_id (str): The ID of the item to be updated.
+        toe_id (str): The ID of the item to be updated.
+        category (str): Category/type of the item.
         request (Request): The request object containing the updated item data.
 
     Returns:
@@ -322,158 +349,151 @@ async def update_item(request: Request, toeid: str = Query(default="00000000-000
     """
     try:
         payload = await request.json()
-
-        updated_item = ctrl.update_item(toeid, category, payload)
-        return JSONResponse(content=updated_item)
+        updated_item = ctrl.update_item(toe_id, category, payload)
+        
+        if updated_item.get("error"):
+            return JSONResponse(
+                status_code=400,
+                content={
+                    "status": "error",
+                    "message": updated_item.get("error", "Failed to update item"),
+                    "timestamp": time.time()
+                }
+            )
+        
+        return JSONResponse(
+            status_code=200,
+            content={
+                "status": "success",
+                "message": "Item updated successfully",
+                "data": updated_item,
+                "timestamp": time.time()
+            }
+        )
     except Exception as e:
         logger.error(f"Error updating item: {e}")
-        return JSONResponse(content={"error": str(e)}, status_code=500)
+        return JSONResponse(
+            status_code=500,
+            content={
+                "status": "error",
+                "message": f"Failed to update item: {str(e)}",
+                "timestamp": time.time()
+            }
+        )
 
+
+@app.delete("/api/SDT/delete/", tags=["Core Operations"])
+async def delete_item_endpoint(
+    toe_id: str = Query(default="00000000-0000-0000-0000-000000000000", description="Target of Evaluation ID (UUID format: 00000000-0000-0000-0000-000000000000)"),
+    category: str = Query(..., description="Category/type of evidence to delete"),
+    update_parent: bool = Query(default=True, description="Update parent thing to remove child reference")
+):
+    """
+    Endpoint to delete an item from the Digital Twin model.
+    
+    This endpoint deletes a thing from Ditto and updates the parent thing to remove the reference.
+
+    Args:
+        toe_id (str): Target of Evaluation ID.
+        category (str): Category/type of evidence to delete (AI, BOMS, QDT, etc.).
+        update_parent (bool): Whether to update parent thing to remove child reference.
+
+    Returns:
+        JSONResponse: Deletion result with status and message.
+    """
+    logger.info(f"Received request to delete item: toe_id={toe_id}, category={category}, update_parent={update_parent}")
+    
+    try:
+        result = ctrl.delete_item(toe_id, category, update_parent=update_parent)
+        
+        if result.get("success"):
+            return JSONResponse(
+                status_code=200,
+                content={
+                    "status": "success",
+                    "message": result.get("message", "Item deleted successfully"),
+                    "data": {
+                        "toe_id": toe_id,
+                        "category": category
+                    },
+                    "timestamp": time.time()
+                }
+            )
+        else:
+            logger.error(f"Failed to delete item: {result.get('error')}")
+            return JSONResponse(
+                status_code=500,
+                content={
+                    "status": "error",
+                    "message": result.get("error", "Unknown error during deletion"),
+                    "timestamp": time.time()
+                }
+            )
+    
+    except Exception as e:
+        logger.error(f"Error deleting item: {e}")
+        return JSONResponse(
+            status_code=500,
+            content={
+                "status": "error",
+                "message": f"Failed to delete item: {str(e)}",
+                "timestamp": time.time()
+            }
+        )
 
 
 # ==================== 3. CONNECTION MANAGEMENT ====================
 
-@app.post("/api/SDT/connection/")
-async def connection(request: Request):
+@app.post("/api/SDT/connection/", tags=["Connection Management"])
+async def connection():
     """
-    Endpoint to establish a connection with the Digital Twin.
-
-    Args:
-        request (Request): The request object containing the connection data.
-
+    Establish a connection with the Eclipse Ditto Digital Twin backend.
+    
+    Initializes MQTT connection to Ditto instance for real-time updates and notifications.
+    
     Returns:
-        str: A confirmation message indicating the connection was established.
+        JSONResponse: Connection status with Ditto server details
     """
-    logger.info("Received request to establish a connection with the Digital Twin")
+    try:
+        logger.info("Received request to establish a connection with the Digital Twin")
 
-    # # Parse the request JSON payload
-    # payload = await request.json()
-    # payload_str = json.dumps(payload)
-    # logger.info(f"Processing payload for connection establishment")
-
-    # Establish the connection with the Digital Twin
-    response = ctrl.connection_create()
-    logger.info("Connection successfully established with the Digital Twin")
-    print(response)
-    return response
+        # Establish the connection with the Digital Twin
+        response = ctrl.connection_create()
+        
+        # Standardize response
+        if isinstance(response, dict):
+            return JSONResponse(
+                status_code=200,
+                content={
+                    "status": "success",
+                    "message": "Connection successfully established with Digital Twin",
+                    "data": response,
+                    "timestamp": time.time()
+                }
+            )
+        else:
+            logger.info("Connection successfully established with the Digital Twin")
+            return JSONResponse(
+                status_code=200,
+                content={
+                    "status": "success",
+                    "message": "Connection successfully established with Digital Twin",
+                    "timestamp": time.time()
+                }
+            )
+    except Exception as e:
+        logger.error(f"Error establishing connection: {e}")
+        return JSONResponse(
+            status_code=500,
+            content={
+                "status": "error",
+                "message": f"Failed to establish connection: {str(e)}",
+                "timestamp": time.time()
+            }
+        )
 
 
 # ==================== 4. EVIDENCE MANAGEMENT ====================
-
-@app.get("/api/SDT/evidence/")
-async def get_evidence(
-    """
-    try:
-        global sdt_token_store
-        
-        # Validate required fields
-        required_fields = ["sdt_id", "access_token", "client_id"]
-        for field in required_fields:
-            if field not in payload:
-                logger.error(f"Missing required field in token payload: {field}")
-                raise ValueError(f"Missing required field: {field}")
-        
-        access_token = payload.get("access_token")
-        
-        if not access_token:
-            raise ValueError("access_token cannot be empty")
-        
-        # Store token in memory
-        sdt_token_store = {
-            "access_token": access_token,
-            "client_id": payload.get("client_id"),
-            "client_secret": payload.get("client_secret"),
-            "sdt_id": payload.get("sdt_id"),
-            "components": payload.get("components", {}),
-            "timestamp": datetime.now().isoformat()
-        }
-        
-        # Also update the controller's token store reference
-        ctrl.set_token_store(sdt_token_store)
-        
-        sdt_id = payload.get("sdt_id")
-        logger.info(f"Bearer token received and stored for SDT {sdt_id}")
-        logger.debug(f"Token timestamp: {sdt_token_store['timestamp']}")
-        
-        return JSONResponse(
-            status_code=200,
-            content={
-                "status": "ok",
-                "message": "Bearer token stored successfully",
-                "sdt_id": sdt_id,
-                "components": list(sdt_token_store.get("components", {}).keys()),
-                "timestamp": datetime.now().isoformat()
-            }
-        )
-    
-    except ValueError as e:
-        logger.error(f"Validation error storing Bearer token: {e}")
-        raise HTTPException(status_code=400, detail=str(e))
-    except Exception as e:
-        logger.error(f"Error storing Bearer token: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to store token: {str(e)}")
-
-
-@app.get("/auth/token/status", tags=["Authentication"])
-async def get_token_status():
-    """
-    Get current status of stored Bearer token (without revealing secrets).
-    
-    Returns:
-        JSONResponse: Token status with redacted secrets
-    """
-    token = sdt_token_store.get("access_token")
-    
-    if not token:
-        return JSONResponse(
-            status_code=200,
-            content={
-                "status": "unavailable",
-                "message": "No Bearer token currently stored",
-                "sdt_id": None,
-                "has_token": False
-            }
-        )
-    
-    return JSONResponse(
-        status_code=200,
-        content={
-            "status": "available",
-            "message": "Bearer token is stored and ready for IDS-Connector authentication",
-            "sdt_id": sdt_token_store.get("sdt_id"),
-            "client_id": sdt_token_store.get("client_id"),
-            "components": list(sdt_token_store.get("components", {}).keys()),
-            "has_token": True,
-            "token_stored_at": sdt_token_store.get("timestamp"),
-            "token_preview": f"{token[:20]}..." if len(token) > 20 else "***"
-        }
-    )
-
-
-@app.post("/api/SDT/connection/")
-async def connection(request: Request):
-    """
-    Endpoint to establish a connection with the Digital Twin.
-
-    Args:
-        request (Request): The request object containing the connection data.
-
-    Returns:
-        str: A confirmation message indicating the connection was established.
-    """
-    logger.info("Received request to establish a connection with the Digital Twin")
-
-    # # Parse the request JSON payload
-    # payload = await request.json()
-    # payload_str = json.dumps(payload)
-    # logger.info(f"Processing payload for connection establishment")
-
-    # Establish the connection with the Digital Twin
-    response = ctrl.connection_create()
-    logger.info("Connection successfully established with the Digital Twin")
-    print(response)
-    return response
-
 
 # ==================== 5. DATA SYNCHRONIZATION ====================
 
@@ -635,31 +655,33 @@ async def connection(request: Request):
 
 # NEW IDS CONNECTOR ENDPOINT - Based on IDSconnector.yml specification
 
-@app.get("/api/SDT/sync/ids")
+@app.get("/api/SDT/sync/ids", tags=["Data Synchronization"])
 async def sync_from_ids_connector(
-    data_path: str = Query(default="all", description="Path to data in IDS connector ('all' or specific resource name)"),
-    toeid: str = Query(default="00000000-0000-0000-0000-000000000000", description="Target of Evaluation ID"),
-    ids_connector_url: str = Query(default=None, description="IDS Connector base URL (defaults to config)")
+    data_path: str = Query(default="all", description="Path to data in IDS connector: 'all' to fetch all resources, or specific resource name (e.g., 'clouditorBOM')"),
+    toe_id: str = Query(default="00000000-0000-0000-0000-000000000000", description="Target of Evaluation ID (UUID format: 00000000-0000-0000-0000-000000000000)"),
+    ids_connector_url: str = Query(default=None, description="IDS Connector base URL for artifact retrieval (optional, uses config if not provided)")
 ):
     """
-    Sync artifacts from IDS connector
+    Sync artifacts from IDS connector to Ditto Digital Twin.
+    
+    Fetches evidence data from IDS connector and creates corresponding things in Ditto.
     
     Args:
         data_path: 'all' to get all resources, or specific resource name like 'clouditorBOM'
-        toeid: Target of Evaluation ID
+        toe_id: Target of Evaluation ID (UUID format)
         ids_connector_url: Base URL of IDS connector (optional, uses config if not provided)
         
     Returns:
-        JSONResponse: Sync results with details of created things
+        JSONResponse: Sync results with status, message, and created thing details
     """
     try:
         # Use config values if URL not provided
         if ids_connector_url is None:
             ids_connector_url = f"http://{IDS_CONNECTOR_HOST}:{IDS_CONNECTOR_PORT}"
         
-        logger.info(f"Starting IDS connector sync for TOE: {toeid}, data_path: {data_path}, URL: {ids_connector_url}")
+        logger.info(f"Starting IDS connector sync for TOE: {toe_id}, data_path: {data_path}, URL: {ids_connector_url}")
         
-        result = ctrl.sync_ids_connector(data_path, toeid, ids_connector_url)
+        result = ctrl.sync_ids_connector(data_path, toe_id, ids_connector_url)
         
         if result.get("success"):
             return JSONResponse(
@@ -668,7 +690,7 @@ async def sync_from_ids_connector(
                     "status": "success",
                     "message": result.get("message"),
                     "data": {
-                        "toe_id": toeid,
+                        "toe_id": toe_id,
                         "data_path": data_path,
                         "artifacts_synced": len(result.get("results", [])),
                         "results": result.get("results", []),
@@ -677,11 +699,13 @@ async def sync_from_ids_connector(
                 }
             )
         else:
+            error_msg = result.get("error", "Unknown error")
+            status_code = 400 if "not found" in error_msg.lower() else 500
             return JSONResponse(
-                status_code=400 if "not found" in result.get("error", "").lower() else 500,
+                status_code=status_code,
                 content={
                     "status": "error",
-                    "message": result.get("error"),
+                    "message": error_msg,
                     "detail": result.get("detail"),
                     "timestamp": time.time()
                 }
@@ -704,45 +728,46 @@ async def sync_from_ids_connector(
 #=====================================================Connector APIS ENDS=================================================
 
 
-@app.get("/api/SDT/evidence/")
+@app.get("/api/SDT/evidence/", tags=["Evidence Management"])
 async def get_evidence(
-    toeid: str = Query(default="00000000-0000-0000-0000-000000000000", description="Target of Evaluation ID (UUID format)"),
-    category: str = Query(None, description="Category to filter (AI, QDT, IDS_Evidence, CLOUD etc.)"),
-    evidence_type: str = Query(default="thing", description="Evidence type: thing|zip|files|specific|auto"),
-    files: str = Query(None, description="Comma-separated list of files to retrieve (for files/specific type)"),
-    include_patterns: str = Query(None, description="Comma-separated include patterns for ZIP (e.g., *.py,*.h5)"),
-    exclude_patterns: str = Query(None, description="Comma-separated exclude patterns for ZIP (e.g., .git/*,*.pyc)"),
-    format: str = Query(default="json", description="Response format: json|download"),
-    transform: str = Query(None, description="Transform name (e.g., qpu_clouditor) or custom mapping JSON"),
-    include_features: str = Query(None, description="Comma-separated features to include (for thing type)"),
-    filename: str = Query(None, description="Filter by specific filename (for FILE category)")
+    toe_id: str = Query(default="00000000-0000-0000-0000-000000000000", description="Target of Evaluation ID (UUID format: 00000000-0000-0000-0000-000000000000)"),
+    category: str = Query(None, description="Category/type of evidence to retrieve (AI, QDT, IDS_Evidence, CLOUD, etc.)"),
+    evidence_type: str = Query(default="thing", description="Type of evidence to return: 'thing' (full thing), 'zip' (compressed), 'files' (specific files), 'specific' (filtered), 'auto' (auto-detect)"),
+    files: str = Query(None, description="Comma-separated list of specific files to retrieve (used with evidence_type=files or specific)"),
+    include_patterns: str = Query(None, description="Comma-separated include patterns for ZIP files (e.g., *.py,*.h5) - used with evidence_type=zip"),
+    exclude_patterns: str = Query(None, description="Comma-separated exclude patterns for ZIP files (e.g., .git/*,*.pyc) - used with evidence_type=zip"),
+    format: str = Query(default="json", description="Response format: 'json' returns JSON response, 'download' returns downloadable file"),
+    transform: str = Query(None, description="Optional transform name (e.g., qpu_clouditor) or custom mapping JSON to apply to evidence"),
+    include_features: str = Query(None, description="Comma-separated list of specific features to include in response (used with evidence_type=thing)"),
+    filename: str = Query(None, description="Filter by specific filename within the evidence (for FILE category)")
 ):
     """
-    Flexible endpoint to retrieve evidence from a Digital Twin.
+    Retrieve evidence from a Digital Twin with flexible options for filtering and formatting.
     
     Examples:
-        - Get full thing: /api/SDT/evidence/?toeid=123&category=AI
-        - Get ZIP with patterns: /api/SDT/evidence/?toeid=123&category=AI&evidence_type=zip&include_patterns=*.py,*.h5
-        - Get specific files: /api/SDT/evidence/?toeid=123&category=QDT&evidence_type=files&files=qpu_data.json
-        - Get with transform: /api/SDT/evidence/?toeid=123&category=QDT&evidence_type=files&files=qpu_data.json&transform=qpu_clouditor
-        - Download as file: /api/SDT/evidence/?toeid=123&category=AI&format=download
+        - Get full thing: /api/SDT/evidence/?toe_id=123&category=AI
+        - Get ZIP with patterns: /api/SDT/evidence/?toe_id=123&category=AI&evidence_type=zip&include_patterns=*.py,*.h5
+        - Get specific files: /api/SDT/evidence/?toe_id=123&category=QDT&evidence_type=files&files=qpu_data.json
+        - Get with transform: /api/SDT/evidence/?toe_id=123&category=QDT&evidence_type=files&files=qpu_data.json&transform=qpu_clouditor
+        - Download as file: /api/SDT/evidence/?toe_id=123&category=AI&format=download
 
     Args:
-        toeid: Target of Evaluation ID
-        category: Category to filter (optional)
-        evidence_type: Type of evidence (thing|zip|files|specific|auto)
+        toe_id: Target of Evaluation ID (UUID)
+        category: Category to filter (optional, e.g., AI, QDT, etc.)
+        evidence_type: Type of evidence (thing, zip, files, specific, auto)
         files: Comma-separated list of files (for files/specific type)
         include_patterns: Include patterns for ZIP (for zip type)
         exclude_patterns: Exclude patterns for ZIP (for zip type)
-        format: Response format (json|download)
+        format: Response format (json or download)
         transform: Transform name or custom mapping JSON
         include_features: Features to include (for thing type)
+        filename: Specific filename to filter by
 
     Returns:
         JSONResponse or FileResponse: Evidence data or downloadable file.
     """
     try:
-        logger.info(f"Flexible evidence retrieval: toeid={toeid}, type={evidence_type}, format={format}")
+        logger.info(f"Flexible evidence retrieval: toe_id={toe_id}, type={evidence_type}, format={format}")
         
         # Parse comma-separated parameters
         files_list = [f.strip() for f in files.split(",")] if files else None
@@ -752,7 +777,7 @@ async def get_evidence(
         
         # Call flexible evidence retrieval
         result = ctrl.get_evidence_flexible(
-            toe_id=toeid,
+            toe_id=toe_id,
             category=category,
             evidence_type=evidence_type,
             files=files_list,
@@ -779,107 +804,178 @@ async def get_evidence(
             else:
                 return JSONResponse(
                     status_code=404,
-                    content={"status": "error", "message": "Evidence file not found"}
+                    content={
+                        "status": "error",
+                        "message": "Evidence file not found",
+                        "timestamp": time.time()
+                    }
                 )
         
         # Return JSON response
-        return JSONResponse(content=result)
+        if isinstance(result, dict) and result.get("status"):
+            return JSONResponse(content=result)
+        else:
+            return JSONResponse(
+                status_code=200,
+                content={
+                    "status": "success",
+                    "message": "Evidence retrieved successfully",
+                    "data": result,
+                    "timestamp": time.time()
+                }
+            )
         
     except Exception as e:
         logger.error(f"Error retrieving evidence: {str(e)}")
         import traceback
-        traceback.print_exc()
+        logger.error(traceback.format_exc())
         return JSONResponse(
             status_code=500,
-            content={"status": "error", "message": str(e)}
+            content={
+                "status": "error",
+                "message": str(e),
+                "timestamp": time.time()
+            }
         )
 
 
 #============================ PARENT THING ENDPOINTS ============================
 
-@app.post("/api/SDT/parent/create")
+@app.post("/api/SDT/parent/create", tags=["Parent Thing Management"])
 async def create_parent(
-    toeid: str = Query(..., description="Target of Evaluation ID"),
+    toe_id: str = Query(..., description="Target of Evaluation ID (UUID format: 00000000-0000-0000-0000-000000000000)"),
     request: Request = None
 ):
     """
-    Explicitly create a parent thing for a TOE ID with optional metadata.
+    Create a parent thing for a Target of Evaluation (TOE) with optional metadata.
+    
+    Parent things aggregate child things and track relationships in the Digital Twin.
     
     Args:
-        toeid: Target of Evaluation ID
-        request: Optional request body with metadata
+        toe_id: Target of Evaluation ID (UUID)
+        request: Optional request body with parent metadata
         
     Returns:
-        JSONResponse: Parent thing creation result
+        JSONResponse: Parent thing creation result with status and thing ID
     """
     try:
         metadata = {}
         if request:
             try:
                 metadata = await request.json()
-            except:
-                pass
+            except Exception as e:
+                logger.warning(f"Could not parse request metadata: {e}")
         
-        result = ctrl.create_parent_thing(toeid, metadata)
+        result = ctrl.create_parent_thing(toe_id, metadata)
         
+        status_code = 201 if result.get("action") == "created" else 200
         return JSONResponse(
-            status_code=201 if result.get("action") == "created" else 200,
-            content=result
+            status_code=status_code,
+            content={
+                "status": "success",
+                "message": result.get("message", "Parent thing created/updated successfully"),
+                "data": result,
+                "timestamp": time.time()
+            }
         )
     except Exception as e:
         logger.error(f"Error creating parent thing: {e}")
         return JSONResponse(
             status_code=500,
-            content={"error": str(e)}
+            content={
+                "status": "error",
+                "message": str(e),
+                "timestamp": time.time()
+            }
         )
 
-@app.get("/api/SDT/parent/read")
-async def read_parent(toeid: str = Query(..., description="Target of Evaluation ID")):
+@app.get("/api/SDT/parent/read", tags=["Parent Thing Management"])
+async def read_parent(toe_id: str = Query(..., description="Target of Evaluation ID (UUID format: 00000000-0000-0000-0000-000000000000)")):
     """
-    Get the parent thing for a TOE ID.
+    Retrieve the parent thing for a Target of Evaluation.
+    
+    Returns the parent thing containing metadata and child thing references.
     
     Args:
-        toeid: Target of Evaluation ID
+        toe_id: Target of Evaluation ID (UUID)
         
     Returns:
-        JSONResponse: Parent thing data
+        JSONResponse: Parent thing data with status 200, or 404 if not found
     """
     try:
-        result = ctrl.get_parent_thing(toeid)
+        result = ctrl.get_parent_thing(toe_id)
         
         if result:
-            return JSONResponse(content=result)
+            return JSONResponse(
+                status_code=200,
+                content={
+                    "status": "success",
+                    "message": "Parent thing retrieved successfully",
+                    "data": result,
+                    "timestamp": time.time()
+                }
+            )
         else:
             return JSONResponse(
                 status_code=404,
-                content={"error": "Parent thing not found"}
+                content={
+                    "status": "error",
+                    "message": "Parent thing not found",
+                    "timestamp": time.time()
+                }
             )
     except Exception as e:
         logger.error(f"Error reading parent thing: {e}")
         return JSONResponse(
             status_code=500,
-            content={"error": str(e)}
+            content={
+                "status": "error",
+                "message": str(e),
+                "timestamp": time.time()
+            }
         )
 
-@app.get("/api/SDT/parent/children")
-async def list_children(toeid: str = Query(..., description="Target of Evaluation ID")):
+@app.get("/api/SDT/parent/children", tags=["Parent Thing Management"])
+async def list_children(toe_id: str = Query(..., description="Target of Evaluation ID (UUID format: 00000000-0000-0000-0000-000000000000)")):
     """
     List all child things under a parent thing.
     
+    Returns a list of all child things/artifacts associated with the parent thing for a TOE.
+    
     Args:
-        toeid: Target of Evaluation ID
+        toe_id: Target of Evaluation ID (UUID)
         
     Returns:
-        JSONResponse: List of child things with statistics
+        JSONResponse: List of child things with count and statistics
     """
     try:
-        result = ctrl.list_child_things(toeid)
-        return JSONResponse(content=result)
+        result = ctrl.list_child_things(toe_id)
+        
+        # Ensure result has proper structure
+        if isinstance(result, dict) and result.get("status"):
+            return JSONResponse(
+                status_code=200,
+                content=result
+            )
+        else:
+            return JSONResponse(
+                status_code=200,
+                content={
+                    "status": "success",
+                    "message": "Child things retrieved successfully",
+                    "data": result,
+                    "timestamp": time.time()
+                }
+            )
     except Exception as e:
         logger.error(f"Error listing child things: {e}")
         return JSONResponse(
             status_code=500,
-            content={"error": str(e)}
+            content={
+                "status": "error",
+                "message": str(e),
+                "timestamp": time.time()
+            }
         )
 
 
@@ -888,16 +984,19 @@ async def list_children(toeid: str = Query(..., description="Target of Evaluatio
 
 # ==================== 6. TEMPLATES MANAGEMENT ====================
 
-@app.post("/api/SDT/upload-template")
+@app.post("/api/SDT/upload-template", tags=["Templates Management"])
 async def upload_template(file: UploadFile = File(...)):
     """
-    Upload a new template.json file to SDT/templates/template.json and reload templates.
+    Upload and load a new template configuration file.
+    
+    Uploads a template.json file to SDT/templates/ directory and automatically reloads
+    all templates in the Evidence Provider for immediate use.
     
     Args:
-        file: The template.json file to upload
+        file: template.json file to upload (required)
         
     Returns:
-        JSONResponse: Success message
+        JSONResponse: Upload result with status and file details
     """
     try:
         # Path to save
@@ -915,22 +1014,41 @@ async def upload_template(file: UploadFile = File(...)):
         
         return JSONResponse(
             status_code=200,
-            content={"message": "Template uploaded and loaded successfully"}
+            content={
+                "status": "success",
+                "message": "Template uploaded and loaded successfully",
+                "data": {
+                    "filename": file.filename,
+                    "size": len(content),
+                    "path": template_path
+                },
+                "timestamp": time.time()
+            }
         )
     except Exception as e:
         logger.error(f"Error uploading template: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        return JSONResponse(
+            status_code=500,
+            content={
+                "status": "error",
+                "message": f"Failed to upload template: {str(e)}",
+                "timestamp": time.time()
+            }
+        )
 
 
 # ==================== 7. HEALTH & STATUS ====================
 
-@app.get("/api/SDT/health")
+@app.get("/api/SDT/health", tags=["Health & Status"])
 async def health_check():
     """
-    Endpoint to check the health status of the Docker container and service.
-
+    Check the health and operational status of the SDT service and container.
+    
+    Returns system metrics including memory usage, CPU count, disk space, and uptime.
+    Useful for monitoring and orchestration systems.
+    
     Returns:
-        dict: A dictionary containing the health status of the service and container metrics.
+        JSONResponse: Comprehensive health status with container metrics
     """
     try:
         health_data = {
@@ -966,12 +1084,24 @@ async def health_check():
         else:
             health_data["container"]["is_docker"] = False
 
-        return JSONResponse(content=health_data)
+        return JSONResponse(
+            status_code=200,
+            content={
+                "status": "success",
+                "message": "Service is healthy",
+                "data": health_data,
+                "timestamp": time.time()
+            }
+        )
     except Exception as e:
         logger.error(f"Health check failed: {e}")
         return JSONResponse(
-            content={"status": "unhealthy", "error": str(e)},
-            status_code=500
+            status_code=500,
+            content={
+                "status": "error",
+                "message": f"Health check failed: {str(e)}",
+                "timestamp": time.time()
+            }
         )
 
 # Run the application
