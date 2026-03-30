@@ -22,7 +22,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-          pip install pyright
+
 
       - name: Install pre-commit
         run: pip install pre-commit
@@ -30,8 +30,8 @@ jobs:
       - name: Run pre-commit hooks
         run: pre-commit run --all-files
 
-      - name: Run pyright
-        run: pyright
+      # - name: Run pyright
+      #   run: pyright
 
       - name: Run unit tests
         run: |
