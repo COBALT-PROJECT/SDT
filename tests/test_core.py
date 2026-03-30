@@ -47,14 +47,14 @@ def test_file_utils_zip_naming(tmp_path):
     evidence_dir = tmp_path / "test_evidence"
     evidence_dir.mkdir()
     (evidence_dir / "file.txt").write_text("content")
-    
+
     toe_id = "test-toe"
     zip_path, zip_filename = FileUtils.zip_file(str(evidence_dir), toe_id)
-    
+
     assert zip_filename.startswith(f"evidence_{evidence_dir.name}_{toe_id}_")
     assert zip_filename.endswith(".zip")
     assert os.path.exists(zip_path)
-    
+
     # Clean up
     if os.path.exists(zip_path):
         os.remove(zip_path)
@@ -63,12 +63,12 @@ def test_file_utils_file_response(tmp_path):
     """Tests that FileUtils correctly generates a FileResponse."""
     test_file = tmp_path / "test.txt"
     test_file.write_text("hello")
-    
+
     response = FileUtils.file_response(str(test_file))
     assert response.path == str(test_file)
     assert response.filename == "test.txt"
     # FastAPI/Starlette will auto-detect media_type for .txt files as 'text/plain'
-    assert "text/plain" in response.media_type 
+    assert "text/plain" in response.media_type
 
 # --- Evidence Provider Tests (core/evidence_provider.py) ---
 
@@ -104,7 +104,7 @@ def test_translator_initialization():
 def test_adapter_from_cyclone_mapping():
     """Verifies that DTModelAdapter correctly transforms a CycloneDX BOM to Ditto format."""
     adapter = DTModelAdapter()
-    
+
     # Using a subset of juice-shop v11.1.2 bom.json for testing
     sample_bom = {
         "bomFormat": "CycloneDX",
@@ -126,21 +126,21 @@ def test_adapter_from_cyclone_mapping():
             }
         ]
     }
-    
+
     # The adapter expects a JSON string
     json_input = json.dumps(sample_bom)
     result = adapter.from_cyclone(json_input)
-    
+
     # Check if result is already a dict or still a JSON string
     if isinstance(result, str):
         result = json.loads(result)
-    
+
     # Verify expected DITTO structure
     # Based on adapter_all.py: attributes include top-level fields
     assert "attributes" in result
     assert result["attributes"]["bomFormat"] == "CycloneDX"
     assert result["attributes"]["specVersion"] == "1.2"
-    
+
     # Verify features (usually components are mapped to features)
     assert "features" in result
     # The exact mapping depends on adapter_all.py implementation details
