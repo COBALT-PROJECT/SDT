@@ -8,6 +8,7 @@ import requests
 import uvicorn
 import json
 import logging
+import mimetypes
 
 import time
 import sys
@@ -82,16 +83,23 @@ async def verify_token_middleware(request: Request, call_next):
     Protected endpoints require:
     Authorization: Bearer {access_token}
     
-    Unprotected endpoints:
+    Unprotected endpoints (no token required):
     - /api/SDT/auth/token (POST) - receive token
     - /api/SDT/auth/token/status (GET) - check token status
     - /api/SDT/health (GET) - health check
+    - /api/SDT/sync/ids (GET) - sync from IDS connector
+    - /api/SDT/evidence/* (GET) - evidence management endpoints
     """
     # Endpoints that don't require token authentication
     unprotected_endpoints = [
         "/api/SDT/auth/token",
         "/api/SDT/auth/token/status",
         "/api/SDT/health",
+        "/api/SDT/sync/ids",
+        "/api/SDT/evidence/thing",
+        "/api/SDT/evidence/list",
+        "/api/SDT/evidence/download",
+        "/api/SDT/evidence/transform",
         "/docs",
         "/openapi.json"
     ]
@@ -826,8 +834,14 @@ async def evidence_thing(
         # Parse features if provided
         features_list = [f.strip() for f in include_features.split(",")] if include_features else None
         
-        # Get thing from controller
-        result = ctrl.get_thing_metadata(toe_id, category, features_list)
+        # Get thing from controller using flexible evidence retrieval
+        result = ctrl.get_evidence_flexible(
+            toe_id=toe_id,
+            category=category,
+            evidence_type="thing",
+            include_features=features_list,
+            format="json"
+        )
         
         if result.get("error"):
             return JSONResponse(
@@ -889,8 +903,15 @@ async def evidence_list(
     try:
         logger.info(f"Listing files: toe_id={toe_id}, pattern={pattern}, recursive={recursive}")
         
-        # Get file list from controller
-        result = ctrl.list_evidence_files(toe_id, category, pattern, recursive)
+        # Get file list from controller using flexible evidence retrieval
+        include_patterns = [pattern] if pattern else None
+        result = ctrl.get_evidence_flexible(
+            toe_id=toe_id,
+            category=category,
+            evidence_type="files",
+            include_patterns=include_patterns,
+            format="json"
+        )
         
         if result.get("error"):
             return JSONResponse(
@@ -952,45 +973,62 @@ async def evidence_download(
         - Multiple files: /api/SDT/evidence/download?toe_id=123&files=data.json,model.h5
     """
     try:
-        logger.info(f"Downloading files: toe_id={toe_id}, files={files}")
+        logger.info(f"Downloading files: toe_id={toe_id}, files={files}, category={category}")
         
-        # Parse files parameter
-        files_list = [f.strip() for f in files.split(",")] if files else None
+        # Retrieve the thing directly instead of using evidence_flexible
+        # which expects repository paths
+        thing_result = ctrl.read_item(toe_id, category)
         
-        # Get download from controller
-        result = ctrl.get_evidence_download(toe_id, files_list, category)
-        
-        if result.get("error"):
-            status_code = 404 if "not found" in result.get("error", "").lower() else 400
-            return JSONResponse(
-                status_code=status_code,
-                content={
-                    "status": "error",
-                    "message": result.get("error", "Download failed"),
-                    "timestamp": time.time()
-                }
-            )
-        
-        # Return file
-        file_path = result.get("file_path")
-        filename = result.get("filename", "evidence")
-        media_type = result.get("media_type", "application/octet-stream")
-        
-        if file_path and os.path.exists(file_path):
-            return FileResponse(
-                path=file_path,
-                filename=filename,
-                media_type=media_type
-            )
-        else:
+        if isinstance(thing_result, dict) and thing_result.get("error"):
             return JSONResponse(
                 status_code=404,
                 content={
                     "status": "error",
-                    "message": "File not found",
+                    "message": f"Thing not found: {thing_result.get('error')}",
                     "timestamp": time.time()
                 }
             )
+        
+        # Extract file information from thing attributes
+        attributes = thing_result.get("attributes", {})
+        file_path = attributes.get("file_path")
+        filename = attributes.get("filename", "evidence")
+        
+        if not file_path:
+            logger.error(f"No file_path in thing attributes for toe_id: {toe_id}")
+            return JSONResponse(
+                status_code=400,
+                content={
+                    "status": "error",
+                    "message": "Thing does not have downloadable file",
+                    "timestamp": time.time()
+                }
+            )
+        
+        # Check if file exists
+        if not os.path.exists(file_path):
+            logger.error(f"File not found on disk: {file_path}")
+            return JSONResponse(
+                status_code=404,
+                content={
+                    "status": "error",
+                    "message": f"File not found: {filename}",
+                    "timestamp": time.time()
+                }
+            )
+        
+        # Determine media type based on file extension
+        media_type, _ = mimetypes.guess_type(file_path)
+        media_type = media_type or "application/octet-stream"
+        
+        logger.info(f"Downloading file: {filename} from {file_path}")
+        
+        # Return the file as download
+        return FileResponse(
+            path=file_path,
+            filename=filename,
+            media_type=media_type
+        )
     except Exception as e:
         logger.error(f"Error downloading files: {str(e)}")
         return JSONResponse(
@@ -1042,8 +1080,15 @@ async def evidence_transform(
         # Convert comma-separated files string to list
         files_list = [f.strip() for f in files.split(",")] if files else None
         
-        # Apply transformation
-        result = ctrl.transform_evidence(toe_id, transform, category, files_list, target_format)
+        # Apply transformation using flexible evidence retrieval
+        result = ctrl.get_evidence_flexible(
+            toe_id=toe_id,
+            category=category,
+            evidence_type="thing",
+            files=files_list,
+            format=target_format,
+            transform=transform
+        )
         
         if result.get("error"):
             status_code = 404 if "not found" in result.get("error", "").lower() else 400
@@ -1359,4 +1404,4 @@ async def health_check():
 # app.add_middleware(AppMapMiddleware)
 
 if __name__ == '__main__':
-    uvicorn.run(app, port=8001, host='0.0.0.0')
+    uvicorn.run(app, port=8000, host='0.0.0.0')

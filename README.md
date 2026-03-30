@@ -46,8 +46,36 @@ The Security Digital Twin (SDT) Service v0.2.8 is a centralized middleware for i
 - **Digital Twin Management**: Full CRUD for Eclipse Ditto instances
 - **Custom Transformation**: Named transformers and custom field mapping with variable substitution
 - **GitHub & IDS Connector**: Fetch, clone, and synchronize repositories and external data sources
+- **Unit Testing Suite**: Robust testing for core logic, security middleware, and data mapping
 
 
+## Testing & Quality Assurance
+
+The SDT project includes a comprehensive unit testing suite using `pytest` to ensure core transformation logic and security middleware are verified during development.
+
+### **Unit Test Coverage**
+
+| Category | Component | Description | Methodology |
+| :--- | :--- | :--- | :--- |
+| **Data Translation** | `core/adapter_all.py` | Verifies CycloneDX/OSCAL to Ditto mapping. | JSON-to-JSON transformation validation |
+| **Evidence Filtering** | `core/evidence_provider.py` | Tests rule-based collection and MQTT matching. | Attribute & topic filtering mocks |
+| **File Utilities** | `core/util.py` | Validates ZIP creation and FileResponse handlers. | Temporary file system simulation |
+| **Security** | `sdt_interface-3.py` | Verifies Bearer token middleware protection. | FastAPI `TestClient` endpoint probing |
+
+### **Running Tests**
+
+To execute the core unit tests and generate a coverage report locally:
+
+```bash
+# 1. Activate your environment
+source sdt_manager_env/bin/activate
+
+# 2. Run tests with coverage
+export PYTHONPATH=$PYTHONPATH:.
+pytest tests/test_core.py -v --cov=core
+```
+
+*Note: The target coverage for the `core/` logic is >85% to ensure stability in security evidence processing.*
 
 ## Installation
 

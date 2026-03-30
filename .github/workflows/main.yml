@@ -33,7 +33,9 @@ jobs:
         run: pyright
 
       - name: Run unit tests
-        run: pytest
+        run: |
+          export PYTHONPATH=$PYTHONPATH:$PWD
+          pytest tests/test_core.py -v --cov=core
 
   # --------- Job 2: Build Docker image + run containerized tests ----------
   build-and-test:
