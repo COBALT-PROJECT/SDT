@@ -200,7 +200,7 @@ curl http://sdt-service:8080/api/SDT/sync/ids?data_path=all&toeid=test-123
 
 **Cause**: Token missing, expired, or invalid
 
-**Solution**: 
+**Solution**:
 - Check token status: `GET /auth/token/status`
 - Redeploy with SDT-Manager to receive new token
 

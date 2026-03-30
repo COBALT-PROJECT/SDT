@@ -1,13 +1,13 @@
 {
   "config_name": "AI usecase",
   "config_version": "3.0",
-  
+
   "evidence_collectors": [
     {
       "collector_id": "aishield",
       "enabled": true,
       "categories": ["AI"],
-      
+
       "mqtt": {
         "topics": [
           "ditto-cobalt/+/+/things/twin/events/created",
@@ -17,38 +17,38 @@
           "sourceType": ["Repository"]
         }
       },
-      
+
       "endpoint": "http://localhost:8002/upload/ai",
-      
+
       "evidence": {
         "type": "zip",
         "include": ["*.py", "*.h5", "*.ipynb", "*.txt", "*.csv"],
         "exclude": [".git/*", "__pycache__/*", "*.pyc", "node_modules/*"]
       }
     },
-    
+
     {
       "collector_id": "spectra",
       "enabled": true,
       "categories": ["AI"],
-      
+
       "mqtt": {
         "filters": {
           "file_extensions": [".csv", ".pkl", ".h5"]
         }
       },
-      
+
       "endpoint": "http://localhost:8003/api/spectra/evidence",
       "auth": {
         "type": "bearer",
         "token_env": "SPECTRA_TOKEN"
       },
-      
+
       "evidence": {
         "type": "files",
         "files": ["dataset.csv", "model.pkl", "model.h5"]
       },
-      
+
       "transform": {
         "toe_id": "${toe_id}",
         "project": "${repo_name}",
@@ -57,7 +57,7 @@
       }
     }
   ],
-  
+
   "defaults": {
     "retry_attempts": 3,
     "max_file_size_mb": 100,

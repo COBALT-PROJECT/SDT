@@ -112,7 +112,7 @@ Or use Docker:
   POST /api/SDT/auth/token
   - Stores OAuth2 credentials received from SDT-Manager
   - Used for authenticated communication with IDS-Connector
-  
+
 - **Check Token Status:**
   GET /api/SDT/auth/token/status
   - Returns token availability and components (secrets redacted)
@@ -161,10 +161,10 @@ Or use Docker:
 - **Create Parent Thing:**
   POST /api/SDT/parent/create
   - Aggregates child things for hierarchical organization
-  
+
 - **Read Parent Thing:**
   GET /api/SDT/parent/read
-  
+
 - **List Child Things:**
   GET /api/SDT/parent/children
 
@@ -172,7 +172,7 @@ Or use Docker:
 
 - **Upload Template:**
   POST /api/SDT/upload-template
-  
+
 - **Health Check:**
   GET /api/SDT/health
 

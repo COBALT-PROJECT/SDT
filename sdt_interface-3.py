@@ -79,10 +79,10 @@ ctrl.run_ditto_listener()
 async def verify_token_middleware(request: Request, call_next):
     """
     Middleware to verify Bearer token for all endpoints except auth and health.
-    
+
     Protected endpoints require:
     Authorization: Bearer {access_token}
-    
+
     Unprotected endpoints (no token required):
     - /api/SDT/auth/token (POST) - receive token
     - /api/SDT/auth/token/status (GET) - check token status
@@ -103,12 +103,12 @@ async def verify_token_middleware(request: Request, call_next):
         "/docs",
         "/openapi.json"
     ]
-    
+
     # Check if this endpoint is protected
     if request.url.path not in unprotected_endpoints:
         # Get Authorization header
         auth_header = request.headers.get("authorization", "")
-        
+
         # Validate Bearer token format
         if not auth_header.startswith("Bearer "):
             logger.warning(f"Missing or invalid Bearer token for {request.method} {request.url.path}")
@@ -120,10 +120,10 @@ async def verify_token_middleware(request: Request, call_next):
                     "timestamp": time.time()
                 }
             )
-        
+
         # Extract token
         token = auth_header.replace("Bearer ", "").strip()
-        
+
         # Verify token against stored token
         stored_token = sdt_token_store.get("access_token")
         if not stored_token or token != stored_token:
@@ -136,9 +136,9 @@ async def verify_token_middleware(request: Request, call_next):
                     "timestamp": time.time()
                 }
             )
-        
+
         logger.debug(f"Token verified for {request.method} {request.url.path}")
-    
+
     # Token valid or endpoint unprotected, proceed to endpoint
     response = await call_next(request)
     return response
@@ -202,7 +202,7 @@ async def receive_bearer_token(payload: Dict):
     """
     Receive OAuth2 Bearer token from SDT-Manager.
     This endpoint stores the token for authenticated communication with IDS-Connector.
-    
+
     Args:
         payload: {
             "sdt_id": "abc123def456",
@@ -215,25 +215,25 @@ async def receive_bearer_token(payload: Dict):
                 "watchtower": "wt012"
             }
         }
-    
+
     Returns:
         JSONResponse: Confirmation that token was stored
     """
     try:
         global sdt_token_store
-        
+
         # Validate required fields
         required_fields = ["sdt_id", "access_token", "client_id"]
         for field in required_fields:
             if field not in payload:
                 logger.error(f"Missing required field in token payload: {field}")
                 raise ValueError(f"Missing required field: {field}")
-        
+
         access_token = payload.get("access_token")
-        
+
         if not access_token:
             raise ValueError("access_token cannot be empty")
-        
+
         # Store token in memory
         sdt_token_store = {
             "access_token": access_token,
@@ -243,14 +243,14 @@ async def receive_bearer_token(payload: Dict):
             "components": payload.get("components", {}),
             "timestamp": datetime.now().isoformat()
         }
-        
+
         # Also update the controller's token store reference
         ctrl.set_token_store(sdt_token_store)
-        
+
         sdt_id = payload.get("sdt_id")
         logger.info(f"Bearer token received and stored for SDT {sdt_id}")
         logger.debug(f"Token timestamp: {sdt_token_store['timestamp']}")
-        
+
         return JSONResponse(
             status_code=200,
             content={
@@ -261,7 +261,7 @@ async def receive_bearer_token(payload: Dict):
                 "timestamp": datetime.now().isoformat()
             }
         )
-    
+
     except ValueError as e:
         logger.error(f"Validation error storing Bearer token: {e}")
         raise HTTPException(status_code=400, detail=str(e))
@@ -274,12 +274,12 @@ async def receive_bearer_token(payload: Dict):
 async def get_token_status():
     """
     Get current status of stored Bearer token (without revealing secrets).
-    
+
     Returns:
         JSONResponse: Token status with redacted secrets
     """
     token = sdt_token_store.get("access_token")
-    
+
     if not token:
         return JSONResponse(
             status_code=200,
@@ -290,7 +290,7 @@ async def get_token_status():
                 "has_token": False
             }
         )
-    
+
     return JSONResponse(
         status_code=200,
         content={
@@ -310,8 +310,8 @@ async def get_token_status():
 
 @app.post("/api/SDT/create/", status_code=201, tags=["Core Operations"])
 async def create(
-    request: Request, 
-    toe_id: str = Query(default="00000000-0000-0000-0000-000000000000", description="Target of Evaluation ID (UUID format: 00000000-0000-0000-0000-000000000000)"), 
+    request: Request,
+    toe_id: str = Query(default="00000000-0000-0000-0000-000000000000", description="Target of Evaluation ID (UUID format: 00000000-0000-0000-0000-000000000000)"),
     category: str = Query(default="BOMS", description="Category/type of payload (AI or QDT or BOMS)"),
     create_parent: bool = Query(default=True, description="Create/update parent thing")
 ):
@@ -377,7 +377,7 @@ async def read_item(toe_id: str = Query(default="00000000-0000-0000-0000-0000000
     """
     try:
         response = ctrl.read_item(toe_id, category)
-        
+
         if response.get("error"):
             return JSONResponse(
                 status_code=404,
@@ -387,7 +387,7 @@ async def read_item(toe_id: str = Query(default="00000000-0000-0000-0000-0000000
                     "timestamp": time.time()
                 }
             )
-        
+
         return JSONResponse(
             status_code=200,
             content={
@@ -424,7 +424,7 @@ async def update_item(request: Request, toe_id: str = Query(default="00000000-00
     try:
         payload = await request.json()
         updated_item = ctrl.update_item(toe_id, category, payload)
-        
+
         if updated_item.get("error"):
             return JSONResponse(
                 status_code=400,
@@ -434,7 +434,7 @@ async def update_item(request: Request, toe_id: str = Query(default="00000000-00
                     "timestamp": time.time()
                 }
             )
-        
+
         return JSONResponse(
             status_code=200,
             content={
@@ -464,7 +464,7 @@ async def delete_item_endpoint(
 ):
     """
     Endpoint to delete an item from the Digital Twin model.
-    
+
     This endpoint deletes a thing from Ditto and updates the parent thing to remove the reference.
 
     Args:
@@ -476,10 +476,10 @@ async def delete_item_endpoint(
         JSONResponse: Deletion result with status and message.
     """
     logger.info(f"Received request to delete item: toe_id={toe_id}, category={category}, update_parent={update_parent}")
-    
+
     try:
         result = ctrl.delete_item(toe_id, category, update_parent=update_parent)
-        
+
         if result.get("success"):
             return JSONResponse(
                 status_code=200,
@@ -503,7 +503,7 @@ async def delete_item_endpoint(
                     "timestamp": time.time()
                 }
             )
-    
+
     except Exception as e:
         logger.error(f"Error deleting item: {e}")
         return JSONResponse(
@@ -522,9 +522,9 @@ async def delete_item_endpoint(
 async def connection():
     """
     Establish a connection with the Eclipse Ditto Digital Twin backend.
-    
+
     Initializes MQTT connection to Ditto instance for real-time updates and notifications.
-    
+
     Returns:
         JSONResponse: Connection status with Ditto server details
     """
@@ -533,7 +533,7 @@ async def connection():
 
         # Establish the connection with the Digital Twin
         response = ctrl.connection_create()
-        
+
         # Standardize response
         if isinstance(response, dict):
             return JSONResponse(
@@ -577,26 +577,26 @@ async def connection():
 # @app.get("/api/SDT/sync/github")
 # async def sync_github_repository(
 #     github_url: str = Query(default="https://github.com/arehmanq101/testevidenceAI", description="GitHub repository URL"),
-#     toeid: str = Query(default="00000000-0000-0000-0000-000000000000", description="Target of Evaluation ID (UUID format: 00000000-0000-0000-0000-000000000000)"), 
+#     toeid: str = Query(default="00000000-0000-0000-0000-000000000000", description="Target of Evaluation ID (UUID format: 00000000-0000-0000-0000-000000000000)"),
 #     category: str = Query(default="AI", description="Category of evidence (AI, BOMS, etc.)")
 # ):
 #     """
 #     Sync data from GitHub repository to Ditto instance.
 #     Creates repository thing and updates parent thing.
-    
+
 #     Args:
 #         github_url: The URL of the GitHub repository to clone
 #         toeid: Target of Evaluation ID
 #         category: Category/type of evidence
-        
+
 #     Returns:
 #         JSONResponse: Sync results with details of created things
 #     """
 #     try:
 #         logger.info(f"Starting GitHub sync for TOE: {toeid}, repository: {github_url}")
-        
+
 #         result = ctrl.sync_github_repository(github_url, toeid, category)
-        
+
 #         if result.get("success"):
 #             return JSONResponse(
 #                 status_code=200,
@@ -623,7 +623,7 @@ async def connection():
 #                     "toe_id": toeid
 #                 }
 #             )
-            
+
 #     except Exception as e:
 #         logger.error(f"Error syncing GitHub repository: {e}")
 #         raise HTTPException(status_code=500, detail=str(e))
@@ -643,12 +643,12 @@ async def connection():
 #     Triggers external data fetch from IDS connector or data provider API
 #     """
 #     logger.info(f"Triggering IDS connector sync from: {data_source_url}")
-#     
+#
 #     try:
 #         # Forward to controller to handle IDS connector communication
 #         result = ctrl.sync_ids_connector(data_source_url, toeid, category)
 #         return result
-#         
+#
 #     except Exception as e:
 #         raise HTTPException(status_code=400, detail=str(e))
 
@@ -664,25 +664,25 @@ async def connection():
 #     Receives files from external connector and processes them
 #     """
 #     logger.info(f"Receiving file: {file.filename} for TOE: {toeid}")
-#     
+#
 #     try:
 #         # Save the uploaded file temporarily
 #         file_content = await file.read()
-#         
+#
 #         # Forward to controller to handle file processing
 #         result = ctrl.receive_and_process_file(
-#             file_content, 
-#             file.filename, 
-#             toeid, 
+#             file_content,
+#             file.filename,
+#             toeid,
 #             category,
 #             metadata
 #         )
-#         
+#
 #         return result
-#         
+#
 #     except Exception as e:
 #         raise HTTPException(status_code=500, detail=str(e))
-    
+
 
 # @app.get("/api/SDT/sync/webhook")
 # async def sync_webhook_registration(
@@ -695,19 +695,19 @@ async def connection():
 #     Registers for data updates from external provider via webhook
 #     """
 #     logger.info(f"Registering webhook for provider: {provider_id}")
-#     
+#
 #     try:
 #         # Forward to controller to handle webhook registration
 #         result = ctrl.register_webhook(
-#             provider_id, 
-#             dataset_id, 
-#             toeid, 
+#             provider_id,
+#             dataset_id,
+#             toeid,
 #             category,
 #             f"http://your-sdt-api:8000/api/SDT/webhook/{toeid}"
 #         )
-#         
+#
 #         return result
-#         
+#
 #     except Exception as e:
 #         raise HTTPException(status_code=400, detail=str(e))
 
@@ -718,12 +718,12 @@ async def connection():
 #     """
 #     payload = await request.json()
 #     logger.info(f"Webhook received for TOE: {toeid}")
-#     
+#
 #     try:
 #         # Forward to controller to handle webhook processing
 #         result = ctrl.process_webhook(toeid, payload)
 #         return result
-#         
+#
 #     except Exception as e:
 #         raise HTTPException(status_code=500, detail=str(e))
 
@@ -737,14 +737,14 @@ async def sync_from_ids_connector(
 ):
     """
     Sync artifacts from IDS connector to Ditto Digital Twin.
-    
+
     Fetches evidence data from IDS connector and creates corresponding things in Ditto.
-    
+
     Args:
         data_path: 'all' to get all resources, or specific resource name like 'clouditorBOM'
         toe_id: Target of Evaluation ID (UUID format)
         ids_connector_url: Base URL of IDS connector (optional, uses config if not provided)
-        
+
     Returns:
         JSONResponse: Sync results with status, message, and created thing details
     """
@@ -752,11 +752,11 @@ async def sync_from_ids_connector(
         # Use config values if URL not provided
         if ids_connector_url is None:
             ids_connector_url = f"http://{IDS_CONNECTOR_HOST}:{IDS_CONNECTOR_PORT}"
-        
+
         logger.info(f"Starting IDS connector sync for TOE: {toe_id}, data_path: {data_path}, URL: {ids_connector_url}")
-        
+
         result = ctrl.sync_ids_connector(data_path, toe_id, ids_connector_url)
-        
+
         if result.get("success"):
             return JSONResponse(
                 status_code=200,
@@ -784,7 +784,7 @@ async def sync_from_ids_connector(
                     "timestamp": time.time()
                 }
             )
-            
+
     except Exception as e:
         logger.error(f"Error in IDS sync endpoint: {e}")
         import traceback
@@ -812,17 +812,17 @@ async def evidence_thing(
 ):
     """
     Retrieve the full Digital Twin thing with metadata and attributes.
-    
+
     Returns the complete thing object as JSON with optional feature filtering.
-    
+
     Args:
         toe_id: Target of Evaluation ID (UUID)
         category: Category filter (optional, e.g., AI, QDT)
         include_features: Features to include (comma-separated)
-    
+
     Returns:
         JSONResponse: Complete thing object with all attributes and metadata
-    
+
     Examples:
         - Get full thing: /api/SDT/evidence/thing?toe_id=123
         - With category: /api/SDT/evidence/thing?toe_id=123&category=AI
@@ -830,10 +830,10 @@ async def evidence_thing(
     """
     try:
         logger.info(f"Retrieving thing: toe_id={toe_id}, category={category}")
-        
+
         # Parse features if provided
         features_list = [f.strip() for f in include_features.split(",")] if include_features else None
-        
+
         # Get thing from controller using flexible evidence retrieval
         result = ctrl.get_evidence_flexible(
             toe_id=toe_id,
@@ -842,7 +842,7 @@ async def evidence_thing(
             include_features=features_list,
             format="json"
         )
-        
+
         if result.get("error"):
             return JSONResponse(
                 status_code=404,
@@ -852,7 +852,7 @@ async def evidence_thing(
                     "timestamp": time.time()
                 }
             )
-        
+
         return JSONResponse(
             status_code=200,
             content={
@@ -883,18 +883,18 @@ async def evidence_list(
 ):
     """
     List all files available in a Digital Twin thing.
-    
+
     Useful for discovery - shows what files are available before downloading.
-    
+
     Args:
         toe_id: Target of Evaluation ID (UUID)
         category: Category filter (optional)
         pattern: Glob pattern filter (optional, e.g., *.json)
         recursive: Include nested files (default: false)
-    
+
     Returns:
         JSONResponse: List of files with metadata (name, size, type, timestamps)
-    
+
     Examples:
         - List all files: /api/SDT/evidence/list?toe_id=123
         - Filter by pattern: /api/SDT/evidence/list?toe_id=123&pattern=*.json
@@ -902,7 +902,7 @@ async def evidence_list(
     """
     try:
         logger.info(f"Listing files: toe_id={toe_id}, pattern={pattern}, recursive={recursive}")
-        
+
         # Get file list from controller using flexible evidence retrieval
         include_patterns = [pattern] if pattern else None
         result = ctrl.get_evidence_flexible(
@@ -912,7 +912,7 @@ async def evidence_list(
             include_patterns=include_patterns,
             format="json"
         )
-        
+
         if result.get("error"):
             return JSONResponse(
                 status_code=404,
@@ -922,7 +922,7 @@ async def evidence_list(
                     "timestamp": time.time()
                 }
             )
-        
+
         return JSONResponse(
             status_code=200,
             content={
@@ -952,21 +952,21 @@ async def evidence_download(
 ):
     """
     Download evidence file(s) from a Digital Twin thing.
-    
+
     Smart logic:
     - Single file: Returns raw file (no zipping)
     - Multiple files: Returns ZIP archive
     - ZIP file requested: Returns as-is (no double-zipping)
     - No files specified: Returns all files as ZIP
-    
+
     Args:
         toe_id: Target of Evaluation ID (UUID)
         files: Comma-separated file list (optional)
         category: Category filter (optional)
-    
+
     Returns:
         FileResponse: Binary file (raw or zipped) or JSONResponse on error
-    
+
     Examples:
         - All files as ZIP: /api/SDT/evidence/download?toe_id=123
         - Single file: /api/SDT/evidence/download?toe_id=123&files=data.json
@@ -974,11 +974,11 @@ async def evidence_download(
     """
     try:
         logger.info(f"Downloading files: toe_id={toe_id}, files={files}, category={category}")
-        
+
         # Retrieve the thing directly instead of using evidence_flexible
         # which expects repository paths
         thing_result = ctrl.read_item(toe_id, category)
-        
+
         if isinstance(thing_result, dict) and thing_result.get("error"):
             return JSONResponse(
                 status_code=404,
@@ -988,12 +988,12 @@ async def evidence_download(
                     "timestamp": time.time()
                 }
             )
-        
+
         # Extract file information from thing attributes
         attributes = thing_result.get("attributes", {})
         file_path = attributes.get("file_path")
         filename = attributes.get("filename", "evidence")
-        
+
         if not file_path:
             logger.error(f"No file_path in thing attributes for toe_id: {toe_id}")
             return JSONResponse(
@@ -1004,7 +1004,7 @@ async def evidence_download(
                     "timestamp": time.time()
                 }
             )
-        
+
         # Check if file exists
         if not os.path.exists(file_path):
             logger.error(f"File not found on disk: {file_path}")
@@ -1016,13 +1016,13 @@ async def evidence_download(
                     "timestamp": time.time()
                 }
             )
-        
+
         # Determine media type based on file extension
         media_type, _ = mimetypes.guess_type(file_path)
         media_type = media_type or "application/octet-stream"
-        
+
         logger.info(f"Downloading file: {filename} from {file_path}")
-        
+
         # Return the file as download
         return FileResponse(
             path=file_path,
@@ -1051,17 +1051,17 @@ async def evidence_transform(
 ):
     """
     Apply transformation to evidence data and return transformed data only.
-    
+
     Query Parameters:
         toe_id: Thing ID (required)
         transform: Transformation type (required)
         category: Thing category (optional)
         files: Comma-separated file list (optional)
         target_format: Output format, default 'json'
-    
+
     Returns:
         Transformed data directly (no wrapper)
-    
+
     Example:
         GET /api/SDT/evidence/transform?toe_id=00000000-0000-0000-0000-000000000000&transform=qpu_clouditor
     """
@@ -1074,12 +1074,12 @@ async def evidence_transform(
                     "message": "Missing required fields: toe_id, transform"
                 }
             )
-        
+
         logger.info(f"Transforming evidence: toe_id={toe_id}, transform={transform}")
-        
+
         # Convert comma-separated files string to list
         files_list = [f.strip() for f in files.split(",")] if files else None
-        
+
         # Apply transformation using flexible evidence retrieval
         result = ctrl.get_evidence_flexible(
             toe_id=toe_id,
@@ -1089,7 +1089,7 @@ async def evidence_transform(
             format=target_format,
             transform=transform
         )
-        
+
         if result.get("error"):
             status_code = 404 if "not found" in result.get("error", "").lower() else 400
             return JSONResponse(
@@ -1099,7 +1099,7 @@ async def evidence_transform(
                     "message": result.get("error", "Transformation failed")
                 }
             )
-        
+
         return JSONResponse(
             status_code=200,
             content=result
@@ -1127,13 +1127,13 @@ async def create_parent(
 ):
     """
     Create a parent thing for a Target of Evaluation (TOE) with optional metadata.
-    
+
     Parent things aggregate child things and track relationships in the Digital Twin.
-    
+
     Args:
         toe_id: Target of Evaluation ID (UUID)
         request: Optional request body with parent metadata
-        
+
     Returns:
         JSONResponse: Parent thing creation result with status and thing ID
     """
@@ -1144,9 +1144,9 @@ async def create_parent(
                 metadata = await request.json()
             except Exception as e:
                 logger.warning(f"Could not parse request metadata: {e}")
-        
+
         result = ctrl.create_parent_thing(toe_id, metadata)
-        
+
         status_code = 201 if result.get("action") == "created" else 200
         return JSONResponse(
             status_code=status_code,
@@ -1172,18 +1172,18 @@ async def create_parent(
 async def read_parent(toe_id: str = Query(..., description="Target of Evaluation ID (UUID format: 00000000-0000-0000-0000-000000000000)")):
     """
     Retrieve the parent thing for a Target of Evaluation.
-    
+
     Returns the parent thing containing metadata and child thing references.
-    
+
     Args:
         toe_id: Target of Evaluation ID (UUID)
-        
+
     Returns:
         JSONResponse: Parent thing data with status 200, or 404 if not found
     """
     try:
         result = ctrl.get_parent_thing(toe_id)
-        
+
         if result:
             return JSONResponse(
                 status_code=200,
@@ -1218,18 +1218,18 @@ async def read_parent(toe_id: str = Query(..., description="Target of Evaluation
 async def list_children(toe_id: str = Query(..., description="Target of Evaluation ID (UUID format: 00000000-0000-0000-0000-000000000000)")):
     """
     List all child things under a parent thing.
-    
+
     Returns a list of all child things/artifacts associated with the parent thing for a TOE.
-    
+
     Args:
         toe_id: Target of Evaluation ID (UUID)
-        
+
     Returns:
         JSONResponse: List of child things with count and statistics
     """
     try:
         result = ctrl.list_child_things(toe_id)
-        
+
         # Ensure result has proper structure
         if isinstance(result, dict) and result.get("status"):
             return JSONResponse(
@@ -1267,13 +1267,13 @@ async def list_children(toe_id: str = Query(..., description="Target of Evaluati
 async def upload_template(file: UploadFile = File(...)):
     """
     Upload and load a new template configuration file.
-    
+
     Uploads a template.json file to SDT/templates/ directory and automatically reloads
     all templates in the Evidence Provider for immediate use.
-    
+
     Args:
         file: template.json file to upload (required)
-        
+
     Returns:
         JSONResponse: Upload result with status and file details
     """
@@ -1282,15 +1282,15 @@ async def upload_template(file: UploadFile = File(...)):
         template_dir = os.path.join(os.path.dirname(__file__), "templates")
         os.makedirs(template_dir, exist_ok=True)
         template_path = os.path.join(template_dir, "template.json")
-        
+
         # Save the file
         with open(template_path, "wb") as f:
             content = await file.read()
             f.write(content)
-        
+
         # Reload templates
         ctrl.ep._load_usecase_templates()
-        
+
         return JSONResponse(
             status_code=200,
             content={
@@ -1322,10 +1322,10 @@ async def upload_template(file: UploadFile = File(...)):
 async def health_check():
     """
     Check the health and operational status of the SDT service and container.
-    
+
     Returns system metrics including memory usage, CPU count, disk space, and uptime.
     Useful for monitoring and orchestration systems.
-    
+
     Returns:
         JSONResponse: Comprehensive health status with container metrics
     """

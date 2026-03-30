@@ -69,7 +69,7 @@ class Controller():
         # Create instances
         self.trs = Translator()
         self.ep = EvidenceProvider()
-        
+
         # ==================== Bearer Token Management ====================
         # Reference to token store from sdt_interface-2.py
         self.token_store = None
@@ -79,31 +79,31 @@ class Controller():
     def set_token_store(self, token_store_dict):
         """
         Set reference to the token store from sdt_interface-2.py.
-        
+
         Args:
             token_store_dict: Dictionary containing OAuth2 token from SDT-Manager
         """
         self.token_store = token_store_dict
         if token_store_dict and token_store_dict.get("access_token"):
             logger.info(f"Token store updated for SDT {token_store_dict.get('sdt_id')}")
-    
+
     def get_auth_headers(self):
         """
         Get Authorization header with Bearer token for IDS-Connector requests.
-        
+
         Returns:
             dict: Headers dict with Bearer token, or empty dict if no token available
         """
         if self.token_store and self.token_store.get("access_token"):
             token = self.token_store.get("access_token")
             return {"Authorization": f"Bearer {token}"}
-        
+
         return {}
-    
+
     def has_bearer_token(self):
         """
         Check if Bearer token is available for IDS-Connector authentication.
-        
+
         Returns:
             bool: True if token is available, False otherwise
         """
@@ -183,7 +183,7 @@ class Controller():
     def create_in_ditto(self, payload, toe_id, category, create_parent: bool = True):
         """
         Creates a thing in Ditto and optionally updates the parent thing.
-        
+
         Args:
             payload: Thing payload
             toe_id: Target of Evaluation ID
@@ -195,10 +195,10 @@ class Controller():
         existing_thing_id = self.search_item(toe_id, category)
         if existing_thing_id is not None:
             logger.warning(f"Thing with toe_id={toe_id} and type={category} already exists: {existing_thing_id}")
-            
+
             # Parse the new payload to compare with existing
             payload_json = json.loads(payload)
-            
+
             # Compare the existing thing with the new payload
             if self.compare_items(existing_thing_id, payload_json):
                 logger.info(f"Thing content is identical, no update needed")
@@ -211,18 +211,18 @@ class Controller():
             else:
                 # Content differs - AUTO-UPDATE the existing thing
                 logger.info(f"Thing exists but content differs, automatically updating")
-                
+
                 # Add thingId to payload for update
                 payload_json["thingId"] = existing_thing_id
-                
+
                 # Call update_item to update the existing thing
                 update_result = self.update_item(toe_id, category, payload_json)
-                
+
                 if update_result.get("success"):
                     # Update parent thing
                     if create_parent:
                         self.update_parent_thing(toe_id, existing_thing_id, category, operation="update")
-                    
+
                     return {
                         "success": True,
                         "status_code": update_result.get("status_code"),
@@ -254,7 +254,7 @@ class Controller():
                 "success": False,
                 "error": "Failed to create policy in Ditto"
             }
-        
+
         policy_response, policy_name = policy_result
         print(policy_response)
         payload_json["policyId"] = policy_name
@@ -287,7 +287,7 @@ class Controller():
                 "thing_id": thing_id,
                 "action": "created"
             }
-            
+
 # Create/Update parent thing
             if create_parent and result["success"]:
                 # Ensure parent thing exists
@@ -297,9 +297,9 @@ class Controller():
                 self.update_parent_thing(toe_id, thing_id, category, operation="add")
 
                 result["parent_thing_id"] = self.get_parent_thing_id(toe_id)
-            
+
             return result
-            
+
         except JSONDecodeError as e:
             logger.error(f"Invalid JSON payload: {e}")
             return {"success": False, "error": f"Invalid JSON: {str(e)}"}
@@ -355,32 +355,32 @@ class Controller():
     def read_item(self, toe_id, category):
         """
         Reads a thing from Ditto by toe_id and category.
-        
+
         Args:
             toe_id (str): Target of Evaluation ID
             category (str): Category (e.g., 'AI', 'BOMS')
-        
+
         Returns:
             dict or None: Thing data if found, None otherwise
         """
         logger.info(f"Reading thing for toe_id: {toe_id}, category: {category}")
-        
+
         # Search for the Thing ID
         item_id = self.search_item(toe_id, category)
         if not item_id:
             logger.error(f"Thing not found for toe_id {toe_id} and category {category}")
             return None
-        
+
         logger.info(f"Attempting to read thing with ID: {item_id}")
-        
+
         url = f'http://{Ditto_IP}:{Ditto_PORT}/api/2/things/{item_id}'
-        
+
         try:
             session = requests.Session()
             session.auth = ("ditto", "ditto")
             logger.info(f"Sending GET request to {url}")
             r = session.get(url, headers={'accept': 'application/json'})
-            
+
             if r.status_code == 200:
                 try:
                     response_json = r.json()
@@ -402,23 +402,23 @@ class Controller():
     def read_item_by_id(self, item_id):
         """
         Reads a thing from Ditto by its full thing ID.
-        
+
         Args:
             item_id (str): Full Thing ID
-        
+
         Returns:
             dict or None: Thing data if found, None otherwise
         """
         logger.info(f"Attempting to read thing with ID: {item_id}")
-        
+
         url = f'http://{Ditto_IP}:{Ditto_PORT}/api/2/things/{item_id}'
-        
+
         try:
             session = requests.Session()
             session.auth = ("ditto", "ditto")
             logger.info(f"Sending GET request to {url}")
             r = session.get(url, headers={'accept': 'application/json'})
-            
+
             if r.status_code == 200:
                 try:
                     response_json = r.json()
@@ -532,52 +532,52 @@ class Controller():
         """
         Search for a FILE type thing by toe_id, category, and specific filename.
         This prevents different files from overwriting each other.
-        
+
         Args:
             toe_id: Target of Evaluation ID
             category: Category (FILE)
             filename: Exact filename to search for
-            
+
         Returns:
             str: Thing ID if found with matching filename, None otherwise
         """
         logger.info(f"Searching for FILE by filename: toe_id={toe_id}, category={category}, filename={filename}")
-        
+
         namespace = "cobalt.sdt"
         item_pattern = f"{namespace}:toe-{toe_id}-{category}"
-        
+
         # Get all FILE things for this TOE
         url = f'http://{Ditto_IP}:{Ditto_PORT}/api/2/search/things?filter=like(thingId,"{item_pattern}*")&fields=thingId,attributes'
-        
+
         try:
             session = requests.Session()
             session.auth = ("ditto", "ditto")
             logger.info(f"Sending GET request to {url}")
             r = session.get(url, headers={'accept': 'application/json'})
-            
+
             if r.status_code == 200:
                 response_json = r.json()
                 items = response_json.get("items", [])
-                
+
                 logger.info(f"Found {len(items)} FILE things, checking filenames...")
-                
+
                 # Check each item's filename attribute
                 for item in items:
                     item_filename = item.get("attributes", {}).get("filename")
                     thing_id = item.get("thingId")
-                    
+
                     logger.info(f"  Checking {thing_id}: filename='{item_filename}'")
-                    
+
                     if item_filename == filename:
                         logger.info(f"✅ Found matching file: {thing_id}")
                         return thing_id
-                
+
                 logger.info(f"❌ No FILE thing found with filename: {filename}")
                 return None
             else:
                 logger.error(f"Error searching files: Status code {r.status_code}")
                 return None
-                
+
         except Exception as e:
             logger.error(f"Error searching for file by name: {e}")
             return None
@@ -585,7 +585,7 @@ class Controller():
     def delete_item(self, toe_id, category, update_parent: bool = True):
         """
         Deletes a thing and updates the parent thing.
-        
+
         Args:
             toe_id: Target of Evaluation ID
             category: Category/type of the thing
@@ -594,11 +594,11 @@ class Controller():
 
         # First search for the existing thing ID
         item_id = self.search_item(toe_id, category)
-        
+
         if not item_id:
             logger.error(f"Thing with toe_id {toe_id} and category {category} does not exist and cannot be deleted")
             return {"success": False, "error": "Thing does not exist"}
-        
+
         logger.info(f"Attempting to delete thing with ID: {item_id}")
 
         url = f'http://{Ditto_IP}:{Ditto_PORT}/api/2/things/{item_id}'
@@ -614,11 +614,11 @@ class Controller():
                 verification = self.read_item_by_id(item_id)
                 if verification is None:
                     logger.info(f"Thing with ID {item_id} was successfully deleted")
-                    
+
                     # Update parent thing
                     if update_parent:
                         self.update_parent_thing(toe_id, item_id, category, operation="delete")
-                    
+
                     return {"success": True, "status_code": r.status_code, "message": "Thing deleted successfully"}
                 else:
                     logger.error(f"Thing with ID {item_id} still exists after deletion attempt")
@@ -638,53 +638,53 @@ class Controller():
     def update_item(self, toe_id, category, payload):
         """
         Updates a thing in Ditto after validating existence and content.
-        
+
         Args:
             toe_id (str): Target of Evaluation ID
             category (str): Category (e.g., 'AI', 'BOMS')
             payload (dict or str): Updated payload
-        
+
         Returns:
             dict: Update result
         """
         logger.info(f"Updating thing for toe_id: {toe_id}, category: {category}")
-        
+
         # Step 1: Search for existing Thing ID
         item_id = self.search_item(toe_id, category)
         if not item_id:
             logger.error(f"Thing not found for toe_id {toe_id} and category {category}")
             return {"success": False, "error": "Thing not found"}
-        
+
         # Step 2: Read existing Thing for full content validation
         existing_thing = self.read_item_by_id(item_id)
         if not existing_thing:
             return {"success": False, "error": "Failed to read existing thing"}
-        
+
         try:
             # Step 3: Parse and validate payload
             payload_json = payload if isinstance(payload, dict) else json.loads(payload)
-            
+
             # Step 4: Merge payload with existing Thing (full content check)
             updated_thing = existing_thing.copy()
             updated_thing.update(payload_json)  # Merge attributes/features
             updated_thing["thingId"] = item_id  # Ensure correct ID
-            
+
             # Step 5: Create/update policy
             policy_response, policy_name = self.create_policy()
             updated_thing["policyId"] = policy_name
-            
+
             # Step 6: Send update to Ditto
             url = f'http://{Ditto_IP}:{Ditto_PORT}/api/2/things/{item_id}'
             session = requests.Session()
             session.auth = ("ditto", "ditto")
             r = session.put(url, json=updated_thing, headers={'Content-Type': 'application/json'})
-            
+
             response_data = r.json() if r.text else {}
             logger.info(f"Ditto update response status: {r.status_code}")
-            
+
             # Step 7: Update parent thing
             self.update_parent_thing(toe_id, item_id, category, operation="update")
-            
+
             return {
                 "success": 200 <= r.status_code < 300,
                 "status_code": r.status_code,
@@ -705,31 +705,31 @@ class Controller():
     def compare_items(self, item_id1, payload2):
         """
         Compares two items based on their source type and appropriate identifiers.
-        
+
         Args:
             item_id1 (str): The ID of the first item in Ditto
             payload2 (dict or str): The new payload to compare
-            
+
         Returns:
             bool: True if items are equal, False otherwise
         """
         logger.info(f"Comparing item {item_id1} with new payload")
-        
+
         # Get existing thing from Ditto
         payload1 = self.read_item_by_id(item_id1)
         if payload1 is None:
             logger.error(f"Could not read item {item_id1}")
             return False
-        
+
         # Convert payload2 to dict if string
         if isinstance(payload2, str):
             payload2 = json.loads(payload2)
-        
+
         # Determine source type
         source_type = payload1.get("attributes", {}).get("sourceType") or payload2.get("attributes", {}).get("sourceType")
-        
+
         logger.info(f"Comparing items of type: {source_type}")
-        
+
         # Compare based on source type
         if source_type == "cyclonedx":
             return self._compare_cyclonedx(payload1, payload2)
@@ -859,39 +859,39 @@ class Controller():
 
     def _compare_arm(self, payload1, payload2):
         """Compare ARM templates using content hash."""
-       
-        
+
+
         # Get schema and contentVersion
         schema1 = payload1.get("attributes", {}).get("$schema")
         schema2 = payload2.get("attributes", {}).get("$schema")
-        
+
         if schema1 != schema2:
             logger.info(f"ARM schema differs: {schema1} vs {schema2}")
             return False
-        
+
         version1 = payload1.get("attributes", {}).get("contentVersion")
         version2 = payload2.get("attributes", {}).get("contentVersion")
-        
+
         if version1 != version2:
             logger.info(f"ARM contentVersion differs: {version1} vs {version2}")
             return False
-        
+
         # Compare resource count
         resources1 = payload1.get("features", {}).get("resources", {}).get("properties", {})
         resources2 = payload2.get("features", {}).get("resources", {}).get("properties", {})
-        
+
         if len(resources1) != len(resources2):
             logger.info(f"ARM resource count differs: {len(resources1)} vs {len(resources2)}")
             return False
-        
+
         # Deep compare: hash the entire resources section
         hash1 = hashlib.sha256(json.dumps(resources1, sort_keys=True).encode()).hexdigest()
         hash2 = hashlib.sha256(json.dumps(resources2, sort_keys=True).encode()).hexdigest()
-        
+
         if hash1 != hash2:
             logger.info(f"ARM resources content differs (hash mismatch)")
             return False
-        
+
         logger.info("ARM templates are identical")
         return True
 
@@ -899,7 +899,7 @@ class Controller():
         """Fallback comparison using Git last_commit (for repositories)."""
         item1_last_modified = payload1.get("features", {}).get("repository", {}).get("properties", {}).get("last_commit", {})
         item2_last_modified = payload2.get("features", {}).get("repository", {}).get("properties", {}).get("last_commit", {})
-        
+
         if item1_last_modified == item2_last_modified:
             logger.info("Items have same last_commit")
             return True
@@ -913,74 +913,74 @@ class Controller():
         For FILE category things with uploaded/extracted files.
         """
         logger.info("Comparing extracted files")
-        
+
         # ✅ PRIORITY 1: Compare filenames first (most specific identifier)
         filename1 = payload1.get("attributes", {}).get("filename")
         filename2 = payload2.get("attributes", {}).get("filename")
-        
+
         if filename1 and filename2 and filename1 != filename2:
             logger.info(f"Extracted files differ by filename: '{filename1}' vs '{filename2}'")
             return False
-        
+
         logger.info(f"Comparing files with same filename: {filename1}")
-        
+
         # ✅ PRIORITY 2: Compare file size (quick check)
         size1 = payload1.get("features", {}).get("file_metadata", {}).get("properties", {}).get("size")
         size2 = payload2.get("features", {}).get("file_metadata", {}).get("properties", {}).get("size")
-        
+
         if size1 != size2:
             logger.info(f"Extracted files differ by size: {size1} bytes vs {size2} bytes")
             return False
-        
+
         logger.info(f"Files have same size: {size1} bytes")
-        
+
         # ✅ PRIORITY 3: Compare file type/format
         type1 = payload1.get("features", {}).get("file_metadata", {}).get("properties", {}).get("type")
         type2 = payload2.get("features", {}).get("file_metadata", {}).get("properties", {}).get("type")
-        
+
         if type1 != type2:
             logger.info(f"Extracted files differ by type: '{type1}' vs '{type2}'")
             return False
-        
+
         logger.info(f"Files have same type: {type1}")
-        
+
         # ✅ PRIORITY 4: Compare file hash if both files exist on disk (most reliable for content)
         file_path1 = payload1.get("attributes", {}).get("file_path")
         file_path2 = payload2.get("attributes", {}).get("file_path")
-        
+
         if file_path1 and file_path2 and os.path.exists(file_path1) and os.path.exists(file_path2):
             try:
                 hash1 = self.trs.get_file_hash(file_path1)
                 hash2 = self.trs.get_file_hash(file_path2)
-                
+
                 logger.info(f"File hash comparison: hash1={hash1[:16]}..., hash2={hash2[:16]}...")
-                
+
                 if hash1 != hash2:
                     logger.info(f"Extracted files differ by content hash - FILES ARE DIFFERENT")
                     return False
-                
+
                 logger.info(f"Files have identical content (hash match)")
             except Exception as e:
                 logger.warning(f"Could not compare file hashes: {e}")
-        
+
         # ✅ PRIORITY 5: Compare updated timestamp (detects re-uploads of same file)
         updated1 = payload1.get("features", {}).get("timestamps", {}).get("properties", {}).get("updated")
         updated2 = payload2.get("features", {}).get("timestamps", {}).get("properties", {}).get("updated")
-        
+
         if updated1 != updated2:
             logger.info(f"Extracted files differ by update time: {updated1} vs {updated2}")
             return False
-        
+
         logger.info(f"Files have same update timestamp: {updated1}")
-        
+
         # ✅ PRIORITY 6: Compare resource_id (IDS resource identifier)
         resource_id1 = payload1.get("attributes", {}).get("resource_id")
         resource_id2 = payload2.get("attributes", {}).get("resource_id")
-        
+
         if resource_id1 and resource_id2 and resource_id1 != resource_id2:
             logger.info(f"Extracted files differ by resource_id: {resource_id1} vs {resource_id2}")
             return False
-        
+
         logger.info("✅ Extracted files are IDENTICAL - all checks passed")
         return True
 
@@ -990,22 +990,22 @@ class Controller():
         Compares key attributes only.
         """
         logger.info("Using basic comparison (attributes only)")
-        
+
         # Compare key attributes
         attrs1 = payload1.get("attributes", {})
         attrs2 = payload2.get("attributes", {})
-        
+
         # Compare critical fields
         critical_fields = ["toe_id", "category", "sourceType", "updated", "transformedAt"]
-        
+
         for field in critical_fields:
             val1 = attrs1.get(field)
             val2 = attrs2.get(field)
-            
+
             if val1 != val2:
                 logger.info(f"Items differ in {field}: {val1} vs {val2}")
                 return False
-        
+
         logger.info("Items appear identical (basic comparison)")
         return True
 
@@ -1014,20 +1014,20 @@ class Controller():
     def create_parent_thing(self, toe_id: str, metadata: dict = None):
         """
         Creates a parent thing for a TOE ID that tracks all related things.
-        
+
         Args:
             toe_id (str): Target of Evaluation ID
             metadata (dict): Optional metadata about the TOE
-            
+
         Returns:
             dict: Result of parent thing creation
         """
         logger.info(f"Creating parent thing for TOE ID: {toe_id}")
-        
+
         # Check if parent thing already exists
         parent_id = self.get_parent_thing_id(toe_id)
         existing_parent = self.read_item_by_id(parent_id)
-        
+
         if existing_parent:
             logger.info(f"Parent thing already exists: {parent_id}")
             return {
@@ -1036,7 +1036,7 @@ class Controller():
                 "message": "Parent thing already exists",
                 "action": "exists"
             }
-        
+
         # Create parent thing payload
         parent_payload = {
             "thingId": parent_id,
@@ -1062,22 +1062,22 @@ class Controller():
                 }
             }
         }
-        
+
         # Create policy and attach
         policy_response, policy_name = self.create_policy()
         parent_payload["policyId"] = policy_name
-        
+
         # Create the parent thing in Ditto
         url = f'http://{Ditto_IP}:{Ditto_PORT}/api/2/things/{parent_id}'
-        
+
         try:
             session = requests.Session()
             session.auth = ("ditto", "ditto")
             r = session.put(url, json=parent_payload, headers={'Content-Type': 'application/json'})
-            
+
             response_data = r.json() if r.text else {}
             logger.info(f"Parent thing created with status: {r.status_code}")
-            
+
             return {
                 "success": 200 <= r.status_code < 300,
                 "status_code": r.status_code,
@@ -1092,10 +1092,10 @@ class Controller():
     def get_parent_thing_id(self, toe_id: str):
         """
         Generates the parent thing ID for a TOE ID.
-        
+
         Args:
             toe_id (str): Target of Evaluation ID
-            
+
         Returns:
             str: Parent thing ID
         """
@@ -1105,35 +1105,35 @@ class Controller():
     def update_parent_thing(self, toe_id: str, child_thing_id: str, payload_type: str, operation: str = "add"):
         """
         Updates the parent thing when child things are added/updated/deleted.
-        
+
         Args:
             toe_id (str): Target of Evaluation ID
             child_thing_id (str): ID of the child thing
             payload_type (str): Type of the child thing (AI, QDT, BOMS, etc.)
             operation (str): Operation type - "add", "update", or "delete"
-            
+
         Returns:
             dict: Result of parent thing update
         """
         logger.info(f"Updating parent thing for TOE {toe_id}, operation: {operation}")
-        
+
         parent_id = self.get_parent_thing_id(toe_id)
         parent_thing = self.read_item_by_id(parent_id)
-        
+
         if not parent_thing:
             logger.error(f"Parent thing not found: {parent_id}")
             return {"success": False, "error": "Parent thing not found"}
-        
+
         # Get current child things
         child_things = parent_thing.get("features", {}).get("child_things", {}).get("properties", {})
         statistics = parent_thing.get("features", {}).get("statistics", {}).get("properties", {})
         things_by_type = statistics.get("things_by_type", {})
-        
+
         # Perform operation
         if operation == "add" or operation == "update":
             # Read the child thing to get its details
             child_thing = self.read_item_by_id(child_thing_id)
-            
+
             if child_thing:
                 child_things[child_thing_id] = {
                     "thing_id": child_thing_id,
@@ -1146,38 +1146,38 @@ class Controller():
                         "componentVersion": child_thing.get("attributes", {}).get("componentVersion")
                     }
                 }
-                
+
                 # Update statistics
                 things_by_type[payload_type] = things_by_type.get(payload_type, 0) + (1 if operation == "add" else 0)
-                
+
         elif operation == "delete":
             if child_thing_id in child_things:
                 removed_type = child_things[child_thing_id].get("type")
                 del child_things[child_thing_id]
-                
+
                 # Update statistics
                 if removed_type in things_by_type:
                     things_by_type[removed_type] = max(0, things_by_type[removed_type] - 1)
-        
+
         # Update statistics
         statistics["total_things"] = len(child_things)
         statistics["things_by_type"] = things_by_type
         statistics["last_updated"] = datetime.now().isoformat()
-        
+
         # Update parent thing
         parent_thing["features"]["child_things"]["properties"] = child_things
         parent_thing["features"]["statistics"]["properties"] = statistics
-        
+
         # Send update to Ditto
         url = f'http://{Ditto_IP}:{Ditto_PORT}/api/2/things/{parent_id}'
         try:
             session = requests.Session()
             session.auth = ("ditto", "ditto")
             r = session.put(url, json=parent_thing, headers={'Content-Type': 'application/json'})
-            
+
             response_data = r.json() if r.text else {}
             logger.info(f"Parent thing updated with status: {r.status_code}")
-            
+
             return {
                 "success": 200 <= r.status_code < 300,
                 "status_code": r.status_code,
@@ -1191,10 +1191,10 @@ class Controller():
     def get_parent_thing(self, toe_id: str):
         """
         Retrieves the parent thing for a TOE ID.
-        
+
         Args:
             toe_id (str): Target of Evaluation ID (can be plain UUID or full parent thing ID)
-            
+
         Returns:
             dict: Parent thing or None
         """
@@ -1204,27 +1204,27 @@ class Controller():
         else:
             # Otherwise, construct the parent ID
             parent_id = self.get_parent_thing_id(toe_id)
-        
+
         return self.read_item_by_id(parent_id)
 
     def list_child_things(self, toe_id: str):
         """
         Lists all child things under a parent thing.
-        
+
         Args:
             toe_id (str): Target of Evaluation ID
-            
+
         Returns:
             dict: List of child things
         """
         parent_thing = self.get_parent_thing(toe_id)
-        
+
         if not parent_thing:
             return {"success": False, "error": "Parent thing not found"}
-        
+
         child_things = parent_thing.get("features", {}).get("child_things", {}).get("properties", {})
         statistics = parent_thing.get("features", {}).get("statistics", {}).get("properties", {})
-        
+
         return {
             "success": True,
             "toe_id": toe_id,
@@ -1235,7 +1235,7 @@ class Controller():
             "last_updated": statistics.get("last_updated")
         }
 
-        
+
         if item1_last_modified == item2_last_modified:
             logger.info("Items have same last_commit")
             return True
@@ -1440,7 +1440,7 @@ class Controller():
 
 # changed on 10th Oct 2023 to MQTT
     # def listen_to_ditto(self):
-        
+
 
     #     def on_connect(client, userdata, flags, rc):
     #         print("Connected to MQTT broker with result code", rc)
@@ -1479,7 +1479,7 @@ class Controller():
         """
         Enhanced MQTT listener that routes to configured evidence collectors
         """
-        
+
         def on_connect(client, userdata, flags, rc):
             print("Connected to MQTT broker with result code", rc)
             client.subscribe("ditto-cobalt/#")
@@ -1487,7 +1487,7 @@ class Controller():
         def on_message(client, userdata, msg):
             print("*************************************Ditto MQTT Listener*******************************")
             print(f"Topic: {msg.topic}")
-            
+
             try:
                 payload = msg.payload.decode()
                 print("Raw MQTT message:", payload)
@@ -1504,18 +1504,18 @@ class Controller():
                 attributes = thing.get('attributes', {})
                 toe_id = attributes.get('toe_id')
                 level = attributes.get('category')
-                
+
                 print(f"thing_id: {thing_id}, toe_id: {toe_id}, level: {level}")
-                
+
                 # NEW: Route to configured evidence collectors based on template
                 matching_collectors = self.ep.get_subscribed_collectors(msg.topic, thing)
-                
+
                 if matching_collectors:
                     print(f"Found {len(matching_collectors)} matching collectors")
                     for collector in matching_collectors:
                         collector_id = collector.get("collector_id")
                         print(f"Notifying collector: {collector_id}")
-                        
+
                         try:
                             self.ep.send_notification(collector, thing)
                         except Exception as e:
@@ -1524,7 +1524,7 @@ class Controller():
                     # Fallback to old method for backward compatibility
                     print("No matching collectors, using legacy notification")
                     self.get_evidence(toe_id=toe_id, level=level, thing_id=thing_id, notify=True)
-                    
+
             except Exception as e:
                 print("Error parsing MQTT message:", e)
                 import traceback
@@ -1810,10 +1810,10 @@ class Controller():
     #     Handles IDS connector communication and data fetching
     #     """
     #     logger.info(f"Controller: Initiating IDS connector sync from {data_source_url}")
-    #     
+    #
     #     try:
     #         # Make HTTP call to IDS connector
-    #         
+    #
     #         response = requests.post(
     #             "http://true-connector:8080/api/data/fetch",
     #             json={
@@ -1825,10 +1825,10 @@ class Controller():
     #             timeout=30
     #         )
     #         response.raise_for_status()
-    #         
+    #
     #         logger.info("IDS connector fetch initiated successfully")
     #         return {"message": "Data fetch initiated", "status": "pending"}
-    #         
+    #
     #     except Exception as e:
     #         logger.error(f"Error in IDS connector sync: {e}")
     #         raise Exception(f"IDS connector sync failed: {str(e)}")
@@ -1838,26 +1838,26 @@ class Controller():
     #     Processes received files and creates digital twin
     #     """
     #     logger.info(f"Controller: Processing received file {filename}")
-    #     
+    #
     #     try:
     #         import os
     #         # Create evidence directory if it doesn't exist
     #         os.makedirs("evidence", exist_ok=True)
-    #         
+    #
     #         # Save the file
     #         file_path = f"evidence/{toe_id}_{category}_{filename}"
     #         with open(file_path, "wb") as f:
     #             f.write(file_content)
-    #         
+    #
     #         # Forward to translator for processing
     #         result = self.trs.process_received_file(file_path, filename, toe_id, category, metadata)
-    #         
+    #
     #         # Create digital twin in Ditto
     #         self.create_in_ditto(result, toe_id, category)
-    #         
+    #
     #         logger.info(f"File processed and digital twin created successfully")
     #         return {"message": "File processed and twin created", "file_path": file_path}
-    #         
+    #
     #     except Exception as e:
     #         logger.error(f"Error processing received file: {e}")
     #         raise Exception(f"File processing failed: {str(e)}")
@@ -1867,7 +1867,7 @@ class Controller():
     #     Registers webhook with external IDS connector
     #     """
     #     logger.info(f"Controller: Registering webhook for provider {provider_id}")
-    #     
+    #
     #     try:
     #         webhook_payload = {
     #             "webhook_url": webhook_url,
@@ -1875,17 +1875,17 @@ class Controller():
     #             "dataset_id": dataset_id,
     #             "filters": {"category": category, "file_types": [".h5", ".py", ".ipynb", ".txt"]}
     #         }
-    #         
+    #
     #         response = requests.post(
     #             "http://ids-connector:8080/api/subscribe",
     #             json=webhook_payload,
     #             timeout=30
     #         )
     #         response.raise_for_status()
-    #         
+    #
     #         logger.info("Webhook registration successful")
     #         return {"message": "Subscription created", "status": "active"}
-    #         
+    #
     #     except Exception as e:
     #         logger.error(f"Error registering webhook: {e}")
     #         raise Exception(f"Webhook registration failed: {str(e)}")
@@ -1895,24 +1895,24 @@ class Controller():
     #     Processes webhook notifications and downloads files
     #     """
     #     logger.info(f"Controller: Processing webhook for TOE {toe_id}")
-    #     
+    #
     #     try:
     #         # Extract file URL from webhook payload
     #         file_url = payload.get("file_url")
     #         category = payload.get("category", "AI")
-    #         
+    #
     #         if not file_url:
     #             raise Exception("No file_url found in webhook payload")
-    #         
+    #
     #         # Forward to translator to download and process file
     #         result = self.trs.download_and_process_file(file_url, toe_id, category)
-    #         
+    #
     #         # Create digital twin in Ditto
     #         self.create_in_ditto(result["thing_data"], toe_id, category)
-    #         
+    #
     #         logger.info("Webhook processed successfully")
     #         return {"message": "Webhook processed successfully", "file_path": result.get("file_path")}
-    #         
+    #
     #     except Exception as e:
     #         logger.error(f"Error processing webhook: {e}")
     #         raise Exception(f"Webhook processing failed: {str(e)}")
@@ -1920,17 +1920,17 @@ class Controller():
     def sync_ids_connector(self, data_path: str, toe_id: str, ids_connector_url: str = "http://localhost:8004"):
         """
         Sync data from IDS connector using OAuth2 Bearer token authentication
-        
+
         Args:
             data_path: Path to data in IDS connector ('all' or specific resource name)
             toe_id: Target of Evaluation ID
             ids_connector_url: Base URL of IDS connector
-            
+
         Returns:
             dict: Result of sync operation
         """
         logger.info(f"Syncing from IDS connector: {ids_connector_url}, data_path: {data_path}")
-        
+
         try:
             # Call IDS connector endpoint
             url = f"{ids_connector_url}/api/IDSconnector/get_data_request"
@@ -1939,47 +1939,47 @@ class Controller():
                 "toe_id": toe_id,
                 "data_type": "json"  # Default to json for now
             }
-            
+
             # Get Bearer token authorization headers
             auth_headers = self.get_auth_headers()
-            
+
             if not auth_headers:
                 logger.warning("No Bearer token available — IDS-Connector authentication may fail")
                 logger.info("Ensure SDT-Manager has distributed token via POST /auth/token")
-            
+
             # Prepare headers for IDS-Connector request
             headers = {
                 "Content-Type": "application/json",
                 **auth_headers  # Include Bearer token if available
             }
-            
+
             logger.info(f"Calling IDS connector: {url} with Bearer token auth")
             logger.debug(f"Authorization: {headers.get('Authorization', 'None')[:30] if headers.get('Authorization') else 'None'}")
-            
+
             response = requests.get(url, params=params, headers=headers, timeout=30)
             response.raise_for_status()
-            
+
             ids_response = response.json()
             logger.info(f"Received IDS response: {ids_response.get('data_type')}")
             logger.info(f"Response data length: {len(ids_response.get('data', ''))}")
-            
+
             # Process IDS response through translator
             processed_things = self.trs.process_ids_response(ids_response, toe_id)
-            
+
             logger.info(f"Processed {len(processed_things)} things from IDS connector")
-            
+
             # Create things in Ditto and update parent
             results = []
             for thing_json in processed_things:
                 thing = json.loads(thing_json)
                 category = thing.get("attributes", {}).get("category", "UNKNOWN")
-                
+
                 # ✅ For FILE types, check by filename first to prevent overwriting different files
                 if category == "FILE":
                     filename = thing.get("attributes", {}).get("filename")
                     if filename:
                         existing_thing_id = self.search_file_by_name(toe_id, category, filename)
-                        
+
                         if existing_thing_id:
                             # File with same name exists - compare and update if different
                             if self.compare_items(existing_thing_id, thing):
@@ -1997,10 +1997,10 @@ class Controller():
                                 # Same filename, different content - update
                                 logger.info(f"File '{filename}' exists but content differs, updating")
                                 update_result = self.update_item(toe_id, category, thing)
-                                
+
                                 if update_result.get("success"):
                                     self.update_parent_thing(toe_id, existing_thing_id, category, operation="update")
-                                
+
                                 results.append({
                                     "category": category,
                                     "filename": filename,
@@ -2012,32 +2012,32 @@ class Controller():
                         else:
                             # File doesn't exist - create new thing directly without search
                             logger.info(f"File '{filename}' not found, creating new Thing")
-                            
+
                             # Generate new unique ID
                             ctrl_id = self.name_thiing_id(toe_id, category)
                             thing["thingId"] = ctrl_id
                             thing["policyId"] = "cobalt:policy"
                             thing["definition"] = "cobalt:evidence-file:1.0.0"
                             thing_json = json.dumps(thing)
-                            
+
                             # Create policy
                             self.create_policy()
-                            
+
                             # Create thing in Ditto directly (uses basic auth: ditto:ditto)
                             url = f'http://{Ditto_IP}:{Ditto_PORT}/api/2/things/{ctrl_id}'
-                            
+
                             session = requests.Session()
                             session.auth = ("ditto", "ditto")
-                            
+
                             logger.info(f"Creating thing with ID: {ctrl_id}")
                             r = session.put(url, json=thing, headers={'Content-Type': 'application/json'})
                             logger.info(f"Ditto response status: {r.status_code}")
-                            
+
                             if r.status_code in [201, 204]:
                                 # Update parent thing
                                 parent_result = self.create_parent_thing(toe_id)
                                 self.update_parent_thing(toe_id, ctrl_id, category, operation="add")
-                                
+
                                 results.append({
                                     "category": category,
                                     "filename": filename,
@@ -2056,10 +2056,10 @@ class Controller():
                                     "error": r.text
                                 })
                                 continue
-                
+
                 # For non-FILE types, use standard create_in_ditto logic
                 result = self.create_in_ditto(thing_json, toe_id, category, create_parent=True)
-                
+
                 results.append({
                     "category": category,
                     "filename": thing.get("attributes", {}).get("filename"),
@@ -2067,17 +2067,17 @@ class Controller():
                     "success": result.get("success"),
                     "action": result.get("action")
                 })
-            
+
             # Update parent thing with IDS sync metadata
             self._update_parent_with_ids_sync(toe_id, data_path, len(processed_things))
-            
+
             return {
                 "success": True,
                 "message": f"Synced {len(processed_things)} artifacts from IDS connector",
                 "data_path": data_path,
                 "results": results
             }
-            
+
         except requests.exceptions.HTTPError as e:
             if e.response.status_code == 401:
                 logger.error(f"Unauthorized — Bearer token invalid or expired for IDS connector")
@@ -2123,33 +2123,33 @@ class Controller():
         """
         Update parent thing with IDS sync metadata
         """
-        
-        
+
+
         try:
             parent_id = self.get_parent_thing_id(toe_id)
             parent_thing = self.read_item_by_id(parent_id)
-            
+
             if not parent_thing:
                 return
-            
+
             # Add IDS sync history
             if "ids_sync_history" not in parent_thing.get("features", {}):
                 parent_thing["features"]["ids_sync_history"] = {"properties": {}}
-            
+
             sync_id = datetime.now().strftime("%Y%m%d_%H%M%S")
             parent_thing["features"]["ids_sync_history"]["properties"][sync_id] = {
                 "data_path": data_path,
                 "artifact_count": artifact_count,
                 "timestamp": datetime.now().isoformat()
             }
-            
+
             # Update parent
             url = f'http://{Ditto_IP}:{Ditto_PORT}/api/2/things/{parent_id}'
             session = requests.Session()
             session.auth = ("ditto", "ditto")
             session.put(url, json=parent_thing, headers={'Content-Type': 'application/json'})
             logger.info(f"Updated parent thing with IDS sync metadata")
-            
+
         except Exception as e:
             logger.error(f"Error updating parent with IDS sync: {e}")
 
@@ -2159,36 +2159,36 @@ class Controller():
     def sync_github_repository(self, github_url: str, toe_id: str, category: str):
         """
         Sync GitHub repository to Ditto instance and update parent thing
-        
+
         Args:
             github_url: The URL of the GitHub repository to clone
             toe_id: Target of Evaluation ID
             category: Category/type of evidence (AI, BOMS, etc.)
-            
+
         Returns:
             dict: Result of sync operation with repository details
         """
         logger.info(f"Syncing GitHub repository: {github_url} for TOE: {toe_id}, category: {category}")
-        
+
         try:
             # Clone and process repository using translator
             repo_thing_json = self.trs.fetch_push_save_repo(toe_id, category, github_url)
             repo_thing = json.loads(repo_thing_json)
-            
+
             # Extract repository name from URL
             repo_name = github_url.split('/')[-1]
             if repo_name.endswith('.git'):
                 repo_name = repo_name[:-4]
-            
+
             logger.info(f"Repository '{repo_name}' cloned and processed")
-            
+
             # Check if repository thing already exists
             thing_id = self.search_item(toe_id, category)
-            
+
             action = None
             if thing_id is not None:
                 logger.info(f"Repository thing already exists: {thing_id}")
-                
+
                 # Compare existing thing with new one
                 if self.compare_items(thing_id, repo_thing_json):
                     logger.info(f"Repository content unchanged, no update needed")
@@ -2205,10 +2205,10 @@ class Controller():
                 create_result = self.create_in_ditto(repo_thing_json, toe_id, category, create_parent=True)
                 action = "created"
                 result_thing_id = create_result.get("thing_id")
-            
+
             # Update parent thing with GitHub sync metadata
             self._update_parent_with_github_sync(toe_id, github_url, repo_name, category)
-            
+
             return {
                 "success": True,
                 "message": f"GitHub repository '{repo_name}' {action} successfully",
@@ -2217,10 +2217,10 @@ class Controller():
                 "action": action,
                 "parent_updated": True
             }
-            
+
         except Exception as e:
             logger.error(f"Error syncing GitHub repository: {e}")
-            
+
             logger.error(traceback.format_exc())
             return {
                 "success": False,
@@ -2231,20 +2231,20 @@ class Controller():
         """
         Update parent thing with GitHub sync metadata
         """
-        
-        
+
+
         try:
             parent_id = self.get_parent_thing_id(toe_id)
             parent_thing = self.read_item_by_id(parent_id)
-            
+
             if not parent_thing:
                 logger.warning(f"Parent thing not found for TOE: {toe_id}")
                 return
-            
+
             # Add GitHub sync history feature if it doesn't exist
             if "github_sync_history" not in parent_thing.get("features", {}):
                 parent_thing["features"]["github_sync_history"] = {"properties": {}}
-            
+
             # Create unique sync ID with timestamp
             sync_id = datetime.now().strftime("%Y%m%d_%H%M%S")
             parent_thing["features"]["github_sync_history"]["properties"][sync_id] = {
@@ -2253,25 +2253,25 @@ class Controller():
                 "category": category,
                 "timestamp": datetime.now().isoformat()
             }
-            
+
             # Update parent thing
             url = f'http://{Ditto_IP}:{Ditto_PORT}/api/2/things/{parent_id}'
             session = requests.Session()
             session.auth = ("ditto", "ditto")
             session.put(url, json=parent_thing, headers={'Content-Type': 'application/json'})
             logger.info(f"Updated parent thing with GitHub sync metadata for repo: {repo_name}")
-            
+
         except Exception as e:
             logger.error(f"Error updating parent with GitHub sync: {e}")
-    
-    def get_evidence_flexible(self, toe_id: str, category: str = None, 
+
+    def get_evidence_flexible(self, toe_id: str, category: str = None,
                               evidence_type: str = "thing", files: list = None,
                               include_patterns: list = None, exclude_patterns: list = None,
                               format: str = "json", transform: str = None,
                               include_features: list = None, filename: str = None):
         """
         Flexible evidence retrieval with dynamic configuration.
-        
+
         Args:
             toe_id: Target of Evaluation ID
             category: Category to filter (optional)
@@ -2282,30 +2282,30 @@ class Controller():
             format: Response format (json|download)
             transform: Transform name or custom mapping JSON
             include_features: Features to include (for thing type)
-        
+
         Returns:
             Evidence data in requested format
         """
         logger.info(f"Flexible evidence retrieval: toe_id={toe_id}, type={evidence_type}, format={format}")
-        
+
         try:
             # Get parent thing
             parent_id = self.get_parent_thing_id(toe_id)
             parent_thing = self.read_item_by_id(parent_id)
-            
+
             if not parent_thing:
                 logger.error(f"Parent thing not found for TOE: {toe_id}")
                 return {"error": "Parent thing not found", "toe_id": toe_id}
-            
+
             # Get thing IDs from correct feature structure
             child_things_feature = parent_thing.get("features", {}).get("child_things", {})
             child_things_dict = child_things_feature.get("properties", {})
-            
+
             # Extract thing IDs from child_things dictionary
             thing_ids = list(child_things_dict.keys())
-            
+
             logger.info(f"Found {len(thing_ids)} things in parent for TOE {toe_id}")
-            
+
             if not thing_ids:
                 logger.warning(f"No child things found in parent for TOE: {toe_id}")
                 return {
@@ -2313,14 +2313,14 @@ class Controller():
                     "toe_id": toe_id,
                     "hint": "Create things first using /api/SDT/create or /api/SDT/sync/github"
                 }
-            
+
             # Filter by category if specified
             if category:
                 filtered_ids = []
                 for thing_id, thing_info in child_things_dict.items():
                     if thing_info.get("type") == category:
                         filtered_ids.append(thing_id)
-                
+
                 if not filtered_ids:
                     logger.warning(f"No things found for category: {category}")
                     available_categories = list(set(t.get("type") for t in child_things_dict.values()))
@@ -2329,9 +2329,9 @@ class Controller():
                         "toe_id": toe_id,
                         "available_categories": available_categories
                     }
-                
+
                 thing_ids = filtered_ids
-            
+
             # Filter by filename if specified (for FILE category)
             if filename and category == "AI":
                 filename_filtered = []
@@ -2339,7 +2339,7 @@ class Controller():
                     thing = self.read_item_by_id(thing_id)
                     if thing and thing.get("attributes", {}).get("filename") == filename:
                         filename_filtered.append(thing_id)
-                
+
                 if not filename_filtered:
                     logger.warning(f"No AI Artifacts found with filename: {filename}")
                     return {
@@ -2347,16 +2347,16 @@ class Controller():
                         "toe_id": toe_id,
                         "hint": "Check available filenames using format=json"
                     }
-                
+
                 thing_ids = filename_filtered
-            
+
             # Get the first matching thing
             thing_id = thing_ids[0]
             thing = self.read_item_by_id(thing_id)
             if not thing:
                 logger.error(f"Thing not found: {thing_ids[0]}")
                 return {"error": "Thing not found", "thing_id": thing_ids[0]}
-            
+
             # Build evidence configuration
             evidence_config = {
                 "type": evidence_type,
@@ -2365,16 +2365,16 @@ class Controller():
                 "exclude": exclude_patterns or [],
                 "include_features": include_features
             }
-            
+
             # Prepare evidence using evidence provider
             evidence_data = self.ep.prepare_evidence_flexible(thing, evidence_config)
-            
+
             # Apply transformation if specified
             if transform:
                 evidence_data = self.ep.apply_transform_flexible(thing, evidence_data, transform)
                 # When transform is applied, return only the transformed content
                 return evidence_data
-            
+
             # Return based on format
             if format == "json":
                 return self._return_evidence_json(evidence_data, thing, evidence_type)
@@ -2383,13 +2383,13 @@ class Controller():
             else:
                 logger.warning(f"Unknown format: {format}, returning JSON")
                 return self._return_evidence_json(evidence_data, thing, evidence_type)
-        
+
         except Exception as e:
             logger.error(f"Error in flexible evidence retrieval: {e}")
             import traceback
             traceback.print_exc()
             return {"error": str(e), "toe_id": toe_id}
-    
+
     def _return_evidence_json(self, evidence_data: dict, thing: dict, evidence_type: str):
         """
         Return evidence as JSON metadata.
@@ -2400,18 +2400,18 @@ class Controller():
             "timestamp": datetime.now().isoformat(),
             "data": evidence_data
         }
-        
+
         # Add file metadata if files are present
         if evidence_type in ["files", "specific"] and isinstance(evidence_data, dict):
             files = evidence_data.get("files", [])
             result["files_count"] = len(files)
             result["files_metadata"] = [
-                {"name": f.get("name"), "size": f.get("size"), "hash": f.get("hash")} 
+                {"name": f.get("name"), "size": f.get("size"), "hash": f.get("hash")}
                 for f in files
             ]
-        
+
         return result
-    
+
     def _return_evidence_download(self, evidence_data: dict, thing: dict, evidence_type: str):
         """
         Return evidence as file download.
@@ -2426,7 +2426,7 @@ class Controller():
                     "filename": f"{thing.get('thingId', 'evidence').replace(':', '_')}.zip",
                     "media_type": "application/zip"
                 }
-        
+
         elif evidence_type in ["files", "specific"]:
             # Create ZIP from specific files
             files_info = evidence_data.get("files", [])
@@ -2438,49 +2438,49 @@ class Controller():
                     "filename": f"{thing.get('thingId', 'evidence').replace(':', '_')}_files.zip",
                     "media_type": "application/zip"
                 }
-        
+
         elif evidence_type == "thing":
             # Convert thing to JSON file
             import tempfile
             temp_dir = tempfile.mkdtemp()
             thing_id = thing.get("thingId", "unknown").replace(":", "_")
             json_path = os.path.join(temp_dir, f"{thing_id}.json")
-            
+
             with open(json_path, 'w') as f:
                 json.dump(evidence_data, f, indent=2)
-            
+
             return {
                 "download": True,
                 "file_path": json_path,
                 "filename": f"{thing_id}.json",
                 "media_type": "application/json"
             }
-        
+
         # Fallback to JSON return
         return {
             "download": False,
             "error": "Cannot create download for this evidence type",
             "data": evidence_data
         }
-    
+
     def _create_files_zip(self, files_info: list, thing_id: str):
         """
         Create a ZIP archive from list of files.
         """
         import tempfile
         import zipfile
-        
+
         temp_dir = tempfile.mkdtemp()
         zip_filename = f"{thing_id.replace(':', '_')}_files.zip"
         zip_path = os.path.join(temp_dir, zip_filename)
-        
+
         with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
             for file_info in files_info:
                 file_path = file_info.get("path")
                 file_name = file_info.get("name")
-                
+
                 if file_path and os.path.exists(file_path):
                     zipf.write(file_path, file_name)
-        
+
         logger.info(f"Created files ZIP with {len(files_info)} files at: {zip_path}")
         return zip_path

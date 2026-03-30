@@ -1,13 +1,13 @@
 {
   "config_name": "Quantum usecase",
   "config_version": "3.0",
-  
+
   "evidence_collectors": [
     {
       "collector_id": "clouditor",
       "enabled": true,
       "categories": ["QDT"],
-      
+
       "endpoint": "http://${CLOUDITOR_IP}:${CLOUDITOR_PORT}/v1/assessment/evidences",
       "auth": {
         "type": "oauth2",
@@ -15,39 +15,39 @@
         "client_id": "clouditor",
         "client_secret_env": "CLOUDITOR_SECRET"
       },
-      
+
       "evidence": {
         "type": "files",
         "files": ["qpu_data.json"]
       },
-      
+
       "transform": "qpu_clouditor"
     },
-    
+
     {
       "collector_id": "boms_collector",
       "enabled": true,
       "categories": ["BOMS"],
-      
+
       "mqtt": {
         "filters": {
           "sourceType": ["cyclonedx", "spdx"]
         }
       },
-      
+
       "endpoint": "http://localhost:8006/api/bom/analyze",
       "auth": {
         "type": "api_key",
         "key_env": "BOM_API_KEY"
       },
-      
+
       "evidence": {
         "type": "thing",
         "include_features": ["components", "metadata"]
       }
     }
   ],
-  
+
   "defaults": {
     "retry_attempts": 3,
     "max_file_size_mb": 50,
