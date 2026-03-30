@@ -8,7 +8,7 @@ evidence/*
 certs/
 api/
 # Ignore everything in tests
-tests/*
+# tests/*
 evidence/*
 
 # But don't ignore the test_files directory
