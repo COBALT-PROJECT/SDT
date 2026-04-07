@@ -58,20 +58,20 @@ jobs:
 
       - name: Build Docker image
         run: |
-          docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/myapp:${{ github.sha }} .
+          docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/sdt-main-image:0.2.8 .
 
       - name: Run tests inside Docker container
         run: |
-          docker run --rm ${{ secrets.DOCKERHUB_USERNAME }}/myapp:${{ github.sha }} \
-          sh -c "pytest || echo 'No tests configured'"
+          docker run --rm ${{ secrets.DOCKERHUB_USERNAME }}/sdt-main-image:0.2.8 \
+          sh -c "pytest tests/test_core.py -v --cov=core"
 
       - name: Push Docker image
         run: |
-          docker push ${{ secrets.DOCKERHUB_USERNAME }}/myapp:${{ github.sha }}
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/sdt-main-image:0.2.8
 
       - name: Tag & push latest
         if: github.ref == 'refs/heads/main'
         run: |
-          docker tag ${{ secrets.DOCKERHUB_USERNAME }}/myapp:${{ github.sha }} \
-                     ${{ secrets.DOCKERHUB_USERNAME }}/myapp:latest
-          docker push ${{ secrets.DOCKERHUB_USERNAME }}/myapp:latest
+          docker tag ${{ secrets.DOCKERHUB_USERNAME }}/sdt-main-image:0.2.8 \
+                     ${{ secrets.DOCKERHUB_USERNAME }}/sdt-main-image:latest
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/sdt-main-image:latest
