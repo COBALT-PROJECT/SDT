@@ -1121,7 +1121,7 @@ class Controller():
         parent_thing = self.read_item_by_id(parent_id)
 
         if not parent_thing:
-            logger.error(f"Parent thing not found: {parent_id}")
+            logger.info(f"Parent thing '{parent_id}' does not exist yet, skipping update")
             return {"success": False, "error": "Parent thing not found"}
 
         # Get current child things
@@ -1533,7 +1533,7 @@ class Controller():
         client = mqtt.Client()
         client.on_connect = on_connect
         client.on_message = on_message
-        client.connect("localhost", 1883, 60)
+        client.connect(MQTT_BROKER_HOST, 1883, 60)
         client.loop_forever()
 
 

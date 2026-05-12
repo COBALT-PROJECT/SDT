@@ -5,10 +5,10 @@ info:
   description: |
     REST API for Security Digital Twin (SDT) Service. Provides endpoints for managing Digital Twin instances, evidence collection, synchronization, authentication with Bearer tokens, and health checks.
 servers:
-  - url: http://localhost:8000
+  - url: http://localhost:8001
 paths:
   # ================== AUTHENTICATION ENDPOINTS ==================
-  /auth/token:
+  /api/SDT/auth/token:
     post:
       summary: Receive OAuth2 Bearer token from SDT-Manager
       description: Store OAuth2 credentials received from SDT-Manager for authenticated communication with IDS-Connector
@@ -59,7 +59,8 @@ paths:
             application/json:
               schema:
                 type: object
-  /auth/token/status:
+
+  /api/SDT/auth/token/status:
     get:
       summary: Check current Bearer token status
       description: Returns token availability status without revealing secrets
@@ -81,20 +82,20 @@ paths:
       tags:
         - Core Operations
       parameters:
-        - name: toeid
+        - name: toe_id
           in: query
           required: false
           schema:
             type: string
             default: "00000000-0000-0000-0000-000000000000"
           description: Target of Evaluation ID (UUID)
-        - name: payload_type
+        - name: category
           in: query
           required: false
           schema:
             type: string
             default: BOMS
-          description: Type of payload (AI, QDT, BOMS)
+          description: Category/type of payload (AI, QDT, BOMS)
         - name: create_parent
           in: query
           required: false
@@ -121,13 +122,14 @@ paths:
             application/json:
               schema:
                 type: object
+
   /api/SDT/read/:
     get:
       summary: Read an item from the Digital Twin model
       tags:
         - Core Operations
       parameters:
-        - name: toeid
+        - name: toe_id
           in: query
           required: false
           schema:
@@ -145,19 +147,26 @@ paths:
             application/json:
               schema:
                 type: object
+        '404':
+          description: Item not found
+          content:
+            application/json:
+              schema:
+                type: object
         '500':
           description: Error reading item
           content:
             application/json:
               schema:
                 type: object
+
   /api/SDT/update/:
     put:
       summary: Update an item in the Digital Twin model
       tags:
         - Core Operations
       parameters:
-        - name: toeid
+        - name: toe_id
           in: query
           required: false
           schema:
@@ -181,19 +190,26 @@ paths:
             application/json:
               schema:
                 type: object
+        '400':
+          description: Failed to update item
+          content:
+            application/json:
+              schema:
+                type: object
         '500':
           description: Error updating item
           content:
             application/json:
               schema:
                 type: object
+
   /api/SDT/delete/:
     delete:
       summary: Delete an item from the Digital Twin model
       tags:
         - Core Operations
       parameters:
-        - name: toeid
+        - name: toe_id
           in: query
           required: false
           schema:
@@ -204,6 +220,13 @@ paths:
           required: true
           schema:
             type: string
+        - name: update_parent
+          in: query
+          required: false
+          schema:
+            type: boolean
+            default: true
+          description: Update parent thing to remove child reference
       responses:
         '200':
           description: Item deleted successfully
@@ -219,20 +242,60 @@ paths:
                 type: object
 
   # ================== CONNECTION MANAGEMENT ==================
-  /api/SDT/connection/:
-    post:
-      summary: Establish a connection with the Digital Twin
+  /api/SDT/topology/:
+    get:
+      summary: Get all Digital Twin things for given TOE IDs
+      description: Reads child things via parent thing and fetches each from Ditto. Returns a flat list of all things under the given TOE IDs.
       tags:
         - Connection Management
-      requestBody:
-        required: false
-        content:
-          application/json:
-            schema:
-              type: object
+      parameters:
+        - name: toeid
+          in: query
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
+            default: ["00000000-0000-0000-0000-000000000000"]
+          style: form
+          explode: true
+          description: One or more TOE IDs to retrieve topology for
+      responses:
+        '200':
+          description: List of Digital Twin things
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      type: object
+                  count:
+                    type: integer
+        '500':
+          description: Error retrieving topology
+          content:
+            application/json:
+              schema:
+                type: object
+
+  /api/SDT/connection/:
+    post:
+      summary: Establish a connection with Eclipse Ditto
+      description: Initializes MQTT connection to Ditto instance for real-time updates.
+      tags:
+        - Connection Management
       responses:
         '200':
           description: Connection established
+          content:
+            application/json:
+              schema:
+                type: object
+        '500':
+          description: Error establishing connection
           content:
             application/json:
               schema:
@@ -241,11 +304,11 @@ paths:
   # ================== EVIDENCE MANAGEMENT ==================
   /api/SDT/evidence/:
     get:
-      summary: Flexible endpoint to retrieve evidence from a Digital Twin
+      summary: Retrieve evidence from a Digital Twin with flexible options
       tags:
         - Evidence Management
       parameters:
-        - name: toeid
+        - name: toe_id
           in: query
           required: false
           schema:
@@ -256,43 +319,57 @@ paths:
           required: false
           schema:
             type: string
+          description: Category/type of evidence (AI, QDT, IDS_Evidence, CLOUD, etc.)
         - name: evidence_type
           in: query
           required: false
           schema:
             type: string
             default: thing
+          description: "Type: thing, zip, files, specific, auto"
         - name: files
           in: query
           required: false
           schema:
             type: string
+          description: Comma-separated list of specific files to retrieve
         - name: include_patterns
           in: query
           required: false
           schema:
             type: string
+          description: Comma-separated include patterns for ZIP (e.g. *.py,*.h5)
         - name: exclude_patterns
           in: query
           required: false
           schema:
             type: string
+          description: Comma-separated exclude patterns for ZIP (e.g. .git/*,*.pyc)
         - name: format
           in: query
           required: false
           schema:
             type: string
             default: json
+          description: "Response format: json or download"
         - name: transform
           in: query
           required: false
           schema:
             type: string
+          description: Transform name or custom mapping JSON
         - name: include_features
           in: query
           required: false
           schema:
             type: string
+          description: Comma-separated list of specific features to include
+        - name: filename
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Filter by specific filename within the evidence (for FILE category)
       responses:
         '200':
           description: Evidence data or downloadable file
@@ -324,11 +401,12 @@ paths:
       tags:
         - Parent Thing Management
       parameters:
-        - name: toeid
+        - name: toe_id
           in: query
           required: true
           schema:
             type: string
+          description: Target of Evaluation ID (UUID)
       requestBody:
         required: false
         content:
@@ -354,17 +432,19 @@ paths:
             application/json:
               schema:
                 type: object
+
   /api/SDT/parent/read:
     get:
       summary: Get the parent thing for a TOE ID
       tags:
         - Parent Thing Management
       parameters:
-        - name: toeid
+        - name: toe_id
           in: query
           required: true
           schema:
             type: string
+          description: Target of Evaluation ID (UUID)
       responses:
         '200':
           description: Parent thing data
@@ -384,17 +464,19 @@ paths:
             application/json:
               schema:
                 type: object
+
   /api/SDT/parent/children:
     get:
       summary: List all child things under a parent thing
       tags:
         - Parent Thing Management
       parameters:
-        - name: toeid
+        - name: toe_id
           in: query
           required: true
           schema:
             type: string
+          description: Target of Evaluation ID (UUID)
       responses:
         '200':
           description: List of child things
@@ -410,45 +492,9 @@ paths:
                 type: object
 
   # ================== DATA SYNCHRONIZATION ==================
-  /api/SDT/sync/github:
-    get:
-      summary: Sync data from GitHub repository to Ditto
-      tags:
-        - Data Synchronization
-      parameters:
-        - name: github_url
-          in: query
-          required: true
-          schema:
-            type: string
-        - name: toeid
-          in: query
-          required: false
-          schema:
-            type: string
-            default: "00000000-0000-0000-0000-000000000000"
-        - name: category
-          in: query
-          required: false
-          schema:
-            type: string
-            default: AI
-      responses:
-        '200':
-          description: Sync results
-          content:
-            application/json:
-              schema:
-                type: object
-        '500':
-          description: Error syncing GitHub repository
-          content:
-            application/json:
-              schema:
-                type: object
   /api/SDT/sync/ids:
     get:
-      summary: Sync artifacts from IDS connector
+      summary: Sync artifacts from IDS connector to Ditto
       tags:
         - Data Synchronization
       parameters:
@@ -458,17 +504,20 @@ paths:
           schema:
             type: string
             default: all
-        - name: toeid
+          description: "'all' to fetch all resources, or specific resource name"
+        - name: toe_id
           in: query
           required: false
           schema:
             type: string
             default: "00000000-0000-0000-0000-000000000000"
+          description: Target of Evaluation ID (UUID)
         - name: ids_connector_url
           in: query
           required: false
           schema:
             type: string
+          description: IDS Connector base URL (optional, uses config if not provided)
       responses:
         '200':
           description: Sync results

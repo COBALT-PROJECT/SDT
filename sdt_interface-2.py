@@ -50,8 +50,14 @@ async def connection_startup(app: FastAPI):
     logger.info("Automatically establishing new connection with Ditto during startup")
     try:
         response = ctrl.connection_create()
-        # logger.info("Connection successfully established with Ditto during startup")
-        print(response)
+        if response.get("success"):
+            inner = response.get("response", {})
+            if inner.get("status") == 409:
+                logger.info("Ditto connection already exists — reusing existing connection 'mqtt-connection_101'")
+            else:
+                logger.info("Ditto connection established successfully")
+        else:
+            logger.error(f"Failed to establish Ditto connection: {response.get('error')}")
     except Exception as e:
         logger.error(f"Failed to establish connection during startup: {str(e)}")
 
