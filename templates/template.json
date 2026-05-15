@@ -4,7 +4,7 @@
 
   "evidence_collectors": [
     {
-      "collector_id": "aishield",
+      "collector_id": "aishield-watchtower",
       "enabled": true,
       "categories": ["AI"],
 
@@ -18,7 +18,7 @@
         }
       },
 
-      "endpoint": "http://localhost:8002/upload/ai",
+      "endpoint": "http://localhost:",
 
       "evidence": {
         "type": "zip",
@@ -28,7 +28,7 @@
     },
 
     {
-      "collector_id": "spectra",
+      "collector_id": "aishield-spectra",
       "enabled": true,
       "categories": ["AI"],
 
@@ -38,7 +38,7 @@
         }
       },
 
-      "endpoint": "http://localhost:8003/api/spectra/evidence",
+      "endpoint": "http://localhost:",
       "auth": {
         "type": "bearer",
         "token_env": "SPECTRA_TOKEN"
