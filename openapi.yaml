@@ -247,7 +247,7 @@ paths:
       summary: Get all Digital Twin things for given TOE IDs
       description: Reads child things via parent thing and fetches each from Ditto. Returns a flat list of all things under the given TOE IDs.
       tags:
-        - Connection Management
+        - Topology Management
       parameters:
         - name: toeid
           in: query
@@ -302,93 +302,215 @@ paths:
                 type: object
 
   # ================== EVIDENCE MANAGEMENT ==================
-  /api/SDT/evidence/:
+  /api/SDT/evidence/thing:
     get:
-      summary: Retrieve evidence from a Digital Twin with flexible options
+      summary: Retrieve the full Digital Twin thing with metadata and attributes
+      description: Returns the complete thing object as JSON with optional feature filtering.
       tags:
         - Evidence Management
       parameters:
         - name: toe_id
           in: query
-          required: false
+          required: true
           schema:
             type: string
-            default: "00000000-0000-0000-0000-000000000000"
+          description: Target of Evaluation ID (UUID)
         - name: category
           in: query
           required: false
           schema:
             type: string
-          description: Category/type of evidence (AI, QDT, IDS_Evidence, CLOUD, etc.)
-        - name: evidence_type
-          in: query
-          required: false
-          schema:
-            type: string
-            default: thing
-          description: "Type: thing, zip, files, specific, auto"
-        - name: files
-          in: query
-          required: false
-          schema:
-            type: string
-          description: Comma-separated list of specific files to retrieve
-        - name: include_patterns
-          in: query
-          required: false
-          schema:
-            type: string
-          description: Comma-separated include patterns for ZIP (e.g. *.py,*.h5)
-        - name: exclude_patterns
-          in: query
-          required: false
-          schema:
-            type: string
-          description: Comma-separated exclude patterns for ZIP (e.g. .git/*,*.pyc)
-        - name: format
-          in: query
-          required: false
-          schema:
-            type: string
-            default: json
-          description: "Response format: json or download"
-        - name: transform
-          in: query
-          required: false
-          schema:
-            type: string
-          description: Transform name or custom mapping JSON
+          description: Category filter (optional, e.g., AI, QDT)
         - name: include_features
           in: query
           required: false
           schema:
             type: string
-          description: Comma-separated list of specific features to include
-        - name: filename
-          in: query
-          required: false
-          schema:
-            type: string
-          description: Filter by specific filename within the evidence (for FILE category)
+          description: Comma-separated list of specific features to include (e.g., performance,security)
       responses:
         '200':
-          description: Evidence data or downloadable file
+          description: Complete thing object with all attributes and metadata
           content:
             application/json:
               schema:
                 type: object
-            application/octet-stream:
-              schema:
-                type: string
-                format: binary
         '404':
-          description: Evidence file not found
+          description: Thing not found
           content:
             application/json:
               schema:
                 type: object
         '500':
-          description: Error retrieving evidence
+          description: Error retrieving thing
+          content:
+            application/json:
+              schema:
+                type: object
+
+  /api/SDT/evidence/list:
+    get:
+      summary: List all files available in a Digital Twin thing
+      description: Useful for discovery — shows what files are available before downloading.
+      tags:
+        - Evidence Management
+      parameters:
+        - name: toe_id
+          in: query
+          required: true
+          schema:
+            type: string
+          description: Target of Evaluation ID (UUID)
+        - name: category
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Category filter (optional)
+        - name: pattern
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Glob pattern to filter files (e.g., *.json, *.h5)
+        - name: recursive
+          in: query
+          required: false
+          schema:
+            type: boolean
+            default: false
+          description: Include nested/recursive files
+      responses:
+        '200':
+          description: List of files with metadata (name, size, type, timestamps)
+          content:
+            application/json:
+              schema:
+                type: object
+        '404':
+          description: Thing not found
+          content:
+            application/json:
+              schema:
+                type: object
+        '500':
+          description: Error listing files
+          content:
+            application/json:
+              schema:
+                type: object
+
+  /api/SDT/evidence/download:
+    get:
+      summary: Download evidence file(s) from a Digital Twin thing
+      description: |
+        Smart logic: single file returns raw file; multiple files return ZIP archive;
+        no files specified returns all files as ZIP.
+      tags:
+        - Evidence Management
+      parameters:
+        - name: toe_id
+          in: query
+          required: true
+          schema:
+            type: string
+          description: Target of Evaluation ID (UUID)
+        - name: files
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Comma-separated list of files to download (optional, defaults to all)
+        - name: category
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Category filter (optional)
+      responses:
+        '200':
+          description: Binary file (raw or zipped)
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        '400':
+          description: Thing does not have downloadable file
+          content:
+            application/json:
+              schema:
+                type: object
+        '404':
+          description: File not found
+          content:
+            application/json:
+              schema:
+                type: object
+        '500':
+          description: Error downloading files
+          content:
+            application/json:
+              schema:
+                type: object
+
+  /api/SDT/evidence/transform:
+    get:
+      summary: Apply transformation to evidence data and return transformed result
+      tags:
+        - Evidence Management
+      parameters:
+        - name: toe_id
+          in: query
+          required: true
+          schema:
+            type: string
+          description: Target of Evaluation ID (UUID)
+        - name: transform
+          in: query
+          required: true
+          schema:
+            type: string
+          description: Transformation type (e.g., qpu_clouditor)
+        - name: category
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Category of the thing (optional)
+        - name: files
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Comma-separated list of files to transform (optional)
+        - name: target_format
+          in: query
+          required: false
+          schema:
+            type: string
+            default: json
+          description: Output format (json, xml, etc.)
+      responses:
+        '200':
+          description: Transformed data
+          content:
+            application/json:
+              schema:
+                type: object
+        '400':
+          description: Missing required fields or transformation failed
+          content:
+            application/json:
+              schema:
+                type: object
+        '404':
+          description: Thing not found
+          content:
+            application/json:
+              schema:
+                type: object
+        '500':
+          description: Error transforming evidence
           content:
             application/json:
               schema:

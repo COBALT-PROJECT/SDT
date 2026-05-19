@@ -451,7 +451,7 @@ async def delete_item_endpoint(
 # ==================== 3. CONNECTION MANAGEMENT ====================
 
 @app.get("/api/SDT/topology/")
-async def get_topology(toeid: list[str] = Query(default=["vm-database", "vm-webserver"], description="One or more TOE IDs to retrieve topology for")):
+async def get_topology(toeid: list[str] = Query(default=["00000000-0000-0000-0000-000000000000"], description="One or more TOE IDs to retrieve topology for")):
     """
     Returns all Digital Twin things for the given TOE IDs, proxied through SDT.
     Reads genesis things via list_child_things, then fetches each child via read_item_by_id.

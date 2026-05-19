@@ -7,9 +7,11 @@ dummy_uploads/*
 evidence/*
 certs/
 api/
+sdt_interface-2.py
 # Ignore everything in tests
 # tests/*
 evidence/*
+sdt.log
 
 # But don't ignore the test_files directory
 !tests/test_files

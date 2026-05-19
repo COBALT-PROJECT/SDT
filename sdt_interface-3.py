@@ -51,8 +51,14 @@ async def connection_startup(app: FastAPI):
     logger.info("Automatically establishing new connection with Ditto during startup")
     try:
         response = ctrl.connection_create()
-        # logger.info("Connection successfully established with Ditto during startup")
-        print(response)
+        if response.get("success"):
+            inner = response.get("response", {})
+            if inner.get("status") == 409:
+                logger.info("Ditto connection already exists — reusing existing connection 'mqtt-connection_101'")
+            else:
+                logger.info("Ditto connection established successfully")
+        else:
+            logger.error(f"Failed to establish Ditto connection: {response.get('error')}")
     except Exception as e:
         logger.error(f"Failed to establish connection during startup: {str(e)}")
 
@@ -517,6 +523,27 @@ async def delete_item_endpoint(
 
 
 # ==================== 3. CONNECTION MANAGEMENT ====================
+
+@app.get("/api/SDT/topology/", tags=["Topology Management"])
+async def get_topology(toeid: list[str] = Query(default=["00000000-0000-0000-0000-000000000000"], description="One or more TOE IDs to retrieve topology for")):
+    """
+    Returns all Digital Twin things for the given TOE IDs, proxied through SDT.
+    Reads genesis things via list_child_things, then fetches each child via read_item_by_id.
+    """
+    try:
+        items = []
+        for toe_id in toeid:
+            result = ctrl.list_child_things(toe_id)
+            if result.get("success"):
+                for child_id in result.get("child_things", {}).keys():
+                    thing = ctrl.read_item_by_id(child_id)
+                    if thing:
+                        items.append(thing)
+        return JSONResponse(content={"items": items, "count": len(items)})
+    except Exception as e:
+        logger.error(f"Error retrieving topology: {e}")
+        return JSONResponse(content={"error": str(e)}, status_code=500)
+
 
 @app.post("/api/SDT/connection/", tags=["Connection Management"])
 async def connection():
