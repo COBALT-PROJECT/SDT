@@ -3,17 +3,17 @@ info:
   title: SDT Service Interface
   version: v0.2.7
   description: |
-    REST API for Security Digital Twin (SDT) Service. Provides endpoints for managing Digital Twin instances, evidence collection, synchronization, authentication with Bearer tokens, and health checks.
+    REST API for Security Digital Twin (SDT) Service. Provides endpoints for managing Digital Twin instances, evidence collection, synchronization, authorization with Bearer tokens, and health checks.
 servers:
   - url: http://localhost:8001
 paths:
-  # ================== AUTHENTICATION ENDPOINTS ==================
+  # ================== AUTHORIZATION ENDPOINTS ==================
   /api/SDT/auth/token:
     post:
       summary: Receive OAuth2 Bearer token from SDT-Manager
-      description: Store OAuth2 credentials received from SDT-Manager for authenticated communication with IDS-Connector
+      description: Store OAuth2 credentials received from SDT-Manager for authorized communication with IDS-Connector
       tags:
-        - Authentication
+        - Authorization
       requestBody:
         required: true
         content:
@@ -65,7 +65,7 @@ paths:
       summary: Check current Bearer token status
       description: Returns token availability status without revealing secrets
       tags:
-        - Authentication
+        - Authorization
       responses:
         '200':
           description: Token status

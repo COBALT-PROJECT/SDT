@@ -79,7 +79,7 @@ ctrl.set_token_store(sdt_token_store)
 
 ctrl.run_ditto_listener()
 
-# ==================== TOKEN AUTHENTICATION MIDDLEWARE ====================
+# ==================== TOKEN AUTHORIZATION MIDDLEWARE ====================
 
 @app.middleware("http")
 async def verify_token_middleware(request: Request, call_next):
@@ -94,18 +94,30 @@ async def verify_token_middleware(request: Request, call_next):
     - /api/SDT/auth/token/status (GET) - check token status
     - /api/SDT/health (GET) - health check
     - /api/SDT/sync/ids (GET) - sync from IDS connector
+    - /api/SDT/topology/ (GET) - topology endpoint
+    - /api/SDT/create/ (POST) - create endpoint
     - /api/SDT/evidence/* (GET) - evidence management endpoints
     """
-    # Endpoints that don't require token authentication
+    # Endpoints that don't require token authorization
     unprotected_endpoints = [
         "/api/SDT/auth/token",
         "/api/SDT/auth/token/status",
         "/api/SDT/health",
+        "/api/SDT/create/",
+        "/api/SDT/read/",
+        "/api/SDT/update/",
+        "/api/SDT/delete/",
+        "/api/SDT/topology/",
+        "/api/SDT/connection/",
         "/api/SDT/sync/ids",
         "/api/SDT/evidence/thing",
         "/api/SDT/evidence/list",
         "/api/SDT/evidence/download",
         "/api/SDT/evidence/transform",
+        "/api/SDT/parent/create",
+        "/api/SDT/parent/read",
+        "/api/SDT/parent/children",
+        "/api/SDT/upload-template",
         "/docs",
         "/openapi.json"
     ]
@@ -149,7 +161,7 @@ async def verify_token_middleware(request: Request, call_next):
     response = await call_next(request)
     return response
 
-# ==================== END AUTHENTICATION MIDDLEWARE ====================
+# ==================== END AUTHORIZATION MIDDLEWARE ====================
 
 # # Create a queue for communication between processes
 # ditto_queue = Queue()
@@ -198,12 +210,12 @@ async def verify_token_middleware(request: Request, call_next):
 #             break
 #     return JSONResponse(content={"messages": messages})
 # ==================== ENDPOINTS BY FUNCTIONAL AREA ====================
-# Organization: Authentication > Core Operations > Connection > Evidence > Parent > Sync > Templates > Health
+# Organization: Authorization > Core Operations > Connection > Evidence > Parent > Sync > Templates > Health
 
 
-# ==================== 1. AUTHENTICATION ENDPOINTS ====================
+# ==================== 1. AUTHORIZATION ENDPOINTS ====================
 
-@app.post("/api/SDT/auth/token", tags=["Authentication"])
+@app.post("/api/SDT/auth/token", tags=["Authorization"])
 async def receive_bearer_token(payload: Dict):
     """
     Receive OAuth2 Bearer token from SDT-Manager.
@@ -276,7 +288,7 @@ async def receive_bearer_token(payload: Dict):
         raise HTTPException(status_code=500, detail=f"Failed to store token: {str(e)}")
 
 
-@app.get("/api/SDT/auth/token/status", tags=["Authentication"])
+@app.get("/api/SDT/auth/token/status", tags=["Authorization"])
 async def get_token_status():
     """
     Get current status of stored Bearer token (without revealing secrets).
@@ -301,7 +313,7 @@ async def get_token_status():
         status_code=200,
         content={
             "status": "available",
-            "message": "Bearer token is stored and ready for IDS-Connector authentication",
+            "message": "Bearer token is stored and ready for IDS-Connector authorization",
             "sdt_id": sdt_token_store.get("sdt_id"),
             "client_id": sdt_token_store.get("client_id"),
             "components": list(sdt_token_store.get("components", {}).keys()),
@@ -1431,4 +1443,4 @@ async def health_check():
 # app.add_middleware(AppMapMiddleware)
 
 if __name__ == '__main__':
-    uvicorn.run(app, port=8000, host='0.0.0.0')
+    uvicorn.run(app, port=8001, host='0.0.0.0')
