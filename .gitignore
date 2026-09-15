@@ -12,6 +12,15 @@ sdt_interface-2.py
 # tests/*
 evidence/*
 sdt.log
+CLAUDE.md
+AUTHENTICATION_QUICK_START.md
 
+EVIDENCE_COMBINATIONS_TABLE.md
+EVIDENCE_COMBINATIONS_TABLE.md
 # But don't ignore the test_files directory
 !tests/test_files
+test_download.zip
+
+SDT_API_WORKFLOW.md
+TEMPLATE_3.0_IMPLEMENTATION.md
+.pytest_cache

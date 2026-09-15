@@ -6,6 +6,7 @@ Note: implement this file's functionality inside the SDT to get the files direct
 """
 import json
 import base64
+import binascii
 import sys
 import os
 
@@ -46,6 +47,47 @@ class file_extractor:
         except Exception as e:
             print(f"Error reading JSON file: {e}")
             return False
+
+    def _extract_json_file(self, payload, metadata):
+        """Extract JSON file content as UTF-8 bytes."""
+        if "content" in payload:
+            file_content = payload["content"]
+        elif "data" in payload:
+            file_content = payload["data"]
+        else:
+            return None, None, None
+
+        if metadata.get("encoding") == "base64":
+            if isinstance(file_content, str):
+                try:
+                    decoded_bytes = base64.b64decode(file_content)
+                except (ValueError, binascii.Error) as e:
+                    print(f"Invalid base64 content: {e}")
+                    return None, None, None
+                try:
+                    parsed_json = json.loads(decoded_bytes.decode('utf-8'))
+                    file_data = json.dumps(parsed_json, indent=2)
+                except (json.JSONDecodeError, UnicodeDecodeError):
+                    # Not valid UTF-8 JSON; keep the raw text, replacing undecodable bytes
+                    file_data = decoded_bytes.decode('utf-8', errors='replace')
+            else:
+                return None, None, None
+        else:
+            if isinstance(file_content, (dict, list)):
+                file_data = json.dumps(file_content, indent=2)
+            elif isinstance(file_content, str):
+                try:
+                    parsed_json = json.loads(file_content)
+                    file_data = json.dumps(parsed_json, indent=2)
+                except json.JSONDecodeError:
+                    file_data = file_content
+            else:
+                file_data = json.dumps(file_content, indent=2)
+
+        self.file_data = file_data.encode('utf-8')
+        self.metadata = metadata
+        self.data_type = "text"
+        return self.file_data, metadata, "text"
 
     def extract_file_from_json(self, json_data=None):
         """
@@ -101,6 +143,8 @@ class file_extractor:
                         self.metadata = metadata
                         self.data_type = "text"
                         return self.file_data, metadata, "text"
+                    elif file_type == "json_file":
+                        return self._extract_json_file(inner_data, metadata)
                 except json.JSONDecodeError as e:
                     print(f"JSON decode error in data field: {e}")
                     pass
@@ -154,6 +198,8 @@ class file_extractor:
                             self.metadata = metadata
                             self.data_type = "text"
                             return self.file_data, metadata, "text"
+                    elif file_type == "json_file":
+                        return self._extract_json_file(inner_data, metadata)
 
             # Alternative: Direct format (without IDS wrapper)
             elif "type" in payload and "metadata" in payload:
@@ -186,6 +232,8 @@ class file_extractor:
                     self.metadata = metadata
                     self.data_type = "text"
                     return self.file_data, metadata, "text"
+                elif file_type == "json_file":
+                    return self._extract_json_file(payload, metadata)
 
         except Exception as e:
             print(f"Error extracting file: {e}")

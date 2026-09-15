@@ -29,10 +29,12 @@ The Security Digital Twin (SDT) Service v0.2.8 is a centralized middleware for i
 - [Installation](#installation)
   - [Prerequisites](#prerequisites)
   - [Setup](#setup)
+- [Kubernetes Deployment (k3s)](#kubernetes-deployment-k3s)
 - [API Reference](#api-reference)
   - [Basic Operations](#basic-operations)
   - [Digital Twin Management](#digital-twin-management)
 - [Usage Examples](#usage-examples)
+- [License](#license)
 
 
 
@@ -327,6 +329,51 @@ curl -X GET "http://localhost:8000/api/SDT/evidence/thing?toe_id=123&category=QD
 - **Automatic Bearer Token Injection**: All IDS-Connector calls automatically authenticated
 - **Enhanced Error Handling**: Detailed errors for authentication failures (401, 403, 404)
 
+## Kubernetes Deployment (k3s)
+
+The SDT service runs as a pod in a k3s cluster. The deployment manifest is managed by
+**SDT-Manager** and lives at `../SDT-Manager/yaml_scripts/sdt-manager-k8s.yaml` (embedded
+as a ConfigMap entry). Key deployment details:
+
+| Setting | Value |
+|---|---|
+| Image | `arq101/sdt-main-image:0.2.8` |
+| Image pull policy | `Never` (imported from local Docker daemon into k3s containerd) |
+| Node | Pinned to `sdtm` via `nodeSelector: kubernetes.io/hostname: sdtm` |
+| API NodePort | `30008 → 8000` |
+| MQTT NodePort | `30009 → 1883` |
+
+### Building and importing the image
+
+```bash
+# Build (from this directory)
+docker build -t arq101/sdt-main-image:0.2.8 .
+
+# Remove old image from k3s containerd (if present)
+sudo k3s ctr images rm docker.io/arq101/sdt-main-image:0.2.8
+
+# Import new image into k3s
+docker save arq101/sdt-main-image:0.2.8 | sudo k3s ctr images import -
+
+# Verify it is present in k3s
+sudo k3s ctr images ls | grep sdt-main-image
+```
+
+After import, restart the pod to pick up the new image:
+
+```bash
+kubectl rollout restart deployment/sdt-deployment
+kubectl rollout status deployment/sdt-deployment
+```
+
+### Mosquitto inside the container
+
+The `Dockerfile` installs Mosquitto directly into the image. The `start.sh` entrypoint starts
+Mosquitto as a background daemon before launching uvicorn, so both the API (port 8000) and
+the MQTT broker (port 1883) run inside the same pod.
+
+---
+
 ## Changelog v0.2.5
 
 - Template 3.0: Unified evidence combinations and flexible packaging
@@ -336,3 +383,13 @@ curl -X GET "http://localhost:8000/api/SDT/evidence/thing?toe_id=123&category=QD
 - Quantum DT and QPU evidence support
 - Improved Dockerfile and MQTT integration
 - Enhanced API endpoints and health checks
+
+---
+
+## License
+
+This project is licensed under the **Apache License 2.0**. See the [LICENSE](LICENSE) file for
+the full license text.
+
+Third-party dependencies and their respective licenses are documented in
+[THIRD_PARTY_LICENSES.md](THIRD_PARTY_LICENSES.md).

@@ -2,7 +2,10 @@
 import logging
 import requests
 from core.util import FileUtils
-from core.config import Clouditor_IP, Clouditor_PORT
+from core.config import (
+    Clouditor_IP, Clouditor_PORT,
+    IAM_TOKEN_URL, IAM_CLIENT_ID, IAM_CLIENT_SECRET, IAM_SCOPE,
+)
 import os
 import json
 import uuid
@@ -18,6 +21,7 @@ class EvidenceProvider():
         self.controller = controller
         self.template_dir = template_dir
         self.usecase_templates = {}
+        self.current_usecase = None  # Name of the currently loaded use case template
         self.mqtt_subscriptions = {}  # Track MQTT subscriptions
         self._load_usecase_templates()
         self._setup_mqtt_subscriptions()
@@ -465,15 +469,24 @@ class EvidenceProvider():
         return {"file": (os.path.basename(zip_path), open(zip_path, "rb"), "application/zip")}
 
     def _get_files(self, thing: dict, evidence_config: dict):
-        """Get specific files from thing"""
+        """Get specific files from thing.
+
+        Resolves each requested file from the Repository_file_tree feature (GitHub-style
+        things) or, failing that, from the thing's own metadata (attributes.file_path /
+        filename) used by IDS-synced single-file things.
+        """
         files_list = evidence_config.get("files", [])
 
-        # Try to find files in Repository_file_tree feature
         file_tree = thing.get("features", {}).get("Repository_file_tree", {}).get("properties", {})
+        attributes = thing.get("attributes", {})
+        thing_filename = attributes.get("filename")
+        thing_file_path = attributes.get("file_path")
 
         result_files = []
         for file_name in files_list:
-            # Search for file in file tree
+            found = False
+
+            # 1) GitHub-style things: look in Repository_file_tree
             for file_key, file_info in file_tree.items():
                 if isinstance(file_info, dict) and file_info.get("name") == file_name:
                     file_path = file_info.get("path")
@@ -487,7 +500,19 @@ class EvidenceProvider():
                             "hash": file_info.get("hash"),
                             "size": os.path.getsize(file_path)
                         })
-                        break
+                        found = True
+                    break
+
+            # 2) IDS-style single-file things: resolve from thing metadata
+            if not found and thing_filename == file_name and thing_file_path and os.path.exists(thing_file_path):
+                with open(thing_file_path, 'r') as f:
+                    content = f.read()
+                result_files.append({
+                    "name": file_name,
+                    "path": thing_file_path,
+                    "content": content,
+                    "size": os.path.getsize(thing_file_path)
+                })
 
         return {"files": result_files}
 
@@ -533,13 +558,18 @@ class EvidenceProvider():
                 # Get token using client credentials
                 basic_auth = base64.b64encode(f"{client_id}:{client_secret}".encode()).decode()
 
+                token_data = {"grant_type": "client_credentials"}
+                scope = auth_config.get("scope")
+                if scope:
+                    token_data["scope"] = scope
+
                 token_resp = requests.post(
                     token_url,
                     headers={
                         "Authorization": f"Basic {basic_auth}",
                         "Content-Type": "application/x-www-form-urlencoded"
                     },
-                    data={"grant_type": "client_credentials"},
+                    data=token_data,
                     timeout=10
                 )
 
@@ -594,6 +624,7 @@ class EvidenceProvider():
             # Assuming template_data is a single template dict
             usecase_name = template_data.get("config_name", "default")
             self.usecase_templates[usecase_name] = template_data
+            self.current_usecase = usecase_name  # Track the active use case for defaults lookup
             logger.info(f"Loaded template: {usecase_name}")
         except Exception as e:
             logger.error(f"Error loading template: {e}")
@@ -669,6 +700,21 @@ class EvidenceProvider():
             logger.error(f"Error sending AI notification: {e}")
             return None
 
+    def _get_iam_token(self):
+        """
+        Get an OAuth2 access token from the COBALT IAM via client_credentials grant.
+        This token is what's sent (as Bearer) to Clouditor's evidence endpoint.
+        """
+        response = requests.post(
+            IAM_TOKEN_URL,
+            auth=(IAM_CLIENT_ID, IAM_CLIENT_SECRET),
+            headers={"Content-Type": "application/x-www-form-urlencoded"},
+            data={"grant_type": "client_credentials", "scope": IAM_SCOPE},
+            timeout=10
+        )
+        response.raise_for_status()
+        return response.json().get("access_token")
+
     def notification_push_QDT(self, file_path, toe_id=None, filename=None):
         """
         Legacy method: Reads QPU data JSON, transforms it, and sends to Clouditor
@@ -678,24 +724,11 @@ class EvidenceProvider():
             with open(file_path, 'r') as f:
                 qpu_data = json.load(f)
 
-            # Get access token
-            token_url = f"http://{Clouditor_IP}:{Clouditor_PORT}/v1/auth/token"
-            client_id = "clouditor"
-            client_secret = os.getenv("CLOUDITOR_SECRET", "clouditor")
-
-            basic_auth = base64.b64encode(f"{client_id}:{client_secret}".encode()).decode()
-
-            token_resp = requests.post(
-                token_url,
-                headers={
-                    "Authorization": f"Basic {basic_auth}",
-                    "Content-Type": "application/x-www-form-urlencoded"
-                },
-                data={"grant_type": "client_credentials"},
-                timeout=10
-            )
-
-            access_token = token_resp.json().get("access_token")
+            # Get access token from the IAM (client_credentials grant)
+            access_token = self._get_iam_token()
+            if not access_token:
+                logger.error("IAM token response did not contain an access_token")
+                return None
 
             # Transform QPU data
             transformed_data = self._transform_qpu_data(qpu_data, toe_id)
@@ -744,10 +777,10 @@ class EvidenceProvider():
             # Generate IDs and timestamp
             evidence_id = str(uuid.uuid4())
             current_time = datetime.now(timezone.utc).isoformat()
-            qpu_id = qpu_data.get("qpu_id", str(uuid.uuid4()))
 
-            # Extract QPU metrics from data
+            # Extract QPU metrics from data (qpu_data may be a dict or a JSON array)
             data_dict = qpu_data if isinstance(qpu_data, dict) else {}
+            qpu_id = data_dict.get("qpu_id", str(uuid.uuid4()))
 
             # Build Clouditor evidence structure
             transformed = {

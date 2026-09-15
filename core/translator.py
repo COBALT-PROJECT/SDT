@@ -895,7 +895,7 @@ class Translator():
     #         logger.error(traceback.format_exc())
     #         return processed_things
 
-    def process_ids_response(self, ids_response: dict, toe_id: str):
+    def process_ids_response(self, ids_response: dict, toe_id: str, category: str = None):
         """
         Process IDS connector response and extract all files with metadata.
         Route each file to appropriate processing based on type:
@@ -905,6 +905,7 @@ class Translator():
         Args:
             ids_response: Response from IDS connector GET /api/IDSconnector/get_data_request
             toe_id: Target of Evaluation ID
+            category: Override category for all extracted things (e.g. 'QDT', 'AI')
 
         Returns:
             list: List of processed things
@@ -942,7 +943,7 @@ class Translator():
                     if isinstance(data, dict) and "resource" in data and "extracted_file" in data:
                         # Extract from the resource directly, not the consumer's extracted_file
                         resource = data["resource"]
-                        processed_things.extend(self._process_resource_directly(resource, toe_id))
+                        processed_things.extend(self._process_resource_directly(resource, toe_id, category=category))
 
                     # Handle consumer response with multiple files
                     elif isinstance(data, dict) and "files" in data:
@@ -952,7 +953,7 @@ class Translator():
                         for file_item in files_data:
                             if "resource" in file_item:
                                 resource = file_item["resource"]
-                                processed_things.extend(self._process_resource_directly(resource, toe_id))
+                                processed_things.extend(self._process_resource_directly(resource, toe_id, category=category))
                             else:
                                 logger.warning("File item missing resource, skipping")
 
@@ -963,14 +964,14 @@ class Translator():
 
                         for resource in resources:
                             logger.info(f"Processing resource: {resource.get('@id', 'unknown')}")
-                            processed_things.extend(self._process_resource_directly(resource, toe_id))
+                            processed_things.extend(self._process_resource_directly(resource, toe_id, category=category))
 
                     else:
                         # Single resource or unknown format
                         resources = [data] if isinstance(data, dict) else [data]
 
                         for resource in resources:
-                            processed_things.extend(self._process_resource_directly(resource, toe_id))
+                            processed_things.extend(self._process_resource_directly(resource, toe_id, category=category))
 
                 except json.JSONDecodeError:
                     logger.warning("Failed to parse JSON data, treating as base64 encoded file")
@@ -1013,7 +1014,7 @@ class Translator():
                         "filename": filename
                     }
                     # Create Ditto thing from extracted file metadata
-                    thing = self._create_thing_from_metadata(file_info, toe_id)
+                    thing = self._create_thing_from_metadata(file_info, toe_id, category=category)
                     if thing:
                         processed_things.append(thing)
 
@@ -1024,7 +1025,7 @@ class Translator():
             logger.error(traceback.format_exc())
             return processed_things
 
-    def _process_resource_directly(self, resource: dict, toe_id: str):
+    def _process_resource_directly(self, resource: dict, toe_id: str, category: str = None):
         """
         Process a single IDS resource directly by extracting embedded file from ids:description.
 
@@ -1114,7 +1115,7 @@ class Translator():
                     }
 
                     # Create Ditto thing from file metadata
-                    thing = self._create_thing_from_metadata(file_info, toe_id)
+                    thing = self._create_thing_from_metadata(file_info, toe_id, category=category)
                     if thing:
                         processed_things.append(thing)
                 else:
@@ -1128,137 +1129,6 @@ class Translator():
 
         except Exception as e:
             logger.error(f"Error processing resource directly: {e}")
-            logger.error(traceback.format_exc())
-
-        return processed_things
-        """
-        Process a single extracted file from consumer response.
-        Determines file type and routes to appropriate processing.
-
-        Args:
-            extracted_file: The extracted_file object from consumer response
-            resource: The resource metadata from consumer response
-            toe_id: Target of Evaluation ID
-
-        Returns:
-            list: List of processed things (usually one thing per file)
-        """
-        logger = logging.getLogger(__name__)
-        processed_things = []
-
-        try:
-            if not extracted_file.get("success"):
-                logger.warning("Extracted file indicates failure, skipping")
-                return processed_things
-
-            file_data = extracted_file.get("data")
-            metadata = extracted_file.get("metadata", {})
-
-            if not file_data:
-                logger.warning("No file data in extracted_file")
-                return processed_things
-
-            # Get resource metadata
-            resource_id = resource.get("@id", "")
-            resource_type = resource.get("@type", "")
-            title = resource.get("ids:title", [{}])[0].get("@value", "Unknown")
-            description = resource.get("ids:description", [{}])[0].get("@value", "")
-
-            logger.info(f"Processing extracted file: {title}")
-
-            # Determine file type and content
-            file_type = metadata.get("type", "unknown")
-            mime_type = metadata.get("mime_type", "")
-
-            # Check if this is a structured data format that needs transformation
-            if self._is_structured_data_format(file_data, metadata, description):
-                logger.info("Detected structured data format, attempting transformation")
-
-                # Try to parse the file data as JSON for transformation
-                try:
-                    if isinstance(file_data, str):
-                        # If it's a string, try to parse as JSON
-                        structured_data = json.loads(file_data)
-                    else:
-                        # If it's bytes, decode and parse
-                        structured_data = json.loads(file_data.decode('utf-8'))
-
-                    # Detect artifact type from the structured data
-                    artifact_type = self._detect_artifact_type_from_content(structured_data, metadata, description)
-
-                    if artifact_type:
-                        logger.info(f"Detected artifact type: {artifact_type} for transformation")
-
-                        # Create a synthetic IDS resource for transformation
-                        synthetic_resource = self._create_synthetic_resource(resource, metadata, structured_data)
-
-                        # Process through appropriate transformer
-                        thing = self._process_ids_artifact(synthetic_resource, toe_id, artifact_type)
-                        if thing:
-                            processed_things.append(thing)
-                            logger.info(f"Created transformed thing for {artifact_type}")
-                        else:
-                            logger.warning(f"Failed to transform {artifact_type}, falling back to file storage")
-                            # Fall through to file storage
-                    else:
-                        logger.info("No specific artifact type detected, storing as file")
-
-                except (json.JSONDecodeError, UnicodeDecodeError) as e:
-                    logger.info(f"File is not JSON-structured, storing as regular file: {e}")
-
-            # Store as regular file if not structured or transformation failed
-            if not processed_things:
-                logger.info("Storing extracted file to disk and creating file thing")
-
-                # Save the file directly
-                filename = metadata.get("filename", f"extracted_file_{toe_id}")
-                # Add appropriate extension if missing
-                if not os.path.splitext(filename)[1]:
-                    if file_type == "text":
-                        filename += ".txt"
-                    elif "zip" in mime_type:
-                        filename += ".zip"
-                    elif "ipynb" in mime_type or "jupyter" in mime_type:
-                        filename += ".ipynb"
-                    elif "python" in mime_type:
-                        filename += ".py"
-                    elif "json" in mime_type:
-                        filename += ".json"
-
-                evidence_dir = "/home/sdtm/SDTM/SDT/evidence"
-                file_path = os.path.join(evidence_dir, filename)
-
-                try:
-                    # Write the file
-                    mode = 'wb' if isinstance(file_data, bytes) else 'w'
-                    with open(file_path, mode) as f:
-                        f.write(file_data)
-                    logger.info(f"Saved extracted file to: {file_path}")
-
-                    file_info = {
-                        "resource_id": f"{toe_id}_extracted_{hashlib.md5(str(metadata).encode()).hexdigest()[:8]}",
-                        "title": metadata.get("filename", title),
-                        "format": file_type,
-                        "data_size": len(file_data) if isinstance(file_data, (str, bytes)) else 0,
-                        "permission": "read",
-                        "created": metadata.get("extraction_timestamp", datetime.utcnow().isoformat() + "Z"),
-                        "updated": metadata.get("extraction_timestamp", datetime.utcnow().isoformat() + "Z"),
-                        "file_path": file_path,
-                        "filename": filename,
-                        "sourceType": "extracted_file"
-                    }
-
-                    # Create Ditto thing from extracted file metadata
-                    thing = self._create_thing_from_metadata(file_info, toe_id)
-                    if thing:
-                        processed_things.append(thing)
-                        logger.info(f"Created file thing for extracted file: {filename}")
-
-                except Exception as e:
-                    logger.error(f"Failed to save extracted file: {e}")
-
-        except Exception as e:
-            logger.error(f"Error processing extracted file: {e}")
             logger.error(traceback.format_exc())
 
         return processed_things
@@ -1433,7 +1303,7 @@ class Translator():
             logger.error(traceback.format_exc())
             return processed_things
 
-    def _create_thing_from_metadata(self, file_info: dict, toe_id: str):
+    def _create_thing_from_metadata(self, file_info: dict, toe_id: str, category: str = None):
         """
         Create a Ditto thing from file metadata extracted by unified extractor
 
@@ -1458,15 +1328,19 @@ class Translator():
             file_path = file_info.get("file_path", "")
             filename = file_info.get("filename", "")
 
-            # Determine category based on file extension or format
-            category = "AI" # Default category for extracted files
-            if file_format:
-                if "zip" in file_format.lower():
-                    category = "AI"
-                elif "ipynb" in file_format.lower():
-                    category = "AI"
-                elif "py" in file_format.lower():
-                    category = "AI"
+            # Determine category based on file extension or format, or use caller-supplied override
+            if category:
+                resolved_category = category
+            else:
+                resolved_category = "AI"  # Default category for extracted files
+                if file_format:
+                    if "zip" in file_format.lower():
+                        resolved_category = "AI"
+                    elif "ipynb" in file_format.lower():
+                        resolved_category = "AI"
+                    elif "py" in file_format.lower():
+                        resolved_category = "AI"
+            category = resolved_category
 
             # Create Ditto thing
             thing = {

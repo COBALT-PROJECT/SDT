@@ -15,6 +15,7 @@ import sys
 
 from fastapi import Request, FastAPI, UploadFile, File, HTTPException, Query
 from fastapi.responses import JSONResponse, FileResponse
+from fastapi.middleware.cors import CORSMiddleware
 from typing import Optional, Dict
 from contextlib import asynccontextmanager
 from datetime import datetime
@@ -117,6 +118,7 @@ async def verify_token_middleware(request: Request, call_next):
         "/api/SDT/parent/create",
         "/api/SDT/parent/read",
         "/api/SDT/parent/children",
+        "/api/SDT/parent/list",
         "/api/SDT/upload-template",
         "/docs",
         "/openapi.json"
@@ -162,6 +164,23 @@ async def verify_token_middleware(request: Request, call_next):
     return response
 
 # ==================== END AUTHORIZATION MIDDLEWARE ====================
+
+# ==================== CORS ====================
+# Origins allowed to make cross-origin browser requests to this API.
+# Registered after the auth middleware so CORS sits outermost and can answer
+# preflight (OPTIONS) requests before the token check runs.
+cors_allowed_origins = [
+    "http://10.163.1.102",
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=cors_allowed_origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+# ==================== END CORS ====================
 
 # # Create a queue for communication between processes
 # ditto_queue = Queue()
@@ -772,17 +791,20 @@ async def connection():
 async def sync_from_ids_connector(
     data_path: str = Query(default="all", description="Path to data in IDS connector: 'all' to fetch all resources, or specific resource name (e.g., 'clouditorBOM')"),
     toe_id: str = Query(default="00000000-0000-0000-0000-000000000000", description="Target of Evaluation ID (UUID format: 00000000-0000-0000-0000-000000000000)"),
-    ids_connector_url: str = Query(default=None, description="IDS Connector base URL for artifact retrieval (optional, uses config if not provided)")
+    ids_connector_url: str = Query(default=None, description="IDS Connector base URL for artifact retrieval (optional, uses config if not provided)"),
+    category: str = Query(default="QDT", description="Evidence category to assign to synced artifacts ('QDT' or 'AI')")
 ):
     """
     Sync artifacts from IDS connector to Ditto Digital Twin.
 
-    Fetches evidence data from IDS connector and creates corresponding things in Ditto.
+    Fetches evidence data from IDS connector and creates corresponding things in Ditto,
+    then forwards the evidence to registered collectors (e.g. Clouditor).
 
     Args:
         data_path: 'all' to get all resources, or specific resource name like 'clouditorBOM'
         toe_id: Target of Evaluation ID (UUID format)
         ids_connector_url: Base URL of IDS connector (optional, uses config if not provided)
+        category: Evidence category for synced artifacts — 'QDT' or 'AI' (default: 'QDT')
 
     Returns:
         JSONResponse: Sync results with status, message, and created thing details
@@ -794,7 +816,7 @@ async def sync_from_ids_connector(
 
         logger.info(f"Starting IDS connector sync for TOE: {toe_id}, data_path: {data_path}, URL: {ids_connector_url}")
 
-        result = ctrl.sync_ids_connector(data_path, toe_id, ids_connector_url)
+        result = ctrl.sync_ids_connector(data_path, toe_id, ids_connector_url, category=category)
 
         if result.get("success"):
             return JSONResponse(
@@ -813,7 +835,10 @@ async def sync_from_ids_connector(
             )
         else:
             error_msg = result.get("error", "Unknown error")
-            status_code = 400 if "not found" in error_msg.lower() else 500
+            # Use the status the connector/controller actually determined
+            # (401/403/404/502/500 - see sync_ids_connector's HTTPError
+            # handling) rather than guessing from the error text.
+            status_code = result.get("status_code", 500)
             return JSONResponse(
                 status_code=status_code,
                 content={
@@ -1292,6 +1317,49 @@ async def list_children(toe_id: str = Query(..., description="Target of Evaluati
             content={
                 "status": "error",
                 "message": str(e),
+                "timestamp": time.time()
+            }
+        )
+
+
+@app.get("/api/SDT/parent/list", tags=["Parent Thing Management"])
+async def list_parents():
+    """
+    List all TOE parent things and their last update time.
+
+    Returns:
+        JSONResponse: List of TOE parent things with last_updated metadata.
+    """
+    try:
+        result = ctrl.list_parent_things()
+
+        if not result.get("success"):
+            return JSONResponse(
+                status_code=500,
+                content={
+                    "status": "error",
+                    "message": result.get("error", "Failed to list parent TOE things"),
+                    "detail": result.get("response"),
+                    "timestamp": time.time()
+                }
+            )
+
+        return JSONResponse(
+            status_code=200,
+            content={
+                "status": "success",
+                "message": "Parent TOE list retrieved successfully",
+                "data": result,
+                "timestamp": time.time()
+            }
+        )
+    except Exception as e:
+        logger.error(f"Error listing parent TOE things: {e}")
+        return JSONResponse(
+            status_code=500,
+            content={
+                "status": "error",
+                "message": f"Failed to list TOE parent things: {str(e)}",
                 "timestamp": time.time()
             }
         )

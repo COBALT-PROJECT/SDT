@@ -24,8 +24,16 @@ LOCAL_IP = get_local_ip()
 # MQTT_BROKER_HOST = os.getenv("MQTT_BROKER_HOST", "localhost")# Use this for your MQTT connections
 MQTT_BROKER_HOST = os.getenv("MQTT_BROKER_HOST", "localhost")  # Fixed typo
 # Clouditor configuration
-Clouditor_IP = os.getenv("CLOUDITOR_HOST")
-Clouditor_PORT = os.getenv("CLOUDITOR_PORT", "8080")
+# Clouditor serves the assessment/evidence API and the OAuth2 token API on separate ports.
+Clouditor_IP = os.getenv("CLOUDITOR_IP") or os.getenv("CLOUDITOR_HOST")
+Clouditor_PORT = os.getenv("CLOUDITOR_PORT", "8083")            # assessment / evidence service
+Clouditor_AUTH_PORT = os.getenv("CLOUDITOR_AUTH_PORT", "8080")  # OAuth2 token service
+
+# COBALT IAM configuration (used to obtain the access token sent to Clouditor)
+IAM_TOKEN_URL = os.getenv("IAM_TOKEN_URL", "http://iam.cobalt.local:3100/oauth/token")
+IAM_CLIENT_ID = os.getenv("IAM_CLIENT_ID", "sdt")
+IAM_CLIENT_SECRET = os.getenv("IAM_CLIENT_SECRET", "sd@tm")
+IAM_SCOPE = os.getenv("IAM_SCOPE", "digital_twins profile")
 
 #IDS Connector configuration
 

@@ -1235,13 +1235,70 @@ class Controller():
             "last_updated": statistics.get("last_updated")
         }
 
+    def list_parent_things(self):
+        """
+        Lists all TOE parent things and their latest update time.
 
-        if item1_last_modified == item2_last_modified:
-            logger.info("Items have same last_commit")
-            return True
-        else:
-            logger.info("Items have different last_commit")
-            return False
+        Returns:
+            dict: List of parent things with metadata
+        """
+        namespace = "cobalt.sdt"
+        filter_expression = f'like(thingId,"{namespace}:parent-*")'
+        url = f'http://{Ditto_IP}:{Ditto_PORT}/api/2/search/things'
+        params = {"filter": filter_expression, "fields": "thingId"}
+
+        try:
+            session = requests.Session()
+            session.auth = ("ditto", "ditto")
+            logger.info(f"Searching Ditto for parent things with filter: {filter_expression}")
+            r = session.get(url, params=params, headers={'accept': 'application/json'})
+
+            if r.status_code != 200:
+                logger.error(f"Failed to search parent things: status {r.status_code}")
+                return {
+                    "success": False,
+                    "error": f"Search failed with status code {r.status_code}",
+                    "response": r.text
+                }
+
+            response_json = r.json()
+            items = response_json.get("items", [])
+            parent_list = []
+
+            for item in items:
+                parent_id = item.get("thingId")
+                if not parent_id:
+                    continue
+
+                parent_thing = self.read_item_by_id(parent_id)
+                if not parent_thing:
+                    continue
+
+                toe_id = parent_thing.get("attributes", {}).get("toe_id")
+                if not toe_id:
+                    toe_id = parent_id.split("parent-")[-1] if "parent-" in parent_id else parent_id
+
+                attributes = parent_thing.get("attributes", {})
+                toe_name = attributes.get("metadata", {}).get("name") or attributes.get("description") or toe_id
+                statistics = parent_thing.get("features", {}).get("statistics", {}).get("properties", {})
+
+                parent_list.append({
+                    "toe_id": toe_id,
+                    "toe_name": toe_name,
+                    "parent_thing_id": parent_id,
+                    "last_updated": statistics.get("last_updated"),
+                    "total_things": statistics.get("total_things", 0),
+                    "things_by_type": statistics.get("things_by_type", {})
+                })
+
+            return {"success": True, "count": len(parent_list), "items": parent_list}
+
+        except requests.exceptions.ConnectionError as e:
+            logger.error(f"Connection error while listing parent things: {e}")
+            return {"success": False, "error": str(e)}
+        except Exception as e:
+            logger.error(f"Error listing parent things: {e}")
+            return {"success": False, "error": str(e)}
 
 
 # ===========================================Evidence Provider methods===========================================
@@ -1272,6 +1329,10 @@ class Controller():
             level = thing_with_repo.get("attributes", {}).get("category")
         logger.info(f"Using toe_id: {toe_id} and level: {level} from thing")
         evidence_template = self.ep.process_query(toe_id, level, thing_with_repo) # no change
+
+        if not evidence_template:
+            logger.warning(f"No evidence template for toe_id={toe_id}, level={level}; skipping")
+            return {"error": "No evidence template for this thing"}
 
         # print(evidence_dir)
         if evidence_template.get('evidence_type') == "repository":
@@ -1506,6 +1567,11 @@ class Controller():
                 level = attributes.get('category')
 
                 print(f"thing_id: {thing_id}, toe_id: {toe_id}, level: {level}")
+
+                # Skip events for things without a category (e.g. parent things) - not evidence
+                if not level:
+                    print("Thing has no category (e.g. parent thing) - skipping notification")
+                    return
 
                 # NEW: Route to configured evidence collectors based on template
                 matching_collectors = self.ep.get_subscribed_collectors(msg.topic, thing)
@@ -1917,7 +1983,7 @@ class Controller():
     #         logger.error(f"Error processing webhook: {e}")
     #         raise Exception(f"Webhook processing failed: {str(e)}")
 
-    def sync_ids_connector(self, data_path: str, toe_id: str, ids_connector_url: str = "http://localhost:8004"):
+    def sync_ids_connector(self, data_path: str, toe_id: str, ids_connector_url: str = "http://localhost:8004", category: str = None):
         """
         Sync data from IDS connector using OAuth2 Bearer token authentication
 
@@ -1925,11 +1991,12 @@ class Controller():
             data_path: Path to data in IDS connector ('all' or specific resource name)
             toe_id: Target of Evaluation ID
             ids_connector_url: Base URL of IDS connector
+            category: Evidence category to assign to synced things (e.g. 'QDT', 'AI'). Defaults to 'AI'.
 
         Returns:
             dict: Result of sync operation
         """
-        logger.info(f"Syncing from IDS connector: {ids_connector_url}, data_path: {data_path}")
+        logger.info(f"Syncing from IDS connector: {ids_connector_url}, data_path: {data_path}, category: {category}")
 
         try:
             # Call IDS connector endpoint
@@ -1964,7 +2031,7 @@ class Controller():
             logger.info(f"Response data length: {len(ids_response.get('data', ''))}")
 
             # Process IDS response through translator
-            processed_things = self.trs.process_ids_response(ids_response, toe_id)
+            processed_things = self.trs.process_ids_response(ids_response, toe_id, category=category)
 
             logger.info(f"Processed {len(processed_things)} things from IDS connector")
 
@@ -1973,6 +2040,15 @@ class Controller():
             for thing_json in processed_things:
                 thing = json.loads(thing_json)
                 category = thing.get("attributes", {}).get("category", "UNKNOWN")
+                # The connector resource this thing came from - carried
+                # through translator.py as attributes.resource_id (embedded
+                # files) or attributes.ids_resource_id (generic IDS evidence
+                # fallback). Needed to confirm the right resource back to
+                # the connector below.
+                connector_resource_id = (
+                    thing.get("attributes", {}).get("resource_id")
+                    or thing.get("attributes", {}).get("ids_resource_id")
+                )
 
                 # ✅ For FILE types, check by filename first to prevent overwriting different files
                 if category == "FILE":
@@ -1988,6 +2064,7 @@ class Controller():
                                     "category": category,
                                     "filename": filename,
                                     "thing_id": existing_thing_id,
+                                    "resource_id": connector_resource_id,
                                     "success": False,
                                     "action": "skipped",
                                     "message": "Identical file already exists"
@@ -2005,8 +2082,9 @@ class Controller():
                                     "category": category,
                                     "filename": filename,
                                     "thing_id": existing_thing_id,
+                                    "resource_id": connector_resource_id,
                                     "success": update_result.get("success"),
-                                    "action": "updated"
+                                    "action": "updated" if update_result.get("success") else "failed"
                                 })
                                 continue
                         else:
@@ -2042,6 +2120,7 @@ class Controller():
                                     "category": category,
                                     "filename": filename,
                                     "thing_id": ctrl_id,
+                                    "resource_id": connector_resource_id,
                                     "success": True,
                                     "action": "created"
                                 })
@@ -2051,6 +2130,7 @@ class Controller():
                                     "category": category,
                                     "filename": filename,
                                     "thing_id": ctrl_id,
+                                    "resource_id": connector_resource_id,
                                     "success": False,
                                     "action": "failed",
                                     "error": r.text
@@ -2064,12 +2144,22 @@ class Controller():
                     "category": category,
                     "filename": thing.get("attributes", {}).get("filename"),
                     "thing_id": result.get("thing_id"),
+                    "resource_id": connector_resource_id,
                     "success": result.get("success"),
-                    "action": result.get("action")
+                    "action": self._derive_sync_action(result)
                 })
 
             # Update parent thing with IDS sync metadata
             self._update_parent_with_ids_sync(toe_id, data_path, len(processed_things))
+
+            # Report each resource's real ingestion outcome back to the
+            # connector, so its notion of "already synced" reflects actual
+            # confirmed ingestion rather than "we handed it out once". Best
+            # effort: if this call fails, the connector's own delivery
+            # timeout will revert the resource to AVAILABLE and it gets
+            # retried on the next sync - it is not left permanently
+            # unconfirmed.
+            self._confirm_sync_results(ids_connector_url, toe_id, headers, results)
 
             return {
                 "success": True,
@@ -2097,18 +2187,35 @@ class Controller():
                     "status_code": 403
                 }
             elif e.response.status_code == 404:
+                # A patched connector never 404s an 'all'/'*'/'resources' sync
+                # (it returns 200 with total:0 for "nothing new" - see
+                # ids_consumer_interface.py). This branch is a defensive
+                # fallback for an older/un-patched connector, or a rolling
+                # deploy where the two sides briefly disagree: treat "nothing
+                # available" as a normal empty sync, not an error, so a
+                # poller doesn't see a 400/500 for what is really "no news".
+                if data_path.lower() in ("all", "*", "resources"):
+                    logger.info(f"IDS connector reported no resources for TOE {toe_id} (404) - treating as an empty sync")
+                    return {
+                        "success": True,
+                        "message": "No new artifacts available from IDS connector",
+                        "data_path": data_path,
+                        "results": []
+                    }
                 logger.error(f"Resource not found in IDS connector: {data_path}")
                 return {
                     "success": False,
                     "error": f"Resource not found: {data_path}",
-                    "detail": e.response.json() if e.response.text else str(e)
+                    "detail": e.response.json() if e.response.text else str(e),
+                    "status_code": 404
                 }
             else:
                 logger.error(f"IDS connector HTTP error {e.response.status_code}: {e}")
                 return {
                     "success": False,
                     "error": f"IDS connector error: HTTP {e.response.status_code}",
-                    "detail": e.response.json() if e.response.text else str(e)
+                    "detail": e.response.json() if e.response.text else str(e),
+                    "status_code": 502
                 }
         except Exception as e:
             logger.error(f"Error syncing from IDS connector: {e}")
@@ -2116,8 +2223,62 @@ class Controller():
             logger.error(traceback.format_exc())
             return {
                 "success": False,
-                "error": str(e)
+                "error": str(e),
+                "status_code": 500
             }
+
+    def _derive_sync_action(self, create_in_ditto_result: dict) -> str:
+        """
+        Normalize create_in_ditto's return shape into the same
+        created/updated/skipped/failed vocabulary the FILE branch above
+        already uses, for the confirm call and for API consumers.
+        create_in_ditto itself doesn't set "action" for its "identical
+        content, no update needed" case - that's a duplicate, not a failure.
+        """
+        if create_in_ditto_result.get("action") in ("created", "updated"):
+            return create_in_ditto_result["action"]
+        if not create_in_ditto_result.get("success") and "identical" in str(create_in_ditto_result.get("error", "")).lower():
+            return "skipped"
+        return "created" if create_in_ditto_result.get("success") else "failed"
+
+    def _confirm_sync_results(self, ids_connector_url: str, toe_id: str, headers: dict, results: list):
+        """
+        POST each synced resource's outcome back to the IDS connector's
+        /api/IDSconnector/confirm endpoint, so it can retire (CONFIRMED),
+        retry (AVAILABLE), or quarantine (DEAD) that resource. Skips
+        entries with no connector resource_id (nothing to confirm against -
+        e.g. things created through some other, non-IDS path) and never
+        raises: a failed confirm is recovered by the connector's own
+        delivery timeout, not by the caller of sync_ids_connector.
+        """
+        confirmations = [
+            {"resource_id": r["resource_id"], "outcome": r.get("action") or "failed"}
+            for r in results
+            if r.get("resource_id")
+        ]
+        if not confirmations:
+            return
+
+        try:
+            url = f"{ids_connector_url}/api/IDSconnector/confirm"
+            resp = requests.post(
+                url,
+                json={"toe_id": toe_id, "results": confirmations},
+                headers=headers,
+                timeout=30
+            )
+            if resp.ok:
+                logger.info(f"Confirmed {len(confirmations)} resource(s) with IDS connector")
+            else:
+                logger.warning(
+                    f"IDS connector rejected confirm call (status {resp.status_code}): {resp.text[:300]} "
+                    f"- affected resources will be re-offered once the connector's delivery timeout expires"
+                )
+        except requests.exceptions.RequestException as e:
+            logger.warning(
+                f"Failed to reach IDS connector confirm endpoint: {e} "
+                f"- affected resources will be re-offered once the connector's delivery timeout expires"
+            )
 
     def _update_parent_with_ids_sync(self, toe_id: str, data_path: str, artifact_count: int):
         """
