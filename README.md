@@ -393,3 +393,11 @@ the full license text.
 
 Third-party dependencies and their respective licenses are documented in
 [THIRD_PARTY_LICENSES.md](THIRD_PARTY_LICENSES.md).
+
+---
+
+![Horizon-Cobalt Project](./assets/horizon-cobalt-logo.png)
+
+This project has received funding from the European Union’s Horizon 2020 research and innovation programme under grant agreement No. 101119602.
+
+![European Union](https://upload.wikimedia.org/wikipedia/commons/b/b7/Flag_of_Europe.svg)
