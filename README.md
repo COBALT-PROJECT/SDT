@@ -386,6 +386,12 @@ the MQTT broker (port 1883) run inside the same pod.
 
 ---
 
+## Authorship
+
+Created and maintained by UPC-CRAAX Lab (https://craax.upc.edu/).
+
+---
+
 ## License
 
 This project is licensed under the **Apache License 2.0**. See the [LICENSE](LICENSE) file for
