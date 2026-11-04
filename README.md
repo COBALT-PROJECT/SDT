@@ -400,7 +400,7 @@ Third-party dependencies and their respective licenses are documented in
 </p>
 
 <p align="center">
-  This project has received funding from the European Union’s Horizon 2020 research and innovation programme under grant agreement No. 101119602.
+  This project has received funding from the European Union’s Horizon Europe research and innovation programme under Grant Agreement No. 101119602.
 </p>
 
 <p align="center">
